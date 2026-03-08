@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Product, Review, User } from '../types';
+import React, { useState } from 'react';
+import { Product, Review } from '../types';
 import BeeCharacter from './BeeCharacter.tsx';
 import ProductCard from './ProductCard';
 
@@ -13,7 +13,6 @@ interface ProductDetailsProps {
   onToggleWishlist: () => void;
   wishlistIds: number[];
   onToggleWishlistId: (id: number) => void;
-  user?: User | null;
 }
 
 
@@ -26,8 +25,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({
   isWishlisted,
   onToggleWishlist,
   wishlistIds,
-  onToggleWishlistId,
-  user
+  onToggleWishlistId
 }) => {
   const [addStatus, setAddStatus] = useState<'idle' | 'loading' | 'success'>('idle');
   const relatedProducts = allProducts.filter(p => p.category === product.category && p.id !== product.id).slice(0, 4);
@@ -40,32 +38,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({
   React.useEffect(() => {
     setReviews(product.reviews || []);
     window.scrollTo({ top: 0, behavior: 'smooth' });
-
-    // Dynamic SEO & OpenGraph Injection
-    const originalTitle = document.title;
-    document.title = `${product.title} | SINGGLEBEE`;
-
-    const updateMetaTag = (property: string, content: string) => {
-      let tag = document.querySelector(`meta[property="${property}"]`);
-      if (!tag) {
-        tag = document.createElement('meta');
-        tag.setAttribute('property', property);
-        document.head.appendChild(tag);
-      }
-      tag.setAttribute('content', content);
-    };
-
-    updateMetaTag('og:title', `${product.title} | SINGGLEBEE`);
-    updateMetaTag('og:description', product.description.substring(0, 150) + '...');
-    updateMetaTag('og:image', product.image || '/assets/brand-logo.png');
-    updateMetaTag('twitter:title', `${product.title} | SINGGLEBEE`);
-    updateMetaTag('twitter:description', product.description.substring(0, 150) + '...');
-    updateMetaTag('twitter:image', product.image || '/assets/brand-logo.png');
-
-    return () => {
-      document.title = originalTitle;
-    };
-  }, [product.reviews, product.id, product.title, product.description, product.image]);
+  }, [product.reviews, product.id]);
 
   const [reviewForm, setReviewForm] = useState({ name: '', rating: 5, comment: '' });
   const [isReviewSubmitting, setIsReviewSubmitting] = useState(false);
@@ -109,18 +82,12 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({
 
   const handleAddToCart = () => {
     if (addStatus !== 'idle') return;
-
-    if (!user) {
-      onAddToCart(product);
-      return;
-    }
-
     setAddStatus('loading');
     setTimeout(() => {
       onAddToCart(product);
       setAddStatus('success');
-      setTimeout(() => setAddStatus('idle'), 1500);
-    }, 600);
+      setTimeout(() => setAddStatus('idle'), 2000);
+    }, 800);
   };
 
   return (

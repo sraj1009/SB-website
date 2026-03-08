@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import BeeCharacter from './BeeCharacter';
 
-export type SupportPageType = 'help' | 'returns' | 'shipping' | 'contact' | 'about' | 'terms' | 'privacy';
+export type SupportPageType = 'help' | 'returns' | 'shipping' | 'contact' | 'about' | 'terms';
 
 interface SupportPageProps {
   page: SupportPageType;
@@ -341,42 +341,6 @@ const SupportPage: React.FC<SupportPageProps> = ({ page, onBack, onNavigate }) =
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
-          </div>
-        );
-      case 'privacy':
-        return (
-          <div className="max-w-4xl mx-auto animate-fade-in px-4">
-            <div className="text-center mb-16">
-              <h1 className="text-5xl md:text-7xl font-black text-brand-black mb-4 tracking-tighter uppercase">🔐 PRIVACY <span className="text-[#dc6601]">POLICY</span></h1>
-              <p className="text-gray-500 font-bold uppercase text-[10px] tracking-[0.3em] border-y border-brand-primary/10 py-4 inline-block px-8">Last Updated: March 2026</p>
-            </div>
-
-            <div className="bg-white p-8 md:p-14 rounded-[2.5rem] md:rounded-[4rem] shadow-premium border border-brand-primary/5 space-y-12">
-              {[
-                { title: '1. Information We Collect', icon: '📋', text: 'We collect information you provide (name, email, phone, address) when you create an account, place an order, or contact us. We also collect usage data to improve our services.' },
-                { title: '2. How We Use Your Data', icon: '🎯', text: 'Your data is used to process orders, send order confirmations, respond to inquiries, and improve our platform. We do not sell your personal information to third parties.' },
-                { title: '3. Data Security', icon: '🛡️', text: 'We use industry-standard security measures (encryption, secure connections) to protect your data. Payment details are processed by secure payment providers.' },
-                { title: '4. Cookies', icon: '🍪', text: 'We use cookies and similar technologies for essential site functionality, analytics, and preferences. You can manage cookie preferences in your browser or via our cookie banner.' },
-                { title: '5. Third-Party Services', icon: '🔗', text: 'We may use services like payment gateways, email providers, and analytics. These providers have their own privacy policies governing their use of your data.' },
-                { title: '6. Your Rights', icon: '✅', text: 'You may request access to, correction of, or deletion of your personal data. Contact us at singglebee.rsventures@gmail.com for such requests.' },
-                { title: '7. Data Retention', icon: '⏱️', text: 'We retain your data as long as your account is active or as needed to fulfill legal and business obligations.' },
-                { title: '8. Children', icon: '👶', text: 'Our products are for families. We do not knowingly collect data from children under 13 without parental consent.' },
-                { title: '9. Changes', icon: '🔄', text: 'We may update this policy from time to time. Continued use of our services after updates constitutes acceptance.' }
-              ].map((clause, idx) => (
-                <section key={idx} className="space-y-4">
-                  <h3 className="text-xl font-black text-brand-black flex items-center gap-4">
-                    <span className="w-10 h-10 bg-brand-light rounded-xl flex items-center justify-center text-lg shadow-sm">{clause.icon}</span>
-                    {clause.title}
-                  </h3>
-                  <p className="text-gray-500 font-bold leading-relaxed text-sm md:text-base border-l-4 border-brand-primary/10 pl-6">
-                    {clause.text}
-                  </p>
-                </section>
-              ))}
-              <div className="pt-10 border-t border-brand-primary/5">
-                <button onClick={() => onNavigate?.('contact')} className="text-sm font-black text-[#dc6601] hover:underline uppercase tracking-widest">Questions? Contact us →</button>
               </div>
             </div>
           </div>

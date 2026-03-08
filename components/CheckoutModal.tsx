@@ -2,7 +2,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { CartItem, User } from '../types';
 import BeeCharacter from './BeeCharacter.tsx';
-import api from '../services/api';
 
 interface CheckoutModalProps {
   isOpen: boolean;
@@ -23,12 +22,10 @@ const InputLabel = ({ children, required, icon }: React.PropsWithChildren<{ requ
   </label>
 );
 
-const FormInputContainer = ({ children, focused, valid, error }: React.PropsWithChildren<{ focused?: boolean, valid?: boolean, error?: boolean }>) => (
+const FormInputContainer = ({ children, focused }: React.PropsWithChildren<{ focused?: boolean }>) => (
   <div className={`relative transition-all duration-300 group ${focused ? 'scale-[1.01]' : ''}`}>
     <div className={`absolute -inset-[1px] bg-brand-primary rounded-2xl blur-sm opacity-0 group-hover:opacity-10 transition duration-500 ${focused ? 'opacity-30 blur-md' : ''}`}></div>
-    <div className={`relative bg-brand-light/50 border-2 rounded-2xl transition-all duration-300 
-      ${error ? 'border-brand-rose/50 bg-rose-50/10' : valid && !focused ? 'border-brand-meadow/40 bg-green-50/10' : focused ? 'border-brand-primary bg-white shadow-lg' : 'border-brand-primary/10 group-hover:border-brand-primary/30'}
-    `}>
+    <div className={`relative bg-brand-light/50 border-2 rounded-2xl transition-all duration-300 ${focused ? 'border-brand-primary bg-white shadow-lg' : 'border-brand-primary/10 group-hover:border-brand-primary/30'}`}>
       {children}
     </div>
   </div>
@@ -51,7 +48,6 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, subtotal
   const [previews, setPreviews] = useState<string[]>([]);
   const [copied, setCopied] = useState(false);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
-  const [createdOrderId, setCreatedOrderId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -60,7 +56,6 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, subtotal
       setScreenshots([]);
       setPreviews([]);
       setSubmissionError(null);
-      setCreatedOrderId(null);
       setFormData({
         name: user?.name || '',
         email: user?.email || '',
@@ -68,7 +63,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, subtotal
         address: user?.streetAddress || '',
         landmark: user?.landmark || '',
         city: user?.city || '',
-        state: 'Tamil Nadu', // Default and restricted to Tamil Nadu
+        state: user?.state || '',
         zip: user?.zipCode || ''
       });
     }
@@ -124,11 +119,27 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, subtotal
       return;
     }
     if (!isValidEmail(formData.email)) {
-      setSubmissionError('Please enter a valid email address');
+      setSubmissionError('Please enter a valid email address (e.g. name@example.com)');
       return;
     }
     if (!isValidPhone(formData.phone)) {
-      setSubmissionError('Phone number must be 10 digits');
+      setSubmissionError('Phone number must be exactly 10 digits');
+      return;
+    }
+    if (!isValidCityState(formData.city)) {
+      setSubmissionError('City must contain only letters');
+      return;
+    }
+    if (!isValidCityState(formData.state)) {
+      setSubmissionError('State must contain only letters');
+      return;
+    }
+    if (!/^[0-9]{6}$/.test(formData.zip)) {
+      setSubmissionError('Pincode must be exactly 6 digits');
+      return;
+    }
+    if (screenshots.length === 0) {
+      alert("Please upload your Honey Receipt (UPI/GPay Screenshot)!");
       return;
     }
 
@@ -136,89 +147,67 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, subtotal
     setSubmissionError(null);
 
     try {
-      // 1. Create payment session (this creates a temporary session in backend, which converts to order on success)
-      const sessionPayload = {
-        items: cart.map(item => ({
-          product: (item as any).originalId || item.id, // backend expects product ID mapping
-          name: item.title,
-          price: item.price,
-          quantity: item.quantity,
-          image: item.image
-        })),
-        shippingAddress: {
-          fullName: formData.name,
-          phone: formData.phone,
-          email: formData.email,
-          line1: formData.address,
-          line2: formData.landmark,
-          city: formData.city,
-          state: formData.state,
-          postalCode: formData.zip,
-          country: 'India' // default
-        },
-        shippingCost: shippingFee,
-        tax: 0
-      };
+      const data = new FormData();
+      // Human-readable keys for better email formatting
+      data.append('Customer Name', formData.name);
+      data.append('Contact Email', formData.email);
+      data.append('Phone Number', formData.phone);
 
-      const sessionData = await api.payments.createSession(sessionPayload);
+      const fullAddress = `${formData.address}, ${formData.landmark ? formData.landmark + ', ' : ''}${formData.city}, ${formData.state}, ${formData.zip}`;
+      data.append('Delivery Address', fullAddress);
 
-      if (sessionData.paymentMethod === 'cashfree' && sessionData.paymentSessionId) {
-        // 2. Launch Cashfree SDK
-        const cashfree = (window as any).Cashfree({
-          mode: sessionData.environment === 'production' ? 'production' : 'sandbox'
-        });
+      data.append('Order Subtotal', `₹${subtotal.toLocaleString('en-IN')}`);
+      data.append('Shipping Cost', `₹${shippingFee.toLocaleString('en-IN')}`);
+      data.append('Grand Total', `₹${total.toLocaleString('en-IN')}`);
 
-        await cashfree.checkout({
-          paymentSessionId: sessionData.paymentSessionId,
-          returnUrl: `${window.location.origin}/checkout/success?sess_id=${sessionData.sessionId}`
-        });
-      } else if (sessionData.paymentMethod === 'upi_manual') {
-        // UPI manual: create order directly (no payment gateway)
-        const orderPayload = {
-          items: cart.map(item => ({
-            productId: String((item as any).originalId || (item as any)._id || item.id),
-            quantity: item.quantity
-          })),
-          shippingAddress: {
-            fullName: formData.name,
-            phone: formData.phone,
-            email: formData.email,
-            street: formData.address,
-            landmark: formData.landmark,
-            city: formData.city,
-            state: formData.state,
-            zipCode: formData.zip,
-            country: 'India'
-          },
-          paymentMethod: 'upi_manual' as const
-        };
-        const orderResponse = await api.orders.createOrder(orderPayload);
-        const orderId = (orderResponse as any)?.orderId || (orderResponse as any)?.order?.orderId;
+      const orderSummary = (cart || []).map(item => `- ${item.title} (x${item.quantity})`).join('\n');
+      data.append('Order Items', orderSummary);
 
-        // Upload screenshots if any
-        if (screenshots.length > 0 && orderId) {
-          try {
-            const fd = new FormData();
-            fd.append('orderId', orderId);
-            // take only the first screenshot to comply with multer `.single('proof')`
-            fd.append('proof', screenshots[0]);
-            await api.payments.uploadProof(fd);
-          } catch (err) {
-            console.error('Failed to upload proof', err);
+      // Main message body for the email
+      data.append('message',
+        `🐝 NEW HIVE ORDER 🐝\n\n` +
+        `Customer: ${formData.name}\n` +
+        `Total: ₹${total.toLocaleString('en-IN')}\n\n` +
+        `--- ORDER ITEMS ---\n${orderSummary}\n\n` +
+        `--- DELIVERY ---\n${fullAddress}\n\n` +
+        `--- CONTACT ---\nPhone: ${formData.phone}\nEmail: ${formData.email}\n\n` +
+        `--- PAYMENT PROOF ---\nVerified: Yes (User uploaded screenshot)`
+      );
+
+      data.append('_subject', `🍯 New Hive Order from ${formData.name}`);
+      data.append('Payment Proof', 'Verified (User Uploaded)');
+
+      // NOTE: screenshots are validated but NOT sent to Formspree as per request
+      // This avoids "File Uploads Not Permitted" errors while keeping the UX mandatory.
+
+      const response = await fetch("https://formspree.io/f/mqeearzy", {
+        method: "POST",
+        body: data,
+        headers: { 'Accept': 'application/json' }
+      });
+
+      if (response.ok) {
+        setStep('success');
+        onSuccess();
+        setTimeout(() => { onClose(); }, 8000);
+      } else {
+        let errorMsg = 'Formspree submission failed';
+        try {
+          const errorData = await response.json();
+          console.error("Formspree Error Details:", errorData); // Debug log
+
+          if (errorData.errors) {
+            errorMsg = errorData.errors.map((err: any) => err.message).join(', ');
+          } else if (errorData.error) {
+            errorMsg = errorData.error;
           }
+        } catch (parseErr) {
+          console.error("Formspree Non-JSON Error:", parseErr);
         }
 
-        setCreatedOrderId(orderId || null);
-        onSuccess();
-        setFormData({ name: '', email: '', phone: '', address: '', landmark: '', city: '', state: 'Tamil Nadu', zip: '' });
-        setScreenshots([]);
-        setPreviews([]);
-        setStep('success');
-        setSubmissionError(null);
+        throw new Error(errorMsg);
       }
-
     } catch (err: any) {
-      console.error("Checkout Error:", err);
       setSubmissionError(err.message || 'The hive connection was interrupted. Please try again.');
       setStep('details');
     }
@@ -369,12 +358,6 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, subtotal
                         <input required type="tel" pattern="[0-9]{10}" value={formData.phone} onFocus={() => setFocusedField('phone')} onBlur={() => setFocusedField(null)} onChange={e => setFormData({ ...formData, phone: e.target.value })} className="w-full bg-transparent px-6 py-4.5 text-base font-black text-brand-black outline-none placeholder:text-gray-200" placeholder="10 Digits" />
                       </FormInputContainer>
                     </div>
-                    <div className="space-y-1 md:col-span-2">
-                      <InputLabel required icon="📧">Email Address</InputLabel>
-                      <FormInputContainer focused={focusedField === 'email'}>
-                        <input required type="email" value={formData.email} onFocus={() => setFocusedField('email')} onBlur={() => setFocusedField(null)} onChange={e => setFormData({ ...formData, email: e.target.value })} className="w-full bg-transparent px-6 py-4.5 text-base font-black text-brand-black outline-none placeholder:text-gray-200" placeholder="name@example.com" />
-                      </FormInputContainer>
-                    </div>
                   </div>
                 </div>
 
@@ -409,23 +392,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, subtotal
                       <div className="space-y-1">
                         <InputLabel required icon="🗺️">State</InputLabel>
                         <FormInputContainer focused={focusedField === 'state'}>
-                          <div className="relative w-full">
-                            <select
-                              required
-                              value={formData.state}
-                              onChange={e => setFormData({ ...formData, state: e.target.value })}
-                              onFocus={() => setFocusedField('state')}
-                              onBlur={() => setFocusedField(null)}
-                              className="w-full bg-transparent px-6 py-4.5 text-base font-black text-brand-black outline-none appearance-none cursor-pointer z-10 relative"
-                            >
-                              <option value="Tamil Nadu">Tamil Nadu</option>
-                            </select>
-                            <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-brand-primary">
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 fill-current" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                              </svg>
-                            </div>
-                          </div>
+                          <input required type="text" value={formData.state} onFocus={() => setFocusedField('state')} onBlur={() => setFocusedField(null)} onChange={e => setFormData({ ...formData, state: e.target.value })} className="w-full bg-transparent px-6 py-4.5 text-base font-black text-brand-black outline-none placeholder:text-gray-200" placeholder="State" />
                         </FormInputContainer>
                       </div>
                       <div className="space-y-1">
@@ -453,10 +420,8 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, subtotal
                       <span className="text-[9px] font-black text-brand-rose bg-white px-4 py-2 rounded-full border-2 border-rose-50 uppercase tracking-widest shadow-sm">Mandatory</span>
                     </div>
 
-                    <div onClick={() => fileInputRef.current?.click()} className={`group/upload relative w-full border-4 border-dashed bg-white rounded-[2rem] p-8 md:p-12 transition-all cursor-pointer text-center
-                      ${previews.length > 0 ? 'border-brand-meadow/50 bg-green-50/10 hover:border-brand-meadow hover:shadow-xl' : 'border-brand-rose/20 hover:border-brand-primary hover:shadow-xl'}
-                    `}>
-                      <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
+                    <div onClick={() => fileInputRef.current?.click()} className="group/upload relative w-full border-4 border-dashed border-brand-primary/10 bg-white rounded-[2rem] p-8 md:p-12 hover:border-brand-primary hover:shadow-xl cursor-pointer transition-all text-center">
+                      <input type="file" ref={fileInputRef} className="hidden" accept="image/*" multiple onChange={handleFileChange} />
                       {previews.length > 0 ? (
                         <div className="flex flex-wrap justify-center gap-5 animate-fade-in">
                           {previews.map((p, i) => (
@@ -528,14 +493,9 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, subtotal
               <h3 className="text-6xl md:text-8xl font-black text-brand-black mb-8 tracking-tighter">Bzz-tastic!</h3>
               <div className="max-w-2xl px-6 space-y-8">
                 <p className="text-gray-500 font-bold text-2xl md:text-4xl leading-relaxed">Your Order has been Received! 🍯</p>
-                {createdOrderId && (
-                  <p className="text-brand-primary font-black text-xl">Order #{createdOrderId}</p>
-                )}
                 <div className="bg-brand-light p-10 rounded-[3.5rem] border-4 border-white shadow-inner">
                   <p className="text-brand-black font-black text-lg md:text-xl leading-relaxed italic opacity-80">
-                    {createdOrderId
-                      ? 'Please pay via UPI to singglebee.rsventures@okhdfcbank. Our hive team will verify and contact you via email or phone!'
-                      : 'Our hive team will contact you shortly through Gmail or Phone to finalize your delivery!'}
+                    Our hive team will contact you shortly through Gmail or Phone to finalize your delivery!
                   </p>
                 </div>
               </div>

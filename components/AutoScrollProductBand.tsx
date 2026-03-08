@@ -1,5 +1,5 @@
 import React from 'react';
-import { Product, User } from '../types';
+import { Product } from '../types';
 import ProductCard from './ProductCard';
 
 interface AutoScrollProductBandProps {
@@ -13,7 +13,6 @@ interface AutoScrollProductBandProps {
     toggleWishlist: (id: number) => void;
     bgColor?: string;
     direction?: 'left' | 'right';
-    user?: User | null;
 }
 
 const AutoScrollProductBand: React.FC<AutoScrollProductBandProps> = ({
@@ -26,8 +25,7 @@ const AutoScrollProductBand: React.FC<AutoScrollProductBandProps> = ({
     wishlist,
     toggleWishlist,
     bgColor = 'bg-transparent',
-    direction = 'left',
-    user
+    direction = 'left'
 }) => {
     // Triple the products to ensure smooth infinite scroll without gaps
     const displayProducts = [...products, ...products, ...products];
@@ -65,7 +63,6 @@ const AutoScrollProductBand: React.FC<AutoScrollProductBandProps> = ({
                                 onQuickView={onQuickView}
                                 isWishlisted={wishlist.includes(product.id)}
                                 onToggleWishlist={() => toggleWishlist(product.id)}
-                                user={user}
                             />
                         </div>
                     ))}

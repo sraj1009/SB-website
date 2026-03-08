@@ -64,8 +64,7 @@ const Footer: React.FC<FooterProps> = ({ onNavigateShop, onNavigateSupport, onNa
       links: [
         { label: 'RETURN & REFUND', action: () => onNavigateSupport('returns') },
         { label: 'SHIPPING POLICY', action: () => onNavigateSupport('shipping') },
-        { label: 'TERMS AND CONDITIONS', action: () => onNavigateSupport('terms') },
-        { label: 'PRIVACY POLICY', action: () => onNavigateSupport('privacy') },
+        { label: 'T&C', action: () => onNavigateSupport('terms') },
         { label: 'CONTACT US', action: () => onNavigateSupport('contact') }
       ]
     }

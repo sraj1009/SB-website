@@ -2,7 +2,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Category, User } from '../types';
 import BeeCharacter from './BeeCharacter';
-import brandLogo from '../assets/brand-logo.png';
 
 interface NavbarProps {
   cartCount: number;
@@ -18,7 +17,6 @@ interface NavbarProps {
   user: User | null;
   onSignInClick: () => void;
   onSignOutClick: () => void;
-  onAdminClick?: () => void;
   onNavbarSearch: (term: string) => void;
 }
 
@@ -36,7 +34,6 @@ const Navbar: React.FC<NavbarProps> = ({
   user,
   onSignInClick,
   onSignOutClick,
-  onAdminClick,
   onNavbarSearch,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -82,7 +79,7 @@ const Navbar: React.FC<NavbarProps> = ({
       <div className="bg-brand-black text-brand-primary text-[10px] md:text-xs font-bold py-1.5 overflow-hidden relative border-b border-white/10">
         <div className="w-full h-full flex items-center">
           <span className="whitespace-nowrap animate-marquee-one">
-            🚚 Delivery is free for purchase above ₹1499 ✨ For outside India orders contact our whatsapp no. 9176008087 or gmail singglebee.rsventures@gmail.com ✨
+            🚚 Delivery is free for purchase above ₹1499 ✨
           </span>
         </div>
       </div>
@@ -94,7 +91,7 @@ const Navbar: React.FC<NavbarProps> = ({
             {/* Logo Container */}
             <div className="flex items-center cursor-pointer group shrink-0 relative" onClick={onNavigateHome}>
               <img
-                src={brandLogo}
+                src="/assets/brand-logo.png"
                 alt="SINGGLEBEE Logo"
                 className={`${scrolled ? 'h-14 md:h-20' : 'h-20 md:h-28'} w-auto transition-all duration-500 group-hover:scale-105`}
               />
@@ -147,14 +144,6 @@ const Navbar: React.FC<NavbarProps> = ({
                       <p className="text-[10px] font-black text-brand-secondary uppercase tracking-widest mb-1">Bee Account</p>
                       <p className="text-base font-black text-brand-black truncate">{user.name}</p>
                     </div>
-                    {user.role === 'admin' && (
-                      <button
-                        onClick={() => { setIsProfileOpen(false); onAdminClick?.(); }}
-                        className="w-full text-left px-6 py-4 text-sm font-black text-brand-primary hover:bg-amber-50 transition-all flex items-center gap-3 border-b border-brand-light"
-                      >
-                        👑 Queen Bee Control
-                      </button>
-                    )}
                     <button onClick={onSignOutClick} className="w-full text-left px-6 py-4 text-sm font-black text-brand-rose hover:bg-rose-50 transition-all flex items-center gap-3 rounded-b-[2rem]">
                       🚪 Log Out of Hive
                     </button>
@@ -203,7 +192,7 @@ const Navbar: React.FC<NavbarProps> = ({
           100% { transform: translateX(-100%); }
         }
         .animate-marquee-one {
-          animation: marquee-one 30s linear infinite;
+          animation: marquee-one 15s linear infinite;
           display: inline-block;
         }
       `}</style>

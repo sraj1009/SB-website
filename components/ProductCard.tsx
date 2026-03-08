@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Product, User } from '../types';
+import { Product } from '../types';
 
 interface ProductCardProps {
   product: Product;
@@ -10,7 +10,6 @@ interface ProductCardProps {
   onToggleWishlist?: () => void;
   index?: number;
   isExiting?: boolean;
-  user?: User | null;
 }
 
 export const ProductSkeleton: React.FC = () => {
@@ -47,8 +46,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   isWishlisted = false,
   onToggleWishlist,
   index = 0,
-  isExiting = false,
-  user
+  isExiting = false
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [addStatus, setAddStatus] = useState<'idle' | 'loading' | 'success'>('idle');
@@ -57,11 +55,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (addStatus !== 'idle') return;
-
-    if (!user) {
-      onAddToCart(product);
-      return;
-    }
 
     setAddStatus('loading');
     setTimeout(() => {
@@ -105,7 +98,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
         <img
           src={product.image}
           alt={product.title}
-          loading="lazy"
           onLoad={() => setImageLoaded(true)}
           className={`w-full h-full object-contain transition-all duration-700 ease-out z-10 relative
             ${isHovered && !isExiting && !product.isOutOfStock ? 'scale-110 rotate-1' : 'scale-100'}
@@ -176,7 +168,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
                 e.stopPropagation();
                 onToggleWishlist();
               }}
-              aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
               className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 backdrop-blur-md border shadow-lg
                 ${isWishlisted
                   ? 'bg-rose-500 text-white border-rose-400 scale-110'

@@ -25,10 +25,5 @@
     },
     "allowImportingTsExtensions": true,
     "noEmit": true
-  },
-  "exclude": [
-    "singglebee-store",
-    "node_modules",
-    "dist"
-  ]
+  }
 }

@@ -59,6 +59,4 @@ export interface User {
   zipCode?: string;
   country?: string;
   preferredCategory?: Category;
-  role?: 'user' | 'admin';
-  mustChangePassword?: boolean;
 }

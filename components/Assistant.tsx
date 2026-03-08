@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Product } from '../types';
-import { getShoppingAssistantResponse } from '../services/singglebeeService';
+import { getShoppingAssistantResponse } from '../services/geminiService';
 import BeeCharacter from './BeeCharacter.tsx';
 
 interface AssistantProps {

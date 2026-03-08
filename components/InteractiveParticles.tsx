@@ -12,16 +12,7 @@ const InteractiveParticles: React.FC = () => {
     if (!ctx) return;
 
     let particles: Particle[] = [];
-
-    // Performance optimization: Hardware capabilities check
-    const isMobile = typeof navigator !== 'undefined' && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    const hwConcurrency = typeof navigator !== 'undefined' ? (navigator.hardwareConcurrency || 4) : 4;
-    const isLowEnd = isMobile || hwConcurrency <= 4;
-
-    // Disable entirely for very low-end mobile devices to save battery
-    if (isMobile && hwConcurrency <= 2) return;
-
-    const particleCount = isLowEnd ? 20 : 65; // Reduced density for lower end devices
+    const particleCount = 65; // Increased for a more "filled" feel
     let mouse = { x: -1000, y: -1000 };
 
     class Particle {
@@ -130,8 +121,8 @@ const InteractiveParticles: React.FC = () => {
   }, []);
 
   return (
-    <canvas
-      ref={canvasRef}
+    <canvas 
+      ref={canvasRef} 
       className="fixed inset-0 pointer-events-none z-[5]"
     />
   );

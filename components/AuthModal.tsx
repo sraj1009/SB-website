@@ -1,7 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { User, Category } from '../types';
 import BeeCharacter from './BeeCharacter.tsx';
-import api from '../services/api';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -9,7 +9,7 @@ interface AuthModalProps {
   onLoginSuccess: (user: User) => void;
 }
 
-type AuthMode = 'login' | 'signup' | 'forgot';
+type AuthMode = 'login' | 'signup';
 
 const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess }) => {
   const [mode, setMode] = useState<AuthMode>('login');
@@ -26,13 +26,10 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess }
   const [zip, setZip] = useState('');
   const [error, setError] = useState('');
 
-  const [forgotSent, setForgotSent] = useState(false);
-
   useEffect(() => {
     if (isOpen) {
       setMode('login'); setStep(1); setError(''); setEmail(''); setName(''); setPassword('');
       setPhone(''); setAddress(''); setLandmark(''); setCity(''); setState(''); setZip(''); setIsLoading(false);
-      setForgotSent(false);
     }
   }, [isOpen]);
 
@@ -43,11 +40,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess }
 
   const handleNextStep = () => {
     if (mode === 'signup') {
-      if (!isValidEmail(email)) return setError('Please enter a valid email address');
-      if (password.length < 8) return setError('Password must be at least 8 characters');
-      if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(password)) {
-        return setError('Password must include uppercase, lowercase, number and special character (@$!%*?&)');
-      }
+      if (!isValidEmail(email)) return setError('Please enter a valid email address (e.g. name@example.com)');
+      if (password.length < 6) return setError('Password too short (min 6 chars)');
       if (name.length < 2) return setError('Full name required');
       setError('');
       setStep(2);
@@ -57,69 +51,34 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess }
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-
     if (mode === 'login') {
-      if (!isValidEmail(email) || password.length < 8) { return setError('Invalid email or password'); }
+      if (!isValidEmail(email) || password.length < 6) { return setError('Invalid email or password'); }
     } else {
-      if (!phone || !address || !city || !state || !zip) { return setError('All shipping details are required'); }
-      if (!isValidPhone(phone)) { return setError('Phone number must be 10 digits'); }
+      if (!phone || !address || !city || !state || !zip) { return setError('All primary shipping details are required'); }
+      if (!isValidPhone(phone)) { return setError('Phone number must be exactly 10 digits'); }
       if (!isValidCityState(city)) { return setError('City must contain only letters'); }
       if (!isValidCityState(state)) { return setError('State must contain only letters'); }
-      if (zip.length !== 6 || !/^[0-9]{6}$/.test(zip)) { return setError('Pincode must be 6 digits'); }
+      if (zip.length !== 6 || !/^[0-9]{6}$/.test(zip)) { return setError('Pincode must be exactly 6 digits'); }
     }
-
     setIsLoading(true);
-
-    try {
-      let userData: any;
-      if (mode === 'login') {
-        userData = await api.auth.signin(email, password);
-      } else {
-        userData = await api.auth.signup({
-          fullName: name,
-          email,
-          password,
-          phone,
-          address: {
-            street: address,
-            landmark,
-            city,
-            state,
-            zipCode: zip
-          }
-        });
-      }
-
-      // Normalize user data for the frontend
-      const normalizedUser: User = {
-        ...userData,
-        id: userData._id || userData.id,
-        avatar: userData.avatar || `https://ui-avatars.com/api/?name=${userData.fullName || userData.name || email.split('@')[0]}&background=F59E0B&color=fff`
+    setTimeout(() => {
+      setIsLoading(false);
+      const mockUser: User = {
+        id: 'u_' + Date.now(),
+        email: email,
+        name: mode === 'signup' ? name : email.split('@')[0],
+        phoneNumber: phone,
+        streetAddress: address,
+        landmark: landmark,
+        city: city,
+        state: state,
+        zipCode: zip,
+        country: 'India',
+        avatar: `https://ui-avatars.com/api/?name=${mode === 'signup' ? name : email.split('@')[0]}&background=F59E0B&color=fff`
       };
-
-      onLoginSuccess(normalizedUser);
+      onLoginSuccess(mockUser);
       onClose();
-    } catch (err: any) {
-      console.error("Auth Error:", err);
-      setError(err.message || 'The hive connection was lost. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleForgotPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    if (!isValidEmail(email)) return setError('Please enter a valid email address');
-    setIsLoading(true);
-    try {
-      await api.auth.forgotPassword(email);
-      setForgotSent(true);
-    } catch (err: any) {
-      setError(err.message || 'Could not send reset email. Try again.');
-    } finally {
-      setIsLoading(false);
-    }
+    }, 1200);
   };
 
   if (!isOpen) return null;
@@ -152,17 +111,16 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess }
             </div>
             <div>
               <h2 className="text-2xl font-black text-brand-black tracking-tight">
-                {mode === 'login' ? 'Welcome Back!' : mode === 'forgot' ? 'Reset Password' : 'Join the Hive'}
+                {mode === 'login' ? 'Welcome Back!' : 'Join the Hive'}
               </h2>
               <p className="text-gray-500 font-medium text-sm mt-0.5">
-                {mode === 'login' ? 'Enter your credentials to continue' : mode === 'forgot' ? 'We\'ll send you a reset link' : 'Create your account in just 2 steps'}
+                {mode === 'login' ? 'Enter your credentials to continue' : 'Create your account in just 2 steps'}
               </p>
             </div>
           </div>
         </div>
 
         {/* Tab Switcher */}
-        {mode !== 'forgot' && (
         <div className="px-10 pt-6 pb-4">
           <div className="bg-gray-100 p-1.5 rounded-2xl flex gap-2">
             <button
@@ -179,7 +137,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess }
             </button>
           </div>
         </div>
-        )}
 
         {/* Progress Indicator for Signup */}
         {mode === 'signup' && (
@@ -192,34 +149,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess }
 
         {/* Form Content */}
         <div className="px-10 pb-10 overflow-y-auto custom-scrollbar max-h-[50vh]">
-          <form onSubmit={mode === 'forgot' ? handleForgotPassword : mode === 'login' ? handleSubmit : (step === 1 ? (e) => { e.preventDefault(); handleNextStep(); } : handleSubmit)} className="space-y-5">
-            {mode === 'forgot' ? (
-              <div className="space-y-5 animate-fade-in">
-                {forgotSent ? (
-                  <div className="bg-brand-meadow/10 border-2 border-brand-meadow/30 p-6 rounded-2xl text-center">
-                    <p className="text-brand-meadow font-black text-sm">✓ Check your email!</p>
-                    <p className="text-gray-600 font-bold text-xs mt-2">If an account exists with that email, you'll receive password reset instructions shortly.</p>
-                  </div>
-                ) : (
-                  <>
-                    <div className="space-y-2">
-                      <label className="block text-xs font-black text-gray-700 ml-1">Email Address</label>
-                      <input
-                        type="email"
-                        value={email}
-                        onChange={e => setEmail(e.target.value)}
-                        required
-                        className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-5 py-4 text-sm font-semibold focus:bg-white focus:border-brand-primary outline-none transition-all"
-                        placeholder="you@example.com"
-                      />
-                    </div>
-                    <button type="button" onClick={() => setMode('login')} className="text-xs font-bold text-brand-primary hover:underline flex items-center gap-1">
-                      ← Back to Sign In
-                    </button>
-                  </>
-                )}
-              </div>
-            ) : mode === 'login' ? (
+          <form onSubmit={mode === 'login' ? handleSubmit : (step === 1 ? (e) => { e.preventDefault(); handleNextStep(); } : handleSubmit)} className="space-y-5">
+            {mode === 'login' ? (
               <div className="space-y-5 animate-fade-in">
                 <div className="space-y-2">
                   <label className="block text-xs font-black text-gray-700 ml-1">Email Address</label>
@@ -252,9 +183,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess }
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                     </div>
                   </div>
-                  <button type="button" onClick={() => setMode('forgot')} className="text-xs font-bold text-brand-primary hover:underline">
-                    Forgot password?
-                  </button>
                 </div>
               </div>
             ) : (
@@ -270,7 +198,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess }
                       <input type="email" value={email} onChange={e => setEmail(e.target.value)} required className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-5 py-4 text-sm font-semibold focus:bg-white focus:border-brand-primary outline-none transition-all" placeholder="you@example.com" />
                     </div>
                     <div className="space-y-2">
-                      <label className="block text-xs font-black text-gray-700 ml-1">Password <span className="text-gray-400 font-medium">(8+ chars, upper, lower, number, special @$!%*?&)</span></label>
+                      <label className="block text-xs font-black text-gray-700 ml-1">Password <span className="text-gray-400 font-medium">(min 6 characters)</span></label>
                       <input type="password" value={password} onChange={e => setPassword(e.target.value)} required className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-5 py-4 text-sm font-semibold focus:bg-white focus:border-brand-primary outline-none transition-all" placeholder="••••••••" />
                     </div>
                   </div>
@@ -319,15 +247,15 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess }
 
             <button
               type="submit"
-              disabled={isLoading || (mode === 'forgot' && forgotSent)}
+              disabled={isLoading}
               className="w-full bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black py-5 rounded-2xl shadow-lg shadow-amber-500/20 hover:shadow-amber-500/30 hover:scale-[1.02] active:scale-95 transition-all flex justify-center items-center gap-3 text-sm uppercase tracking-wider disabled:opacity-60 disabled:cursor-wait"
             >
               {isLoading ? (
                 <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
                 <>
-                  <span>{mode === 'forgot' ? (forgotSent ? 'Done' : 'Send Reset Link') : mode === 'login' ? 'Sign In' : (step === 1 ? 'Continue' : 'Create Account')}</span>
-                  {!forgotSent && <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>}
+                  <span>{mode === 'login' ? 'Sign In' : (step === 1 ? 'Continue' : 'Create Account')}</span>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
                 </>
               )}
             </button>

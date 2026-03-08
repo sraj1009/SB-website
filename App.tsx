@@ -1,12 +1,16 @@
-import React, { useState, useEffect, useMemo, useRef, Suspense, lazy } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Navbar from './components/Navbar.tsx';
 import ProductCard, { ProductSkeleton } from './components/ProductCard.tsx';
 import ProductDetails from './components/ProductDetails.tsx';
 import CartDrawer from './components/CartDrawer.tsx';
+import CheckoutModal from './components/CheckoutModal.tsx';
+import QuickViewModal from './components/QuickViewModal.tsx';
 import FilterSidebar from './components/FilterSidebar.tsx';
 import Hero from './components/Hero.tsx';
 import Footer from './components/Footer.tsx';
+import SupportPage, { SupportPageType } from './components/SupportPage.tsx';
+import AuthModal from './components/AuthModal.tsx';
+import Assistant from './components/Assistant.tsx';
 import InteractiveParticles from './components/InteractiveParticles.tsx';
 import RoamingBee from './components/RoamingBee.tsx';
 import AutoScrollProductBand from './components/AutoScrollProductBand';
@@ -14,35 +18,10 @@ import TestimonialMarquee from './components/TestimonialMarquee';
 import { MOCK_PRODUCTS } from './constants.ts';
 import { Category, Product, CartItem, User } from './types';
 import BeeCharacter from './components/BeeCharacter.tsx';
-import SuccessPage from './components/SuccessPage.tsx';
 
-// Lazy loaded components for performance
-const CheckoutModal = lazy(() => import('./components/CheckoutModal.tsx'));
-const QuickViewModal = lazy(() => import('./components/QuickViewModal.tsx'));
-const SupportPage = lazy(() => import('./components/SupportPage.tsx'));
-const AuthModal = lazy(() => import('./components/AuthModal.tsx'));
-const Assistant = lazy(() => import('./components/Assistant.tsx'));
-const CookieConsent = lazy(() => import('./components/CookieConsent.tsx'));
-const ResetPasswordPage = lazy(() => import('./components/ResetPasswordPage.tsx'));
-const AdminDashboard = lazy(() => import('./components/AdminDashboard.tsx'));
-const ForceChangePasswordModal = lazy(() => import('./components/ForceChangePasswordModal.tsx'));
-
-import { SupportPageType } from './components/SupportPageTypes.ts'; // Import from standalone file
-
-import api from './services/api';
-import { normalizeProduct } from './services/normalizeProduct';
-import ErrorBoundary from './components/ErrorBoundary.tsx';
-import AdminGuard from './components/AdminGuard.tsx';
-
-const AppContent: React.FC = () => {
-  // State
-  const [products, setProducts] = useState<Product[]>([]);
-  const [cart, setCart] = useState<CartItem[]>(() => {
-    try {
-      const saved = localStorage.getItem('singglebee_cart');
-      return saved ? JSON.parse(saved) : [];
-    } catch { return []; }
-  });
+const App: React.FC = () => {
+  const products = MOCK_PRODUCTS;
+  const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
 
@@ -60,7 +39,6 @@ const AppContent: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isFiltering, setIsFiltering] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const [user, setUser] = useState<User | null>(null);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
@@ -77,83 +55,28 @@ const AppContent: React.FC = () => {
   });
 
   const [showWishlist, setShowWishlist] = useState(false);
-  const [isAdminOpen, setIsAdminOpen] = useState(false);
-  const [showForceChangePassword, setShowForceChangePassword] = useState(false);
   const [sortBy, setSortBy] = useState<'default' | 'price-low' | 'price-high' | 'rating' | 'newest'>('default');
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [isAllProductsInView, setIsAllProductsInView] = useState(false);
 
-  // Fetch Products from API
+  // Initial Load Simulation
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        setIsLoading(true);
-        const response = await api.products.getProducts({ limit: 100 });
-        if (response && response.products) {
-          // Normalize: stable numeric id + keep originalId for backend calls
-          const mappedProducts = response.products.map(normalizeProduct);
-          setProducts(mappedProducts);
-        } else {
-          // Fallback to mock data if API returns empty
-          console.warn('Empty product list from API, using fallback');
-          setProducts(MOCK_PRODUCTS);
-        }
-      } catch (err) {
-        console.error('Failed to fetch products:', err);
-        setError('Could not load products. Using offline mode.');
-        setProducts(MOCK_PRODUCTS); // Graceful degradation
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchProducts();
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1200);
+    return () => clearTimeout(timer);
   }, []);
 
-  const [paymentSuccessOrderId, setPaymentSuccessOrderId] = useState<string | null>(null);
-
-  // Check for successful payment redirection
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const orderId = params.get('order_id');
-    if (orderId) {
-      setPaymentSuccessOrderId(orderId);
-      // Clear URL params without refreshing
-      window.history.replaceState({}, document.title, window.location.pathname);
+    try {
+      const savedUser = localStorage.getItem('singglebee_user');
+      if (savedUser && savedUser !== "undefined" && savedUser !== "null") {
+        setUser(JSON.parse(savedUser));
+      }
+    } catch (e) {
+      console.warn("Could not load user session", e);
+      localStorage.removeItem('singglebee_user');
     }
-  }, []);
-
-  // Initialize User from Token/Storage
-  useEffect(() => {
-    const initAuth = async () => {
-      if (api.TokenManager.isLoggedIn()) {
-        try {
-          const profile = await api.auth.getProfile();
-          if (profile) {
-            setUser(profile);
-            localStorage.setItem('singglebee_user', JSON.stringify(profile));
-          }
-        } catch (err) {
-          console.warn("Session expired or invalid", err);
-          api.TokenManager.clearTokens();
-          localStorage.removeItem('singglebee_user');
-          setUser(null);
-        }
-      } else {
-        // Fallback to local storage if not logged in (legacy support or guest info)
-        try {
-          const savedUser = localStorage.getItem('singglebee_user');
-          if (savedUser && savedUser !== "undefined" && savedUser !== "null") {
-            setUser(JSON.parse(savedUser));
-          }
-        } catch (e) {
-          api.TokenManager.clearTokens();
-          localStorage.removeItem('singglebee_user');
-        }
-      }
-    };
-
-    initAuth();
   }, []);
 
   // Auto-scroll testimonials for mobile
@@ -377,44 +300,12 @@ const AppContent: React.FC = () => {
     localStorage.setItem('singglebee_user', JSON.stringify(userData));
   };
 
-  const handleAdminClick = () => {
-    if ((user as any)?.mustChangePassword) {
-      setShowForceChangePassword(true);
-    } else {
-      setIsAdminOpen(true);
-    }
-  };
-
-  const handleForceChangePasswordSuccess = async () => {
-    setShowForceChangePassword(false);
-    try {
-      const profile = await api.auth.getProfile();
-      if (profile) {
-        const updatedUser: User = {
-          ...profile,
-          id: profile._id || profile.id,
-          name: profile.fullName || profile.name || profile.email?.split('@')[0] || 'User',
-          avatar: profile.avatar || `https://ui-avatars.com/api/?name=${profile.fullName || profile.name}&background=F59E0B&color=fff`
-        };
-        setUser(updatedUser);
-        localStorage.setItem('singglebee_user', JSON.stringify(updatedUser));
-      }
-      setIsAdminOpen(true);
-    } catch (err) {
-      console.error('Failed to refresh profile', err);
-    }
-  };
-
   const handleSignOut = () => {
     setUser(null);
     localStorage.removeItem('singglebee_user');
   };
 
   const addToCart = (product: Product) => {
-    if (!user) {
-      setIsAuthOpen(true);
-      return;
-    }
     setCart(prev => {
       const existing = prev.find(item => item.id === product.id);
       if (existing) {
@@ -436,69 +327,9 @@ const AppContent: React.FC = () => {
     }).filter(item => item.quantity > 0));
   };
 
-  // Sync Wishlist when user changes
-  useEffect(() => {
-    const syncWishlist = async () => {
-      if (user && api.TokenManager.isLoggedIn()) {
-        try {
-          const remoteWishlist = await api.wishlist.getWishlist();
-          if (remoteWishlist && remoteWishlist.items) {
-            // Map Mongo object IDs to the numeric IDs used in frontend state
-            // Search by originalId if available
-            const backendProductIds = remoteWishlist.items.map((item: any) => item.product._id);
-            const frontendNumericIds = products
-              .filter(p => backendProductIds.includes((p as any).originalId))
-              .map(p => p.id);
-            setWishlist(frontendNumericIds);
-          }
-        } catch (err) {
-          console.error("Failed to sync wishlist", err);
-        }
-      }
-    };
-    if (products.length > 0) syncWishlist();
-  }, [user, products]);
-
-  // Persist cart to localStorage so other tabs can read it
-  useEffect(() => {
-    try {
-      localStorage.setItem('singglebee_cart', JSON.stringify(cart));
-    } catch { /* quota exceeded */ }
-  }, [cart]);
-
-  // Cross-tab cart synchronization
-  useEffect(() => {
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'singglebee_cart' && e.newValue !== null) {
-        try {
-          const updatedCart = JSON.parse(e.newValue);
-          setCart(updatedCart);
-        } catch { /* ignore parse errors */ }
-      }
-    };
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
-
-  const toggleWishlist = async (productId: number) => {
-    const isCurrentlyIn = wishlist.includes(productId);
-    const product = products.find(p => p.id === productId);
-    const mongoId = (product as any)?.originalId;
-
-    if (user && api.TokenManager.isLoggedIn() && mongoId) {
-      try {
-        if (isCurrentlyIn) {
-          await api.wishlist.removeFromWishlist(mongoId);
-        } else {
-          await api.wishlist.addToWishlist(mongoId);
-        }
-      } catch (err) {
-        console.error("Failed to update remote wishlist", err);
-      }
-    }
-
+  const toggleWishlist = (productId: number) => {
     setWishlist(prev => {
-      const newWishlist = isCurrentlyIn ? prev.filter(id => id !== productId) : [...prev, productId];
+      const newWishlist = prev.includes(productId) ? prev.filter(id => id !== productId) : [...prev, productId];
       localStorage.setItem('singglebee_wishlist', JSON.stringify(newWishlist));
       return newWishlist;
     });
@@ -539,12 +370,7 @@ const AppContent: React.FC = () => {
     // But since this function is general, we might need a separate way to set language.
     // Actually, we'll clear language here to be safe for general navigation.
     // The View All handlers will set language AFTER calling this or handle state updates manually.
-    // But if coming from "View All" on a language band, we want to keep language.
-    // We already handle that in the AutoScrollProductBand handlers.
-    // So here we perform a check or default.
-    // For simplicity, if we pass Category.BOOKS, we might be coming from a band, but the band handler explicitly sets language.
-    // If user clicks "Shop" nav link, category is ALL.
-    if (category === Category.ALL) {
+    if (category !== Category.BOOKS || !selectedLanguage) {
       setSelectedLanguage(null);
     }
 
@@ -565,10 +391,6 @@ const AppContent: React.FC = () => {
   };
 
   const moveWishlistToCart = () => {
-    if (!user) {
-      setIsAuthOpen(true);
-      return;
-    }
     const wishlistProducts = products.filter(p => wishlist.includes(p.id));
 
     setCart(prev => {
@@ -638,7 +460,6 @@ const AppContent: React.FC = () => {
         user={user}
         onSignInClick={() => setIsAuthOpen(true)}
         onSignOutClick={handleSignOut}
-        onAdminClick={handleAdminClick}
       />
 
       <main className="flex-grow w-full max-w-7xl mx-auto pt-48 px-6 relative z-10">
@@ -653,16 +474,13 @@ const AppContent: React.FC = () => {
             onToggleWishlist={() => toggleWishlist(selectedProduct.id)}
             wishlistIds={wishlist}
             onToggleWishlistId={toggleWishlist}
-            user={user}
           />
         ) : activeSupportPage ? (
-          <Suspense fallback={<div className="min-h-[60vh] flex items-center justify-center"><div className="animate-spin text-4xl">🐝</div></div>}>
-            <SupportPage
-              page={activeSupportPage}
-              onBack={() => setActiveSupportPage(null)}
-              onNavigate={setActiveSupportPage}
-            />
-          </Suspense>
+          <SupportPage
+            page={activeSupportPage}
+            onBack={() => setActiveSupportPage(null)}
+            onNavigate={setActiveSupportPage}
+          />
         ) : showWishlist ? (
           <div className="animate-fade-in min-h-[60vh]">
             <div className="flex items-center justify-between mb-8">
@@ -689,7 +507,6 @@ const AppContent: React.FC = () => {
                     isWishlisted={true}
                     onToggleWishlist={() => toggleWishlist(p.id)}
                     index={idx}
-                    user={user}
                   />
                 ))}
               </div>
@@ -730,7 +547,6 @@ const AppContent: React.FC = () => {
               wishlist={wishlist}
               toggleWishlist={toggleWishlist}
               bgColor="bg-white"
-              user={user}
             />
 
             {/* English Books Band */}
@@ -751,7 +567,6 @@ const AppContent: React.FC = () => {
               toggleWishlist={toggleWishlist}
               bgColor="bg-brand-light"
               direction="right"
-              user={user}
             />
 
             {/* Testimonials Band */}
@@ -904,7 +719,6 @@ const AppContent: React.FC = () => {
                             isWishlisted={wishlist.includes(p.id)}
                             onToggleWishlist={() => toggleWishlist(p.id)}
                             index={idx}
-                            user={user}
                           />
                         ))}
                     </div>
@@ -933,7 +747,6 @@ const AppContent: React.FC = () => {
                             isWishlisted={wishlist.includes(p.id)}
                             onToggleWishlist={() => toggleWishlist(p.id)}
                             index={idx}
-                            user={user}
                           />
                         ))}
                     </div>
@@ -1028,71 +841,9 @@ const AppContent: React.FC = () => {
       />
       <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} onLoginSuccess={handleLoginSuccess} />
       <QuickViewModal product={quickViewProduct} onClose={() => setQuickViewProduct(null)} />
-
-      {isAdminOpen && (
-        <AdminGuard user={user}>
-          <Suspense fallback={null}>
-            <AdminDashboard onClose={() => setIsAdminOpen(false)} />
-          </Suspense>
-        </AdminGuard>
-      )}
-      {showForceChangePassword && (
-        <Suspense fallback={null}>
-          <ForceChangePasswordModal
-            onSuccess={handleForceChangePasswordSuccess}
-            onClose={() => setShowForceChangePassword(false)}
-          />
-        </Suspense>
-      )}
-
-      {paymentSuccessOrderId && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-brand-black/80 backdrop-blur-xl animate-fade-in">
-          <div className="bg-white rounded-[4rem] p-12 md:p-20 max-w-2xl w-full text-center shadow-2xl border-[6px] border-brand-accent relative overflow-hidden animate-slide-up">
-            <div className="absolute top-0 right-0 w-40 h-40 bg-brand-primary/10 rounded-full blur-3xl -mr-20 -mt-20"></div>
-            <div className="w-40 h-40 bg-brand-meadow rounded-[3rem] flex items-center justify-center mx-auto mb-10 shadow-2xl relative group border-[8px] border-white overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent"></div>
-              <svg className="w-20 h-20 text-white relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={5} d="M5 13l4 4L19 7" /></svg>
-            </div>
-            <h2 className="text-5xl md:text-7xl font-black text-brand-black mb-6 tracking-tighter">Bzz-tastic!</h2>
-            <p className="text-gray-500 font-bold text-xl md:text-2xl mb-10 leading-relaxed">
-              Order <span className="text-brand-primary">#{paymentSuccessOrderId}</span> has been confirmed! 🍯
-            </p>
-            <div className="bg-brand-light p-8 rounded-[2.5rem] border-4 border-white mb-10 shadow-inner">
-              <p className="text-brand-black font-black text-lg italic opacity-80">
-                Our hive team is already preparing your package! We'll buzz you as soon as it's shipped.
-              </p>
-            </div>
-            <button
-              onClick={() => {
-                setPaymentSuccessOrderId(null);
-                setCart([]);
-                setShowShop(false);
-              }}
-              className="w-full bg-brand-black text-brand-primary font-black py-6 rounded-[2rem] text-xl hover:scale-105 transition-all shadow-xl active:scale-95"
-            >
-              Continue Shopping
-            </button>
-          </div>
-        </div>
-      )}
-
       <Assistant products={products} />
-
-      <Suspense fallback={null}>
-        <CookieConsent onNavigatePrivacy={() => navigateToSupport('privacy')} />
-      </Suspense>
     </div >
   );
 };
-
-const App: React.FC = () => (
-  <ErrorBoundary>
-    <Routes>
-      <Route path="/" element={<AppContent />} />
-      <Route path="/checkout/success" element={<SuccessPage />} />
-      <Route path="/reset-password" element={<Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin text-4xl">🐝</div></div>}><ResetPasswordPage /></Suspense>} />
-    </Routes>
-  </ErrorBoundary>
-);
 
 export default App;
