@@ -1,0 +1,38 @@
+{
+    "name": "singglebee-backend",
+    "version": "1.0.0",
+    "description": "Production-ready MERN backend for SINGGLEBEE e-commerce",
+    "main": "server.js",
+    "type": "module",
+    "scripts": {
+        "start": "node server.js",
+        "dev": "node --watch server.js",
+        "seed": "node utils/seedAdmin.js"
+    },
+    "dependencies": {
+        "@google/generative-ai": "^0.24.1",
+        "axios": "^1.7.9",
+        "bcryptjs": "^2.4.3",
+        "cloudinary": "^1.41.3",
+        "compression": "^1.8.1",
+        "cors": "^2.8.5",
+        "crypto": "^1.0.1",
+        "dotenv": "^16.4.5",
+        "express": "^4.21.2",
+        "express-mongo-sanitize": "^2.2.0",
+        "express-rate-limit": "^7.5.0",
+        "helmet": "^8.0.0",
+        "joi": "^17.13.3",
+        "jsonwebtoken": "^9.0.2",
+        "mongoose": "^8.9.5",
+        "multer": "^2.1.1",
+        "multer-storage-cloudinary": "^4.0.0",
+        "node-cache": "^5.1.2",
+        "winston": "^3.17.0"
+    },
+    "engines": {
+        "node": ">=18.0.0"
+    },
+    "author": "SINGGLEBEE",
+    "license": "ISC"
+}

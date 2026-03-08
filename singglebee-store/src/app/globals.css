@@ -1,0 +1,236 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply text-brand-black bg-brand-light antialiased;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+  }
+}
+
+/* ─── Premium Architectural Effects ────────────────────────────── */
+
+.honeycomb-pattern {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: radial-gradient(var(--brand-primary) 0.8px, transparent 0.8px);
+  background-size: 24px 24px;
+  opacity: 0.08;
+  animation: panBackground 60s linear infinite;
+  pointer-events: none;
+  z-index: -1;
+}
+
+@keyframes panBackground {
+  0% {
+    background-position: 0 0;
+  }
+
+  100% {
+    background-position: 100% 100%;
+  }
+}
+
+.glass {
+  background: rgba(255, 253, 247, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255, 193, 7, 0.1);
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+
+/* ─── Nectar & Honey Effects ────────────────────────────── */
+
+.nectar-text-flow {
+  background: linear-gradient(to right,
+      #E65100 0%,
+      #FFC107 25%,
+      #E65100 50%,
+      #FFC107 75%,
+      #E65100 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: nectarFlow 3s infinite linear;
+}
+
+.nectar-underline {
+  background: linear-gradient(to right,
+      #FFC107 0%,
+      #E65100 25%,
+      #FFC107 50%,
+      #E65100 75%,
+      #FFC107 100%);
+  background-size: 200% auto;
+  animation: nectarFlow 2s infinite linear;
+  border-radius: 20px;
+  height: 6px;
+  width: 100%;
+  box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+}
+
+.honey-bubble {
+  position: absolute;
+  background: rgba(255, 193, 7, 0.5);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: bubbleUp 1.6s ease-out forwards;
+}
+
+@keyframes bubbleUp {
+  0% {
+    transform: translateY(0) scale(0);
+    opacity: 0.6;
+  }
+
+  100% {
+    transform: translateY(-120px) scale(1.6);
+    opacity: 0;
+  }
+}
+
+/* ─── Standard Overrides ────────────────────────────── */
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #FFFDF7;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #E6B000;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #1F120F;
+}
+
+/* ─── Custom Marquee Logic ────────────────────────────── */
+/* ─── Premium Animations ────────────────────────────── */
+@keyframes float-gentle {
+
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+
+  50% {
+    transform: translateY(-20px) rotate(2deg);
+  }
+}
+
+@keyframes float-parallax {
+
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+
+  33% {
+    transform: translate(10px, -15px);
+  }
+
+  66% {
+    transform: translate(-10px, 10px);
+  }
+}
+
+@keyframes pulse-soft {
+
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.7;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes buzz {
+
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+
+  25% {
+    transform: rotate(-5deg) translateX(-2px);
+  }
+
+  75% {
+    transform: rotate(5deg) translateX(2px);
+  }
+}
+
+@layer utilities {
+  .animate-float-gentle {
+    animation: float-gentle 6s ease-in-out infinite;
+  }
+
+  .animate-float-parallax {
+    animation: float-parallax 12s ease-in-out infinite;
+  }
+
+  .animate-pulse-soft {
+    animation: pulse-soft 4s ease-in-out infinite;
+  }
+
+  .animate-shimmer {
+    animation: shimmer 2s infinite;
+  }
+
+  .animate-buzz {
+    animation: buzz 0.3s ease-in-out infinite;
+  }
+
+  .pause {
+    animation-play-state: paused !important;
+  }
+}
+
+@keyframes scroll {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-33.33%);
+  }
+}
+
+.animate-marquee {
+  animation: scroll linear infinite;
+}

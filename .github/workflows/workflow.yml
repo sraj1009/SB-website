@@ -1,0 +1,55 @@
+name: SINGGLEBEE CI/CD
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install Frontend Dependencies
+        run: npm ci
+
+      - name: Install Backend Dependencies
+        run: cd server && npm ci
+
+      # In a real scenario, this would run tests
+      # - name: Run Tests
+      #   run: npm test
+
+  deploy-frontend:
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      # Vercel deployment happens automatically on push to main if connected via GitHub
+      - name: Notify Vercel Wait
+        run: echo "Vercel will build and deploy automatically."
+
+  deploy-backend:
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Invoke Render Deploy Hook
+        # Requires RENDER_DEPLOY_HOOK in GitHub Secrets
+        run: |
+          if [ -n "${{ secrets.RENDER_DEPLOY_HOOK }}" ]; then
+            curl -X POST -d "" ${{ secrets.RENDER_DEPLOY_HOOK }}
+          else
+            echo "Render Deploy Hook not configured in secrets."
+          fi
