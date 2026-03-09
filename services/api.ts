@@ -184,16 +184,20 @@ export const AuthAPI = {
       zipCode?: string;
     };
   }) => {
-    const response = await apiRequest<{
+    const response: any = await apiRequest<{
       success: boolean;
       data: {
         user: any;
+        tokens?: { accessToken: string; refreshToken: string };
       };
     }>('/auth/signup', {
       method: 'POST',
       body: JSON.stringify(userData),
     });
 
+    if (response.data?.tokens) {
+      TokenManager.setTokens(response.data.tokens.accessToken, response.data.tokens.refreshToken);
+    }
     return response.data.user;
   },
 
@@ -201,16 +205,20 @@ export const AuthAPI = {
    * Sign in user
    */
   signin: async (email: string, password: string) => {
-    const response = await apiRequest<{
+    const response: any = await apiRequest<{
       success: boolean;
       data: {
         user: any;
+        tokens?: { accessToken: string; refreshToken: string };
       };
     }>('/auth/signin', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     });
 
+    if (response.data?.tokens) {
+      TokenManager.setTokens(response.data.tokens.accessToken, response.data.tokens.refreshToken);
+    }
     return response.data.user;
   },
 

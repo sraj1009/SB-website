@@ -79,6 +79,10 @@ export const signup = async (req, res, next) => {
           role: user.role,
           address: user.address,
         },
+        tokens: {
+          accessToken,
+          refreshToken,
+        },
       },
     });
   } catch (error) {
@@ -159,6 +163,10 @@ export const signin = async (req, res, next) => {
           address: user.address,
           lastLogin: user.lastLogin,
           mustChangePassword: user.mustChangePassword,
+        },
+        tokens: {
+          accessToken,
+          refreshToken,
         },
       },
     });
