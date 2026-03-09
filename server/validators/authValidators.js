@@ -65,9 +65,7 @@ export const signinSchema = Joi.object({
  * Refresh token validation schema
  */
 export const refreshTokenSchema = Joi.object({
-  refreshToken: Joi.string().required().messages({
-    'string.empty': 'Refresh token is required',
-  }),
+  refreshToken: Joi.string().optional(),
 });
 
 /**

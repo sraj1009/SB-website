@@ -49,17 +49,35 @@ cd singglebee
 
 ### 2. Gather the Nectar
 
+Install dependencies for both the frontend and backend:
+
 ```bash
+# Install frontend dependencies (root)
 npm install
+
+# Install backend dependencies
+cd server
+npm install
+cd ..
 ```
 
-### 3. Let it Buzz
+### 3. Environment Setup
+
+Create `.env` files in both the root directory and the `server` directory using the provided `.env.example` files as templates. Ensure your environment variables are set correctly (e.g., `MONGO_URI`, `JWT_ACCESS_SECRET`).
+
+### 4. Let it Buzz (Full-Stack)
+
+Start both the frontend and backend servers concurrently:
 
 ```bash
-npm run dev
+npm run full-stack
 ```
 
-Explore the magic at: `http://localhost:5173`
+Explore the magic at:
+- **Frontend App**: `http://localhost:3000`
+- **Backend API**: `http://localhost:5000`
+
+*(Note: The frontend development server automatically proxies API requests to the backend at port 5000)*
 
 ---
 

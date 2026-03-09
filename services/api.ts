@@ -66,11 +66,17 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
     ...options.headers,
   };
 
+  // Attach access token to headers if available
+  const accessToken = TokenManager.getAccessToken();
+  if (accessToken) {
+    (headers as Record<string, string>)['Authorization'] = `Bearer ${accessToken}`;
+  }
+
   try {
     let response = await fetch(url, { ...options, headers, credentials: 'include' });
 
     // If 401, try to refresh token (using cookies)
-    if (response.status === 401) {
+    if (response.status === 401 && endpoint !== '/auth/refresh') {
       // All parallel 401s await the SAME singleton promise — no duplicates
       if (!refreshPromise) {
         refreshPromise = refreshAccessToken().finally(() => {
@@ -81,7 +87,11 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
       const refreshed = await refreshPromise;
 
       if (refreshed) {
-        // Retry original request
+        // Retry original request with new token if available
+        const newAccessToken = TokenManager.getAccessToken();
+        if (newAccessToken) {
+          (headers as Record<string, string>)['Authorization'] = `Bearer ${newAccessToken}`;
+        }
         response = await fetch(url, { ...options, headers, credentials: 'include' });
       }
     }
@@ -96,7 +106,7 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
       } else {
         const text = await response.text();
         throw new ApiError(
-          `Server returned non-JSON response: ${text.substring(0, 100)}...`,
+          `Server returned non-JSON response: ${text.substring(0, 150)}...`,
           'INVALID_RESPONSE',
           response.status
         );
@@ -133,13 +143,19 @@ async function refreshAccessToken(): Promise<boolean> {
     const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({}), // Payload no longer needed as we use cookies
+      body: JSON.stringify({ refreshToken: TokenManager.getRefreshToken() }), // Also send in body as fallback
       credentials: 'include',
     });
 
     if (!response.ok) {
       TokenManager.clearTokens();
       return false;
+    }
+
+    // If backend returns new tokens in response data, store them
+    const data = await response.json().catch(() => null);
+    if (data?.data?.tokens) {
+      TokenManager.setTokens(data.data.tokens.accessToken, data.data.tokens.refreshToken);
     }
 
     return true;
