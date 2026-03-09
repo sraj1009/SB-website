@@ -1,3 +1,4 @@
+/// <reference types="vitest" />
 import path from 'path';
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
@@ -50,6 +51,24 @@ export default defineConfig(({ mode }) => {
         },
       }),
     ],
+    test: {
+      globals: true,
+      environment: 'jsdom',
+      setupFiles: ['./test/setup.ts'],
+      css: true,
+      coverage: {
+        provider: 'v8',
+        reporter: ['text', 'json', 'html'],
+        exclude: [
+          'node_modules/',
+          'test/',
+          '**/*.d.ts',
+          '**/*.config.*',
+          'dist/',
+          'coverage/',
+        ],
+      },
+    },
     define: {
       // Remove GEMINI_API_KEY from client side for security
     },
@@ -58,7 +77,8 @@ export default defineConfig(({ mode }) => {
         '@': path.resolve(__dirname, './'),
         '@components': path.resolve(__dirname, './components'),
         '@services': path.resolve(__dirname, './services'),
-        '@server': path.resolve(__dirname, './server'),
+        '@hooks': path.resolve(__dirname, './hooks'),
+        '@types': path.resolve(__dirname, './types'),
       },
     },
   };

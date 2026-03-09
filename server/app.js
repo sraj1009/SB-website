@@ -24,8 +24,7 @@ import addressRoutes from './routes/api/v1/addresses.js';
 import reviewRoutes from './routes/api/v1/reviews.js';
 import assistantRoutes from './routes/assistant.js';
 import couponRoutes from './routes/api/v1/coupons.js';
-// Note: Temporarily commented out rate limiters to fix startup
-// import { authLimiter, passwordResetLimiter, apiLimiter } from './middleware/authRateLimiter.js';
+import { authLimiter, paymentLimiter, apiLimiter } from './middleware/rateLimiter.js';
 
 const app = express();
 
@@ -182,31 +181,21 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 // ===========================================
 
 // Core routes with specific rate limiting
-// Note: Temporarily commented out rate limiters to fix startup
-// app.use('/api/v1/auth/signin', authLimiter);
-// app.use('/api/v1/auth/signup', authLimiter);
-// app.use('/api/v1/auth/forgot-password', passwordResetLimiter);
-// app.use('/api/v1/auth/reset-password', passwordResetLimiter);
+app.use('/api/v1/auth/signin', authLimiter);
+app.use('/api/v1/auth/signup', authLimiter);
+app.use('/api/v1/auth/forgot-password', authLimiter);
+app.use('/api/v1/auth/reset-password', authLimiter);
 app.use('/api/v1/auth', authRoutes);
-// app.use('/api/v1/products', apiLimiter, productRoutes);
-// app.use('/api/v1/orders', apiLimiter, orderRoutes);
-// app.use('/api/v1/payments', apiLimiter, paymentRoutes);
-app.use('/api/v1/products', productRoutes);
-app.use('/api/v1/orders', orderRoutes);
-app.use('/api/v1/payments', paymentRoutes);
+app.use('/api/v1/products', apiLimiter, productRoutes);
+app.use('/api/v1/orders', apiLimiter, orderRoutes);
+app.use('/api/v1/payments', paymentLimiter, paymentRoutes);
 
 // User feature routes with API rate limiting
-// Note: Temporarily commented out rate limiters to fix startup
-// app.use('/api/v1/wishlist', apiLimiter, wishlistRoutes);
-// app.use('/api/v1/addresses', apiLimiter, addressRoutes);
-// app.use('/api/v1/reviews', apiLimiter, reviewRoutes);
-// app.use('/api/v1/coupons', apiLimiter, couponRoutes);
-// app.use('/api/v1/assistant', apiLimiter, assistantRoutes);
-app.use('/api/v1/wishlist', wishlistRoutes);
-app.use('/api/v1/addresses', addressRoutes);
-app.use('/api/v1/reviews', reviewRoutes);
-app.use('/api/v1/coupons', couponRoutes);
-app.use('/api/v1/assistant', assistantRoutes);
+app.use('/api/v1/wishlist', apiLimiter, wishlistRoutes);
+app.use('/api/v1/addresses', apiLimiter, addressRoutes);
+app.use('/api/v1/reviews', apiLimiter, reviewRoutes);
+app.use('/api/v1/coupons', apiLimiter, couponRoutes);
+app.use('/api/v1/assistant', apiLimiter, assistantRoutes);
 
 // Admin routes
 app.use('/api/v1/admin', adminRoutes);

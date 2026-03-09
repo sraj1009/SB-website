@@ -11,7 +11,7 @@ const setTokenCookies = (res, accessToken, refreshToken) => {
   const cookieOptions = {
     httpOnly: true,
     secure: isProd,
-    sameSite: isProd ? 'none' : 'lax', // 'none' requires secure=true; use 'lax' in dev
+    sameSite: isProd ? 'strict' : 'lax', // Use 'strict' in production for better CSRF protection
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days (matching refresh token)
   };
 

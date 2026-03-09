@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import ErrorBoundary from './components/ErrorBoundary.tsx';
 import Navbar from './components/Navbar.tsx';
 import ProductCard, { ProductSkeleton } from './components/ProductCard.tsx';
 import ProductDetails, { ProductDetailsSkeleton } from './components/ProductDetails.tsx';
@@ -366,8 +367,9 @@ const App: React.FC = () => {
   const cartTotal = cartSubtotal + shippingFee;
 
   return (
-    <div className="min-h-screen flex flex-col bg-brand-light font-sans selection:bg-brand-primary selection:text-brand-black relative">
-      <div className="fixed inset-0 honeycomb-pattern pointer-events-none -z-10"></div>
+    <ErrorBoundary>
+      <div className="min-h-screen flex flex-col bg-brand-light font-sans selection:bg-brand-primary selection:text-brand-black relative">
+        <div className="fixed inset-0 honeycomb-pattern pointer-events-none -z-10"></div>
 
       <InteractiveParticles />
       <RoamingBee isCheckoutOpen={isCheckoutOpen} />
@@ -905,7 +907,8 @@ const App: React.FC = () => {
         </React.Suspense>
       )}
       <CookieConsent />
-    </div>
+      </div>
+    </ErrorBoundary>
   );
 };
 
