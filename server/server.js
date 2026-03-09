@@ -38,6 +38,15 @@ const startServer = async () => {
             logger.info(`🔗 Health check: http://localhost:${PORT}/health`);
         });
 
+        server.on('error', (error) => {
+            if (error.code === 'EADDRINUSE') {
+                logger.error(`Port ${PORT} is already in use. Please close other instances or the hive will be blocked.`);
+            } else {
+                logger.error(`Server error: ${error.message}`);
+            }
+            process.exit(1);
+        });
+
         // Graceful shutdown
         const gracefulShutdown = (signal) => {
             logger.info(`${signal} received. Shutting down gracefully...`);

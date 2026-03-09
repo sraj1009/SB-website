@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
 import BeeCharacter from './BeeCharacter';
 import api from '../services/api';
 
+const navigate = (path: string) => { window.location.href = path; };
+
 const ResetPasswordPage: React.FC = () => {
-  const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
+  const searchParams = new URLSearchParams(window.location.search);
   const token = searchParams.get('token');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');

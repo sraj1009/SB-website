@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { CartItem, User } from '../types';
 import BeeCharacter from './BeeCharacter.tsx';
+import api from '../services/api';
 
 interface CheckoutModalProps {
   isOpen: boolean;
@@ -180,33 +181,45 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, subtotal
       // NOTE: screenshots are validated but NOT sent to Formspree as per request
       // This avoids "File Uploads Not Permitted" errors while keeping the UX mandatory.
 
-      const response = await fetch("https://formspree.io/f/mqeearzy", {
-        method: "POST",
-        body: data,
-        headers: { 'Accept': 'application/json' }
-      });
+      // 1. Send purely notification email via Formspree (Backup)
+      try {
+        await fetch("https://formspree.io/f/mqeearzy", {
+          method: "POST",
+          body: data,
+          headers: { 'Accept': 'application/json' }
+        });
+      } catch (e) { console.warn("Formspree backup failed, continuing with main order...", e); }
 
-      if (response.ok) {
-        setStep('success');
-        onSuccess();
-        setTimeout(() => { onClose(); }, 8000);
-      } else {
-        let errorMsg = 'Formspree submission failed';
-        try {
-          const errorData = await response.json();
-          console.error("Formspree Error Details:", errorData); // Debug log
+      // 2. Create the ACTUAL order in the MongoDB backend
+      try {
+        const orderData = {
+          items: cart.map(item => ({
+            productId: item.id.toString(),
+            quantity: item.quantity,
+          })),
+          shippingAddress: {
+            fullName: formData.name,
+            street: formData.address,
+            landmark: formData.landmark,
+            city: formData.city,
+            state: formData.state,
+            zipCode: formData.zip,
+            phone: formData.phone,
+            email: formData.email
+          },
+          paymentMethod: 'upi_manual' as const
+        };
 
-          if (errorData.errors) {
-            errorMsg = errorData.errors.map((err: any) => err.message).join(', ');
-          } else if (errorData.error) {
-            errorMsg = errorData.error;
-          }
-        } catch (parseErr) {
-          console.error("Formspree Non-JSON Error:", parseErr);
-        }
-
-        throw new Error(errorMsg);
+        const backendOrder = await api.orders.createOrder(orderData);
+        console.log("Backend order created:", backendOrder);
+      } catch (err: any) {
+        throw new Error(err.message || 'Failed to create order in system. Please try again.');
       }
+
+      setStep('success');
+      onSuccess();
+      setTimeout(() => { onClose(); }, 8000);
+
     } catch (err: any) {
       setSubmissionError(err.message || 'The hive connection was interrupted. Please try again.');
       setStep('details');

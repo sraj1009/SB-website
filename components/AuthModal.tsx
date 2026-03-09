@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, Category } from '../types';
 import BeeCharacter from './BeeCharacter.tsx';
+import api from '../services/api';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -61,24 +62,47 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess }
       if (zip.length !== 6 || !/^[0-9]{6}$/.test(zip)) { return setError('Pincode must be exactly 6 digits'); }
     }
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      const mockUser: User = {
-        id: 'u_' + Date.now(),
-        email: email,
-        name: mode === 'signup' ? name : email.split('@')[0],
-        phoneNumber: phone,
-        streetAddress: address,
-        landmark: landmark,
-        city: city,
-        state: state,
-        zipCode: zip,
+    try {
+      let apiUser: any;
+      if (mode === 'login') {
+        apiUser = await api.auth.signin(email, password);
+      } else {
+        apiUser = await api.auth.signup({
+          fullName: name,
+          email,
+          password,
+          phone,
+          address: {
+            street: address,
+            landmark,
+            city,
+            state,
+            zipCode: zip,
+          },
+        });
+      }
+      // Map API user to frontend User type
+      const mappedUser: User = {
+        id: apiUser._id || apiUser.id || 'u_' + Date.now(),
+        email: apiUser.email || email,
+        name: apiUser.fullName || apiUser.name || (mode === 'signup' ? name : email.split('@')[0]),
+        phoneNumber: apiUser.phone || phone,
+        streetAddress: apiUser.address?.street || address,
+        landmark: apiUser.address?.landmark || landmark,
+        city: apiUser.address?.city || city,
+        state: apiUser.address?.state || state,
+        zipCode: apiUser.address?.zipCode || zip,
         country: 'India',
-        avatar: `https://ui-avatars.com/api/?name=${mode === 'signup' ? name : email.split('@')[0]}&background=F59E0B&color=fff`
+        role: apiUser.role,
+        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(apiUser.fullName || apiUser.name || name || email.split('@')[0])}&background=F59E0B&color=fff`,
       };
-      onLoginSuccess(mockUser);
+      onLoginSuccess(mappedUser);
       onClose();
-    }, 1200);
+    } catch (err: any) {
+      setError(err.message || 'Authentication failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (!isOpen) return null;

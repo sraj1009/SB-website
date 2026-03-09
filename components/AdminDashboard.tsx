@@ -1,329 +1,555 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import api from '../services/api';
-import BeeCharacter from './BeeCharacter.tsx';
 
 interface AdminDashboardProps {
     onClose: () => void;
 }
 
+type TabType = 'overview' | 'orders' | 'products' | 'customers';
+
 const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
-    const [activeTab, setActiveTab] = useState<'stats' | 'orders' | 'products'>('stats');
+    const [activeTab, setActiveTab] = useState<TabType>('overview');
     const [stats, setStats] = useState<any>(null);
     const [orders, setOrders] = useState<any[]>([]);
     const [products, setProducts] = useState<any[]>([]);
+    const [customers, setCustomers] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+    const [currentTime, setCurrentTime] = useState(new Date());
+
+    // Filters
+    const [orderStatusFilter, setOrderStatusFilter] = useState<string>('all');
+    const [paymentFilter, setPaymentFilter] = useState<string>('all');
 
     useEffect(() => {
-        fetchData();
-    }, [activeTab]);
+        const timer = setInterval(() => setCurrentTime(new Date()), 60000);
+        return () => clearInterval(timer);
+    }, []);
 
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         setIsLoading(true);
         setError(null);
         try {
-            if (activeTab === 'stats') {
+            if (activeTab === 'overview') {
                 const data = await api.admin.getStats();
-                setStats(data);
+                setStats({
+                    ...(data.stats || {}),
+                    ordersByStatus: data.ordersByStatus || {},
+                    recentOrders: data.recentOrders || [],
+                    lowStockProducts: data.lowStockProducts || [],
+                });
             } else if (activeTab === 'orders') {
                 const data = await api.admin.getOrders();
-                setOrders(data.orders);
+                setOrders(data.orders || []);
             } else if (activeTab === 'products') {
                 const data = await api.admin.getProducts();
-                setProducts(data.products);
+                setProducts(data.products || []);
+            } else if (activeTab === 'customers') {
+                const data = await api.admin.getUsers();
+                setCustomers(data.users || []);
             }
         } catch (err: any) {
-            setError(err.message || 'Failed to fetch hive data');
+            setError(err.message || 'Failed to fetch data');
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [activeTab]);
+
+    useEffect(() => { fetchData(); }, [fetchData]);
 
     const handleUpdateOrderStatus = async (orderId: string, status: string) => {
         try {
             await api.admin.updateOrderStatus(orderId, status);
-            fetchData(); // Refresh
+            fetchData();
         } catch (err: any) {
-            alert('Error updating status: ' + err.message);
+            alert('Error: ' + err.message);
         }
     };
 
     const handleVerifyPayment = async (orderId: string) => {
         try {
             await api.admin.markPaymentComplete(orderId);
-            fetchData(); // Refresh
+            fetchData();
         } catch (err: any) {
-            alert('Error verifying payment: ' + err.message);
+            alert('Error: ' + err.message);
         }
     };
 
+    const handleUpdateUserStatus = async (userId: string, status: 'active' | 'banned' | 'suspended') => {
+        if (!confirm(`Are you sure you want to ${status === 'banned' ? 'ban' : status === 'suspended' ? 'suspend' : 'activate'} this user?`)) return;
+        try {
+            await api.admin.updateUserStatus(userId, status);
+            fetchData();
+        } catch (err: any) {
+            alert('Error: ' + err.message);
+        }
+    };
+
+    // Filter orders
+    const filteredOrders = orders.filter(order => {
+        if (orderStatusFilter !== 'all' && order.status !== orderStatusFilter) return false;
+        if (paymentFilter === 'paid' && order.payment?.status !== 'success') return false;
+        if (paymentFilter === 'unpaid' && order.payment?.status === 'success') return false;
+        return true;
+    });
+
+    const navItems: { id: TabType; label: string; icon: string }[] = [
+        { id: 'overview', label: 'Overview', icon: '📊' },
+        { id: 'orders', label: 'Orders', icon: '📦' },
+        { id: 'products', label: 'Products', icon: '🍯' },
+        { id: 'customers', label: 'Customers', icon: '👥' },
+    ];
+
     return (
-        <div className="fixed inset-0 z-[150] bg-brand-black/90 backdrop-blur-2xl flex items-center justify-center p-4 md:p-10 animate-fade-in overflow-hidden">
-            <div className="bg-white rounded-[3rem] w-full max-w-7xl h-full flex flex-col shadow-2xl border-[8px] border-brand-accent animate-slide-up overflow-hidden relative">
-
-                {/* Decorative Background Elements */}
-                <div className="absolute top-0 right-0 w-96 h-96 bg-brand-primary/5 rounded-full blur-3xl -mr-48 -mt-48 pointer-events-none" />
-                <div className="absolute bottom-0 left-0 w-96 h-96 bg-brand-secondary/5 rounded-full blur-3xl -ml-48 -mb-48 pointer-events-none" />
-
-                {/* Header */}
-                <div className="px-10 py-8 border-b border-gray-100 flex items-center justify-between shrink-0 bg-white/50 backdrop-blur-md relative z-10">
-                    <div className="flex items-center gap-6">
-                        <div className="w-14 h-14 bg-brand-black rounded-2xl flex items-center justify-center shadow-lg group relative overflow-hidden">
-                            <div className="absolute inset-0 bg-gradient-to-tr from-brand-primary/20 to-transparent"></div>
-                            <BeeCharacter size="2rem" />
-                        </div>
-                        <div>
-                            <h2 className="text-3xl font-black text-brand-black tracking-tighter">Queen Bee Dashboard</h2>
-                            <p className="text-[10px] font-black text-brand-secondary uppercase tracking-[0.4em] mt-1 opacity-60">Hive Management Protocol</p>
-                        </div>
+        <div className="fixed inset-0 z-[200] flex overflow-hidden" style={{ fontFamily: '"Plus Jakarta Sans", "Quicksand", system-ui, sans-serif' }}>
+            {/* SIDEBAR */}
+            <aside
+                className={`${sidebarCollapsed ? 'w-20' : 'w-72'} shrink-0 flex flex-col transition-all duration-300 ease-in-out relative z-10`}
+                style={{ background: 'linear-gradient(180deg, #1F120F 0%, #2D1B18 50%, #1a0e0b 100%)' }}
+            >
+                <div className="p-5 border-b border-white/5">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0"
+                            style={{ background: 'linear-gradient(135deg, #FFC107, #E65100)' }}>🐝</div>
+                        {!sidebarCollapsed && (
+                            <div className="overflow-hidden">
+                                <h1 className="text-white font-black text-sm tracking-tight truncate">SINGGLEBEE</h1>
+                                <p className="text-amber-500/60 text-[9px] font-bold uppercase tracking-[0.2em]">Admin Console</p>
+                            </div>
+                        )}
                     </div>
-
-                    <div className="flex bg-gray-100 p-1.5 rounded-2xl gap-2">
-                        {(['stats', 'orders', 'products'] as const).map(tab => (
-                            <button
-                                key={tab}
-                                onClick={() => setActiveTab(tab)}
-                                className={`px-8 py-3 rounded-xl text-sm font-black uppercase tracking-wider transition-all ${activeTab === tab ? 'bg-white text-brand-black shadow-honey-hover scale-105' : 'text-gray-400 hover:text-gray-600'}`}
-                            >
-                                {tab}
-                            </button>
-                        ))}
-                    </div>
-
-                    <button onClick={onClose} className="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center text-gray-400 hover:bg-rose-500 hover:text-white transition-all active:scale-90 font-black">✕</button>
                 </div>
+                <nav className="flex-1 py-4 px-3 space-y-1">
+                    {navItems.map(item => (
+                        <button key={item.id} onClick={() => setActiveTab(item.id)}
+                            className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-bold transition-all duration-200 ${activeTab === item.id ? 'bg-amber-500/15 text-amber-400' : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'
+                                }`}>
+                            <span className="text-lg shrink-0">{item.icon}</span>
+                            {!sidebarCollapsed && <span className="truncate">{item.label}</span>}
+                            {activeTab === item.id && !sidebarCollapsed && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-amber-400"></span>}
+                        </button>
+                    ))}
+                </nav>
+                <div className="p-3 border-t border-white/5 space-y-2">
+                    <button onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs text-gray-600 hover:text-gray-400 hover:bg-white/5 transition-all font-bold">
+                        <span className="text-base shrink-0">{sidebarCollapsed ? '→' : '←'}</span>
+                        {!sidebarCollapsed && <span>Collapse</span>}
+                    </button>
+                    <button onClick={onClose}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs text-rose-400/60 hover:text-rose-400 hover:bg-rose-500/10 transition-all font-bold">
+                        <span className="text-base shrink-0">✕</span>
+                        {!sidebarCollapsed && <span>Exit Dashboard</span>}
+                    </button>
+                </div>
+            </aside>
 
-                {/* Content */}
-                <div className="flex-grow overflow-y-auto p-10 custom-scrollbar relative z-0">
-                    {isLoading ? (
-                        <div className="animate-pulse space-y-6">
-                            {activeTab === 'stats' && (
-                                <>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                                        {[...Array(4)].map((_, i) => (
-                                            <div key={i} className="bg-white p-10 rounded-[3rem] border-4 border-brand-light">
-                                                <div className="w-10 h-10 bg-gray-100 rounded-2xl mb-6" />
-                                                <div className="h-3 bg-gray-100 rounded-full w-2/3 mb-3" />
-                                                <div className="h-8 bg-gray-100 rounded-full w-1/2" />
-                                            </div>
-                                        ))}
-                                    </div>
-                                    <div className="col-span-4 bg-white p-10 rounded-[3rem] border-4 border-brand-light">
-                                        <div className="h-4 bg-gray-100 rounded-full w-48 mb-8" />
-                                        <div className="grid grid-cols-4 gap-4">
-                                            {[...Array(4)].map((_, i) => (
-                                                <div key={i} className="bg-brand-light p-8 rounded-[2.5rem] border-4 border-white">
-                                                    <div className="h-3 bg-white rounded-full w-3/4 mb-4" />
-                                                    <div className="h-8 bg-white rounded-full w-1/2" />
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </>
-                            )}
+            {/* MAIN */}
+            <main className="flex-1 flex flex-col overflow-hidden bg-gray-50">
+                <header className="h-16 shrink-0 bg-white border-b border-gray-100 flex items-center justify-between px-8">
+                    <div>
+                        <h2 className="text-lg font-black text-gray-900 tracking-tight capitalize">{activeTab === 'overview' ? 'Dashboard Overview' : activeTab}</h2>
+                        <p className="text-[10px] text-gray-400 font-bold">
+                            {currentTime.toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                        </p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <button onClick={fetchData} className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-amber-50 hover:text-amber-600 transition-all text-sm" title="Refresh">🔄</button>
+                        <div className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-black text-white" style={{ background: 'linear-gradient(135deg, #FFC107, #E65100)' }}>A</div>
+                    </div>
+                </header>
+
+                <div className="flex-1 overflow-y-auto p-6 lg:p-8">
+                    {isLoading ? <LoadingState tab={activeTab} /> : error ? <ErrorState error={error} onRetry={fetchData} /> : (
+                        <>
+                            {activeTab === 'overview' && stats && <OverviewTab stats={stats} />}
                             {activeTab === 'orders' && (
-                                <div className="bg-white rounded-[3rem] border border-gray-100 overflow-hidden shadow-sm">
-                                    <div className="bg-gray-50/50 border-b border-gray-100 px-8 py-6 grid grid-cols-6 gap-4">
-                                        {[...Array(6)].map((_, i) => <div key={i} className="h-3 bg-gray-100 rounded-full" />)}
-                                    </div>
-                                    {[...Array(6)].map((_, i) => (
-                                        <div key={i} className="px-8 py-6 border-b border-gray-50 grid grid-cols-6 gap-4 items-center">
-                                            <div className="space-y-2"><div className="h-4 bg-gray-100 rounded-full w-3/4" /><div className="h-3 bg-gray-50 rounded-full w-1/2" /></div>
-                                            <div className="space-y-2"><div className="h-4 bg-gray-100 rounded-full" /><div className="h-3 bg-gray-50 rounded-full w-2/3" /></div>
-                                            <div className="h-5 bg-gray-100 rounded-full w-16" />
-                                            <div className="h-6 bg-gray-100 rounded-full w-20" />
-                                            <div className="h-6 bg-gray-100 rounded-full w-16" />
-                                            <div className="h-8 bg-gray-100 rounded-xl" />
-                                        </div>
-                                    ))}
-                                </div>
+                                <OrdersTab
+                                    orders={filteredOrders}
+                                    allOrders={orders}
+                                    onUpdateStatus={handleUpdateOrderStatus}
+                                    onVerifyPayment={handleVerifyPayment}
+                                    statusFilter={orderStatusFilter}
+                                    paymentFilter={paymentFilter}
+                                    onStatusFilterChange={setOrderStatusFilter}
+                                    onPaymentFilterChange={setPaymentFilter}
+                                />
                             )}
-                            {activeTab === 'products' && (
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                                    {[...Array(6)].map((_, i) => (
-                                        <div key={i} className="bg-white p-8 rounded-[3rem] border-2 border-brand-light">
-                                            <div className="flex gap-6">
-                                                <div className="w-24 h-24 bg-gray-100 rounded-2xl shrink-0" />
-                                                <div className="flex-grow space-y-3">
-                                                    <div className="h-5 bg-gray-100 rounded-full w-3/4" />
-                                                    <div className="h-3 bg-gray-50 rounded-full w-1/2" />
-                                                    <div className="flex justify-between">
-                                                        <div className="h-5 bg-gray-100 rounded-full w-16" />
-                                                        <div className="h-5 bg-gray-100 rounded-full w-20" />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="mt-8 pt-8 border-t border-gray-50 flex gap-3">
-                                                <div className="flex-1 h-10 bg-gray-100 rounded-xl" />
-                                                <div className="flex-1 h-10 bg-gray-100 rounded-xl" />
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    ) : error ? (
-                        <div className="bg-rose-50 border-2 border-brand-rose/10 p-10 rounded-[3rem] text-center">
-                            <p className="text-brand-rose font-black text-xl mb-4">🚨 BUZZ ERROR</p>
-                            <p className="text-gray-600 font-bold">{error}</p>
-                            <button onClick={fetchData} className="mt-8 bg-brand-rose text-white px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-xs">Try Re-Syncing</button>
-                        </div>
-                    ) : (
-                        <div className="animate-fade-in">
-                            {activeTab === 'stats' && stats && (
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                                    <StatCard label="Total Revenue" value={`₹${stats.totalRevenue.toLocaleString('en-IN')}`} icon="💰" color="brand-meadow" />
-                                    <StatCard label="Total Orders" value={stats.totalOrders} icon="📦" color="brand-primary" />
-                                    <StatCard label="Total Customers" value={stats.totalUsers} icon="👤" color="brand-secondary" />
-                                    <StatCard label="Active Stock" value={stats.lowStockProducts.length > 0 ? 'Low Stock Alert' : 'Healthy'} icon="🍯" color={stats.lowStockProducts.length > 0 ? 'brand-rose' : 'brand-meadow'} />
-
-                                    <div className="col-span-1 md:col-span-2 lg:col-span-4 mt-10">
-                                        <h3 className="text-2xl font-black text-brand-black mb-8 px-2">Order Distribution</h3>
-                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                            {Object.entries(stats.ordersByStatus).map(([status, count]: any) => (
-                                                <div key={status} className="bg-brand-light p-8 rounded-[2.5rem] border-4 border-white text-center shadow-sm">
-                                                    <span className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">{status}</span>
-                                                    <span className="text-3xl font-black text-brand-black">{count}</span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {activeTab === 'orders' && (
-                                <div className="space-y-6">
-                                    {orders.length === 0 ? (
-                                        <EmptyState message="No orders in the hive yet." />
-                                    ) : (
-                                        <div className="bg-white rounded-[3rem] border border-gray-100 overflow-hidden shadow-sm">
-                                            <table className="w-full text-left">
-                                                <thead>
-                                                    <tr className="bg-gray-50/50 border-b border-gray-100">
-                                                        <th className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase tracking-widest">Order ID</th>
-                                                        <th className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase tracking-widest">Customer</th>
-                                                        <th className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase tracking-widest">Total</th>
-                                                        <th className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase tracking-widest">Status</th>
-                                                        <th className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase tracking-widest">Payment</th>
-                                                        <th className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Actions</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody className="divide-y divide-gray-50">
-                                                    {orders.map(order => (
-                                                        <tr key={order._id} className="hover:bg-brand-light/30 transition-colors group">
-                                                            <td className="px-8 py-6">
-                                                                <span className="font-black text-brand-black">#{order.orderId}</span>
-                                                                <span className="block text-[10px] text-gray-400 font-bold mt-1">{new Date(order.createdAt).toLocaleDateString()}</span>
-                                                            </td>
-                                                            <td className="px-8 py-6">
-                                                                <span className="font-bold text-gray-600 block">{order.shippingAddress.fullName}</span>
-                                                                <span className="text-[10px] text-gray-400">{order.shippingAddress.phone}</span>
-                                                            </td>
-                                                            <td className="px-8 py-6 font-black text-brand-black">₹{order.pricing.total.toLocaleString('en-IN')}</td>
-                                                            <td className="px-8 py-6">
-                                                                <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${getStatusStyle(order.status)}`}>
-                                                                    {order.status}
-                                                                </span>
-                                                            </td>
-                                                            <td className="px-8 py-6">
-                                                                <div className="flex flex-col items-start gap-1">
-                                                                    <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${order.payment?.status === 'success' ? 'bg-brand-meadow/20 text-brand-meadow' : order.payment?.method === 'upi_manual' ? 'bg-amber-100 text-amber-600' : 'bg-gray-100 text-gray-600'}`}>
-                                                                        {order.payment?.status || 'unknown'}
-                                                                    </span>
-                                                                    {order.payment?.method === 'upi_manual' && order.payment?.status !== 'success' && (
-                                                                        <button
-                                                                            onClick={() => handleVerifyPayment(order._id)}
-                                                                            className="text-[9px] font-black text-brand-primary bg-brand-black px-2 py-1 rounded hover:scale-105 transition-transform"
-                                                                        >
-                                                                            Verify UPI
-                                                                        </button>
-                                                                    )}
-                                                                </div>
-                                                            </td>
-                                                            <td className="px-8 py-6 text-right">
-                                                                <select
-                                                                    value={order.status}
-                                                                    onChange={(e) => handleUpdateOrderStatus(order._id, e.target.value)}
-                                                                    className="bg-gray-100 border-none rounded-xl text-xs font-black uppercase tracking-wider py-2 pl-4 pr-10 focus:ring-2 ring-brand-primary outline-none appearance-none cursor-pointer"
-                                                                    style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'%23a1a1aa\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center', backgroundSize: '16px' }}
-                                                                >
-                                                                    <option value="pending">Pending</option>
-                                                                    <option value="processing">Processing</option>
-                                                                    <option value="shipped">Shipped</option>
-                                                                    <option value="delivered">Delivered</option>
-                                                                    <option value="cancelled">Cancelled</option>
-                                                                </select>
-                                                            </td>
-                                                        </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-
-                            {activeTab === 'products' && (
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                                    {products.map(product => (
-                                        <div key={product._id} className="bg-white p-8 rounded-[3rem] border-2 border-brand-light hover:border-brand-primary transition-all group relative overflow-hidden shadow-sm">
-                                            <div className="flex gap-6">
-                                                <div className="w-24 h-24 bg-brand-light rounded-2xl overflow-hidden shrink-0 border border-gray-100">
-                                                    <img src={product.images?.[0] || 'https://via.placeholder.com/150'} alt={product.title} className="w-full h-full object-cover" />
-                                                </div>
-                                                <div className="flex-grow min-w-0">
-                                                    <h4 className="font-black text-brand-black truncate text-lg">{product.title}</h4>
-                                                    <p className="text-xs font-bold text-gray-500 mb-4">{product.category}</p>
-                                                    <div className="flex items-center justify-between">
-                                                        <span className="text-brand-secondary font-black">₹{product.price}</span>
-                                                        <span className={`text-[10px] font-black uppercase tracking-widest ${(product.stock ?? product.stockQuantity ?? 0) < 5 ? 'text-brand-rose' : 'text-brand-meadow'}`}>
-                                                            Stock: {product.stock ?? product.stockQuantity ?? 0}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="mt-8 pt-8 border-t border-gray-50 flex gap-3">
-                                                <button className="flex-1 bg-gray-100 text-gray-600 font-black py-3 rounded-xl text-[10px] uppercase tracking-widest hover:bg-brand-primary hover:text-white transition-all">Edit</button>
-                                                <button className="flex-1 bg-gray-100 text-brand-rose/60 font-black py-3 rounded-xl text-[10px] uppercase tracking-widest hover:bg-brand-rose hover:text-white transition-all">Disable</button>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
+                            {activeTab === 'products' && <ProductsTab products={products} />}
+                            {activeTab === 'customers' && <CustomersTab customers={customers} onUpdateStatus={handleUpdateUserStatus} />}
+                        </>
                     )}
                 </div>
-            </div>
+            </main>
         </div>
     );
 };
 
-// Helper Components
-const StatCard = ({ label, value, icon, color }: any) => (
-    <div className="bg-white p-10 rounded-[3rem] shadow-honey border-4 border-brand-light relative overflow-hidden group hover:scale-[1.02] transition-all">
-        <div className={`absolute top-0 right-0 w-32 h-32 bg-${color}/10 rounded-full blur-3xl -mr-16 -mt-16`} />
-        <div className="text-4xl mb-6 relative z-10">{icon}</div>
-        <span className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mb-2">{label}</span>
-        <span className="text-4xl font-black text-brand-black tracking-tighter">{value}</span>
+/* ═══════════ OVERVIEW ═══════════ */
+const OverviewTab = ({ stats }: { stats: any }) => (
+    <div className="space-y-8 animate-fade-in">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+            <KPICard label="Total Revenue" value={`₹${(stats.totalRevenue || 0).toLocaleString('en-IN')}`} icon="💰" gradient="from-emerald-500 to-teal-600" trend="+12.5%" trendUp={true} />
+            <KPICard label="Total Orders" value={stats.totalOrders || 0} icon="📦" gradient="from-amber-500 to-orange-600" trend={`${stats.pendingOrders || 0} pending`} trendUp={null} />
+            <KPICard label="Customers" value={stats.totalUsers || 0} icon="👥" gradient="from-violet-500 to-purple-600" trend="Active" trendUp={true} />
+            <KPICard label="Products" value={stats.totalProducts || 0} icon="🍯" gradient="from-rose-500 to-pink-600" trend={stats.lowStockProducts?.length > 0 ? `${stats.lowStockProducts.length} low stock` : 'All healthy'} trendUp={stats.lowStockProducts?.length === 0} />
+        </div>
+
+        {/* Order Pipeline */}
+        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+            <h3 className="text-sm font-black text-gray-900 mb-5 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-amber-400"></span>Order Pipeline
+            </h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                {stats.ordersByStatus && Object.entries(stats.ordersByStatus).map(([status, count]: any) => (
+                    <div key={status} className="bg-gray-50 rounded-xl p-4 text-center hover:bg-amber-50 transition-colors group">
+                        <span className={`inline-block px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest mb-2 ${getStatusColor(status)}`}>{status}</span>
+                        <p className="text-2xl font-black text-gray-900 group-hover:text-amber-600 transition-colors">{count}</p>
+                    </div>
+                ))}
+                {(!stats.ordersByStatus || Object.keys(stats.ordersByStatus).length === 0) && (
+                    <p className="text-gray-400 text-sm col-span-full text-center py-4">No orders yet</p>
+                )}
+            </div>
+        </div>
+
+        {/* Two Columns */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+                <h3 className="text-sm font-black text-gray-900 mb-4 flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-blue-400"></span>Recent Orders
+                </h3>
+                {stats.recentOrders?.length > 0 ? (
+                    <div className="space-y-3">
+                        {stats.recentOrders.map((order: any) => (
+                            <div key={order._id} className="flex items-center justify-between py-2.5 px-3 rounded-xl hover:bg-gray-50 transition-colors">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center text-xs">📦</div>
+                                    <div>
+                                        <p className="text-xs font-black text-gray-900">#{order.orderId}</p>
+                                        <p className="text-[10px] text-gray-400">{order.user?.fullName || 'Guest'}</p>
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-xs font-black text-gray-900">₹{order.pricing?.total?.toLocaleString('en-IN') || '0'}</p>
+                                    <span className={`text-[9px] font-bold uppercase ${getStatusColor(order.status)}`}>{order.status}</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                ) : <EmptyMini message="No recent orders" />}
+            </div>
+            <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+                <h3 className="text-sm font-black text-gray-900 mb-4 flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-rose-400"></span>Stock Alerts
+                </h3>
+                {stats.lowStockProducts?.length > 0 ? (
+                    <div className="space-y-3">
+                        {stats.lowStockProducts.map((product: any) => (
+                            <div key={product._id} className="flex items-center justify-between py-2.5 px-3 rounded-xl hover:bg-gray-50 transition-colors">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-lg bg-rose-100 flex items-center justify-center text-xs">⚠️</div>
+                                    <p className="text-xs font-bold text-gray-700 truncate max-w-[180px]">{product.title}</p>
+                                </div>
+                                <span className="text-xs font-black text-rose-500 bg-rose-50 px-2.5 py-1 rounded-lg">{product.stockQuantity ?? product.stock ?? 0} left</span>
+                            </div>
+                        ))}
+                    </div>
+                ) : <EmptyMini message="All products well-stocked 🎉" />}
+            </div>
+        </div>
     </div>
 );
 
-const EmptyState = ({ message }: { message: string }) => (
-    <div className="text-center py-40 bg-brand-light/30 rounded-[4rem] border-4 border-white">
-        <div className="text-6xl mb-8 animate-buzz inline-block">🐝</div>
-        <p className="text-gray-500 font-black text-xl italic">{message}</p>
+/* ═══════════ ORDERS TAB (ENHANCED) ═══════════ */
+const OrdersTab = ({ orders, allOrders, onUpdateStatus, onVerifyPayment, statusFilter, paymentFilter, onStatusFilterChange, onPaymentFilterChange }: {
+    orders: any[]; allOrders: any[];
+    onUpdateStatus: (id: string, status: string) => void; onVerifyPayment: (id: string) => void;
+    statusFilter: string; paymentFilter: string;
+    onStatusFilterChange: (f: string) => void; onPaymentFilterChange: (f: string) => void;
+}) => {
+    const paidCount = allOrders.filter(o => o.payment?.status === 'success').length;
+    const unpaidCount = allOrders.length - paidCount;
+
+    return (
+        <div className="space-y-5 animate-fade-in">
+            {/* Summary Cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="bg-white rounded-xl border border-gray-100 p-4 text-center">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Total</p>
+                    <p className="text-xl font-black text-gray-900">{allOrders.length}</p>
+                </div>
+                <div className="bg-emerald-50 rounded-xl border border-emerald-100 p-4 text-center cursor-pointer hover:bg-emerald-100 transition-colors" onClick={() => onPaymentFilterChange(paymentFilter === 'paid' ? 'all' : 'paid')}>
+                    <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Paid ✓</p>
+                    <p className="text-xl font-black text-emerald-700">{paidCount}</p>
+                </div>
+                <div className="bg-amber-50 rounded-xl border border-amber-100 p-4 text-center cursor-pointer hover:bg-amber-100 transition-colors" onClick={() => onPaymentFilterChange(paymentFilter === 'unpaid' ? 'all' : 'unpaid')}>
+                    <p className="text-[10px] font-bold text-amber-600 uppercase tracking-wider">Unpaid ✗</p>
+                    <p className="text-xl font-black text-amber-700">{unpaidCount}</p>
+                </div>
+                <div className="bg-white rounded-xl border border-gray-100 p-4 text-center">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Filtered</p>
+                    <p className="text-xl font-black text-gray-900">{orders.length}</p>
+                </div>
+            </div>
+
+            {/* Filters */}
+            <div className="flex flex-wrap gap-2 items-center">
+                <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider mr-1">Status:</span>
+                {['all', 'pending', 'processing', 'shipped', 'delivered', 'cancelled'].map(s => (
+                    <button key={s} onClick={() => onStatusFilterChange(s)}
+                        className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${statusFilter === s ? 'bg-gray-900 text-white' : 'bg-white border border-gray-200 text-gray-500 hover:border-gray-400'
+                            }`}>{s}</button>
+                ))}
+                <span className="text-gray-200 mx-1">|</span>
+                <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider mr-1">Payment:</span>
+                {['all', 'paid', 'unpaid'].map(p => (
+                    <button key={p} onClick={() => onPaymentFilterChange(p)}
+                        className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${paymentFilter === p ? 'bg-gray-900 text-white' : 'bg-white border border-gray-200 text-gray-500 hover:border-gray-400'
+                            }`}>{p}</button>
+                ))}
+            </div>
+
+            {/* Table */}
+            {orders.length === 0 ? (
+                <EmptyState message="No orders match filters." />
+            ) : (
+                <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left min-w-[750px]">
+                            <thead>
+                                <tr className="border-b border-gray-100">
+                                    <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Order</th>
+                                    <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Customer</th>
+                                    <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Total</th>
+                                    <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Status</th>
+                                    <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Payment</th>
+                                    <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-50">
+                                {orders.map(order => (
+                                    <tr key={order._id} className="hover:bg-amber-50/30 transition-colors">
+                                        <td className="px-6 py-4">
+                                            <p className="text-xs font-black text-gray-900">#{order.orderId}</p>
+                                            <p className="text-[10px] text-gray-400 mt-0.5">{new Date(order.createdAt).toLocaleDateString('en-IN')}</p>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <p className="text-xs font-bold text-gray-700">{order.shippingAddress?.fullName || '—'}</p>
+                                            <p className="text-[10px] text-gray-400">{order.shippingAddress?.phone || ''}</p>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <p className="text-xs font-black text-gray-900">₹{(order.pricing?.total || 0).toLocaleString('en-IN')}</p>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <span className={`inline-block px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider ${getStatusColor(order.status)}`}>{order.status}</span>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div className="flex flex-col gap-1">
+                                                <span className={`inline-block w-fit px-2 py-0.5 rounded text-[9px] font-bold uppercase ${order.payment?.status === 'success' ? 'bg-emerald-100 text-emerald-700' :
+                                                    order.payment?.method === 'upi_manual' ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-500'
+                                                    }`}>{order.payment?.status || 'pending'}</span>
+                                                {order.payment?.method === 'upi_manual' && order.payment?.status !== 'success' && (
+                                                    <button onClick={() => onVerifyPayment(order._id)} className="text-[9px] font-black text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded hover:bg-amber-100 transition-colors w-fit">✓ Verify UPI</button>
+                                                )}
+                                                {order.payment?.status !== 'success' && (
+                                                    <button onClick={() => onVerifyPayment(order._id)} className="text-[9px] font-black text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded hover:bg-emerald-100 transition-colors w-fit">💳 Mark Paid</button>
+                                                )}
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4 text-right">
+                                            <select value={order.status} onChange={(e) => onUpdateStatus(order._id, e.target.value)}
+                                                className="bg-gray-50 border border-gray-200 rounded-lg text-[10px] font-bold py-1.5 pl-2.5 pr-7 focus:ring-2 ring-amber-300 outline-none cursor-pointer appearance-none"
+                                                style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'%23a1a1aa\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 6px center', backgroundSize: '12px' }}>
+                                                <option value="pending">Pending</option>
+                                                <option value="processing">Processing</option>
+                                                <option value="shipped">Shipped</option>
+                                                <option value="delivered">Delivered</option>
+                                                <option value="cancelled">Cancelled</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+/* ═══════════ PRODUCTS TAB ═══════════ */
+const ProductsTab = ({ products }: { products: any[] }) => (
+    <div className="space-y-5 animate-fade-in">
+        <h3 className="text-sm font-black text-gray-900">{products.length} Products</h3>
+        {products.length === 0 ? <EmptyState message="No products in inventory." /> : (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                {products.map(product => {
+                    const stock = product.stock ?? product.stockQuantity ?? 0;
+                    return (
+                        <div key={product._id} className="bg-white rounded-2xl border border-gray-100 p-5 hover:border-amber-200 hover:shadow-md transition-all">
+                            <div className="flex gap-4">
+                                <div className="w-16 h-16 rounded-xl bg-gray-50 overflow-hidden shrink-0 border border-gray-100">
+                                    <img src={product.images?.[0] || '/assets/bee-character.png'} alt={product.title} className="w-full h-full object-cover" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <h4 className="text-sm font-black text-gray-900 truncate">{product.title}</h4>
+                                    <p className="text-[10px] text-gray-400 font-bold mt-0.5">{product.category} • {product.language || 'N/A'}</p>
+                                    <div className="flex items-center justify-between mt-2">
+                                        <span className="text-sm font-black text-amber-600">₹{product.price}</span>
+                                        <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${stock <= 5 ? 'bg-rose-100 text-rose-600' : 'bg-emerald-100 text-emerald-600'}`}>{stock} in stock</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="flex gap-2 mt-4 pt-4 border-t border-gray-50">
+                                <span className="flex-1 text-center bg-gray-50 text-gray-500 font-bold py-2 rounded-lg text-[10px]">★ {product.rating || '—'}</span>
+                                <span className="flex-1 text-center bg-gray-50 text-gray-500 font-bold py-2 rounded-lg text-[10px]">{product.reviewCount || 0} reviews</span>
+                                <span className={`flex-1 text-center font-bold py-2 rounded-lg text-[10px] uppercase ${product.status === 'active' ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-400'}`}>{product.status || 'active'}</span>
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+        )}
     </div>
 );
 
-const getStatusStyle = (status: string) => {
-    switch (status.toLowerCase()) {
-        case 'pending': return 'bg-amber-100 text-amber-600';
-        case 'processing': return 'bg-cyan-100 text-cyan-600';
-        case 'shipped': return 'bg-indigo-100 text-indigo-600';
-        case 'delivered': return 'bg-brand-meadow/20 text-brand-meadow';
-        case 'cancelled': return 'bg-rose-100 text-rose-600';
-        default: return 'bg-gray-100 text-gray-600';
+/* ═══════════ CUSTOMERS TAB (ENHANCED) ═══════════ */
+const CustomersTab = ({ customers, onUpdateStatus }: { customers: any[]; onUpdateStatus: (id: string, status: 'active' | 'banned' | 'suspended') => void }) => (
+    <div className="space-y-5 animate-fade-in">
+        <div className="flex items-center justify-between">
+            <h3 className="text-sm font-black text-gray-900">{customers.length} Customers</h3>
+            <div className="flex gap-2 text-[10px] font-bold text-gray-400">
+                <span className="bg-emerald-50 text-emerald-600 px-2 py-1 rounded">Active: {customers.filter(c => c.status === 'active').length}</span>
+                <span className="bg-rose-50 text-rose-600 px-2 py-1 rounded">Banned: {customers.filter(c => c.status === 'banned').length}</span>
+                <span className="bg-amber-50 text-amber-600 px-2 py-1 rounded">Suspended: {customers.filter(c => c.status === 'suspended').length}</span>
+            </div>
+        </div>
+        {customers.length === 0 ? <EmptyState message="No customers registered yet." /> : (
+            <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left min-w-[800px]">
+                        <thead>
+                            <tr className="border-b border-gray-100">
+                                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Customer</th>
+                                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">ID</th>
+                                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Email</th>
+                                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Role</th>
+                                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Status</th>
+                                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Activity</th>
+                                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-50">
+                            {customers.map(customer => {
+                                const joinedDate = new Date(customer.createdAt);
+                                const lastLogin = customer.lastLoginAt ? new Date(customer.lastLoginAt) : null;
+                                const daysSinceJoin = Math.floor((Date.now() - joinedDate.getTime()) / (1000 * 60 * 60 * 24));
+                                const loginCount = customer.loginHistory?.length || customer.loginCount || 0;
+
+                                return (
+                                    <tr key={customer._id} className="hover:bg-amber-50/30 transition-colors">
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black text-white" style={{ background: 'linear-gradient(135deg, #FFC107, #E65100)' }}>
+                                                    {(customer.fullName || customer.name || customer.email || '?')[0].toUpperCase()}
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs font-bold text-gray-900">{customer.fullName || customer.name || 'Unknown'}</p>
+                                                    <p className="text-[10px] text-gray-400">{customer.phone || 'No phone'}</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <code className="text-[9px] bg-gray-100 px-1.5 py-0.5 rounded font-mono text-gray-500">{customer._id}</code>
+                                        </td>
+                                        <td className="px-6 py-4 text-xs text-gray-500">{customer.email}</td>
+                                        <td className="px-6 py-4">
+                                            <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase ${customer.role === 'admin' ? 'bg-purple-100 text-purple-600' : 'bg-gray-100 text-gray-500'}`}>{customer.role === 'admin' ? 'Admin' : 'Customer'}</span>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase ${customer.status === 'active' ? 'bg-emerald-100 text-emerald-600' :
+                                                customer.status === 'suspended' ? 'bg-amber-100 text-amber-600' : 'bg-rose-100 text-rose-600'
+                                                }`}>{customer.status}</span>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div className="space-y-0.5">
+                                                <p className="text-[10px] text-gray-500">Joined <span className="font-bold text-gray-700">{daysSinceJoin}d ago</span></p>
+                                                {lastLogin && <p className="text-[10px] text-gray-400">Last seen: {lastLogin.toLocaleDateString('en-IN')}</p>}
+                                                {loginCount > 0 && <p className="text-[10px] text-gray-400">{loginCount} logins</p>}
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4 text-right">
+                                            {customer.role !== 'admin' && (
+                                                <div className="flex gap-1 justify-end">
+                                                    {customer.status !== 'active' && (
+                                                        <button onClick={() => onUpdateStatus(customer._id, 'active')} className="text-[9px] font-black text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded hover:bg-emerald-100 transition-colors">Activate</button>
+                                                    )}
+                                                    {customer.status !== 'suspended' && (
+                                                        <button onClick={() => onUpdateStatus(customer._id, 'suspended')} className="text-[9px] font-black text-amber-600 bg-amber-50 border border-amber-200 px-2 py-1 rounded hover:bg-amber-100 transition-colors">Suspend</button>
+                                                    )}
+                                                    {customer.status !== 'banned' && (
+                                                        <button onClick={() => onUpdateStatus(customer._id, 'banned')} className="text-[9px] font-black text-rose-600 bg-rose-50 border border-rose-200 px-2 py-1 rounded hover:bg-rose-100 transition-colors">Ban</button>
+                                                    )}
+                                                </div>
+                                            )}
+                                            {customer.role === 'admin' && <span className="text-[9px] text-gray-400 italic">Protected</span>}
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        )}
+    </div>
+);
+
+/* ═══════════ SHARED COMPONENTS ═══════════ */
+const KPICard = ({ label, value, icon, gradient, trend, trendUp }: { label: string; value: any; icon: string; gradient: string; trend: string; trendUp: boolean | null }) => (
+    <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-all group relative overflow-hidden">
+        <div className={`absolute top-0 right-0 w-20 h-20 rounded-full bg-gradient-to-br ${gradient} opacity-5 -mr-6 -mt-6 group-hover:opacity-10 transition-opacity`}></div>
+        <div className="flex items-start justify-between mb-3">
+            <span className="text-2xl">{icon}</span>
+            {trend && <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${trendUp === true ? 'bg-emerald-50 text-emerald-600' : trendUp === false ? 'bg-rose-50 text-rose-600' : 'bg-gray-50 text-gray-500'}`}>{trend}</span>}
+        </div>
+        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">{label}</p>
+        <p className="text-2xl font-black text-gray-900 tracking-tight">{value}</p>
+    </div>
+);
+
+const EmptyState = ({ message }: { message: string }) => (<div className="text-center py-20 bg-white rounded-2xl border border-gray-100"><div className="text-4xl mb-4">🐝</div><p className="text-gray-400 font-bold text-sm">{message}</p></div>);
+const EmptyMini = ({ message }: { message: string }) => (<div className="text-center py-10"><p className="text-gray-400 font-bold text-xs">{message}</p></div>);
+
+const LoadingState = ({ tab }: { tab: string }) => (
+    <div className="space-y-5 animate-pulse">
+        {tab === 'overview' && (<><div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">{[...Array(4)].map((_, i) => (<div key={i} className="bg-white rounded-2xl border border-gray-100 p-5 h-32"><div className="w-8 h-8 bg-gray-100 rounded-lg mb-3"></div><div className="h-3 bg-gray-100 rounded w-24 mb-2"></div><div className="h-6 bg-gray-100 rounded w-16"></div></div>))}</div><div className="bg-white rounded-2xl border border-gray-100 p-6 h-48"></div></>)}
+        {(tab === 'orders' || tab === 'customers') && (<div className="bg-white rounded-2xl border border-gray-100 p-6">{[...Array(5)].map((_, i) => (<div key={i} className="flex gap-4 py-4 border-b border-gray-50"><div className="w-20 h-4 bg-gray-100 rounded"></div><div className="w-32 h-4 bg-gray-100 rounded"></div><div className="w-16 h-4 bg-gray-100 rounded"></div></div>))}</div>)}
+        {tab === 'products' && (<div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">{[...Array(6)].map((_, i) => (<div key={i} className="bg-white rounded-2xl border border-gray-100 p-5 h-40"></div>))}</div>)}
+    </div>
+);
+
+const ErrorState = ({ error, onRetry }: { error: string; onRetry: () => void }) => (
+    <div className="bg-rose-50 border border-rose-200 rounded-2xl p-8 text-center">
+        <p className="text-rose-600 font-black text-sm mb-2">Connection Error</p>
+        <p className="text-rose-400 text-xs mb-4">{error}</p>
+        <button onClick={onRetry} className="bg-rose-600 text-white px-5 py-2 rounded-xl text-xs font-black hover:bg-rose-700 transition-colors">Retry</button>
+    </div>
+);
+
+const getStatusColor = (status: string) => {
+    switch (status?.toLowerCase()) {
+        case 'pending': return 'bg-amber-100 text-amber-700';
+        case 'processing': return 'bg-cyan-100 text-cyan-700';
+        case 'shipped': return 'bg-indigo-100 text-indigo-700';
+        case 'delivered': return 'bg-emerald-100 text-emerald-700';
+        case 'cancelled': return 'bg-rose-100 text-rose-700';
+        case 'paid': return 'bg-emerald-100 text-emerald-700';
+        default: return 'bg-gray-100 text-gray-500';
     }
 };
 

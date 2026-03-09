@@ -58,5 +58,6 @@ export interface User {
   state?: string;
   zipCode?: string;
   country?: string;
+  role?: 'user' | 'admin';
   preferredCategory?: Category;
 }

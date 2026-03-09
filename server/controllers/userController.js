@@ -144,20 +144,24 @@ export const updateUserStatus = async (req, res, next) => {
             });
         }
 
-        user.status = status;
-        await user.save();
+        // Use findByIdAndUpdate to avoid full-document re-validation
+        const updatedUser = await User.findByIdAndUpdate(
+            req.params.id,
+            { status },
+            { new: true, runValidators: true }
+        );
 
-        logger.info(`User ${user.email} status changed to ${status} by admin ${req.user.email}`);
+        logger.info(`User ${updatedUser.email} status changed to ${status} by admin ${req.user.email}`);
 
         res.json({
             success: true,
             message: `User ${status === 'active' ? 'activated' : status}`,
             data: {
                 user: {
-                    id: user._id,
-                    email: user.email,
-                    fullName: user.fullName,
-                    status: user.status
+                    id: updatedUser._id,
+                    email: updatedUser.email,
+                    fullName: updatedUser.fullName,
+                    status: updatedUser.status
                 }
             }
         });

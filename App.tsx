@@ -10,6 +10,8 @@ import Hero from './components/Hero.tsx';
 import Footer from './components/Footer.tsx';
 import SupportPage, { SupportPageType } from './components/SupportPage.tsx';
 import AuthModal from './components/AuthModal.tsx';
+import AdminDashboard from './components/AdminDashboard.tsx';
+import CookieConsent from './components/CookieConsent.tsx';
 import Assistant from './components/Assistant.tsx';
 import InteractiveParticles from './components/InteractiveParticles.tsx';
 import RoamingBee from './components/RoamingBee.tsx';
@@ -42,6 +44,7 @@ const App: React.FC = () => {
 
   const [user, setUser] = useState<User | null>(null);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [showAdmin, setShowAdmin] = useState(false);
   const isInitialRender = useRef(true);
   const lastGoodProducts = useRef<Product[]>([]);
   const testimonialRef = useRef<HTMLDivElement>(null);
@@ -842,6 +845,19 @@ const App: React.FC = () => {
       <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} onLoginSuccess={handleLoginSuccess} />
       <QuickViewModal product={quickViewProduct} onClose={() => setQuickViewProduct(null)} />
       <Assistant products={products} />
+
+      {user?.role === 'admin' && (
+        <button
+          onClick={() => setShowAdmin(true)}
+          className="fixed bottom-6 left-6 z-50 w-14 h-14 bg-brand-black text-brand-primary rounded-full shadow-2xl hover:scale-110 active:scale-95 transition-all flex items-center justify-center text-2xl border-2 border-brand-primary/20 hover:shadow-honey"
+          aria-label="Admin Dashboard"
+        >
+          👑
+        </button>
+      )}
+
+      {showAdmin && <AdminDashboard onClose={() => setShowAdmin(false)} />}
+      <CookieConsent />
     </div >
   );
 };

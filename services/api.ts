@@ -97,11 +97,33 @@ async function apiRequest<T>(
             // If refresh failed, fall through to throw ApiError below
         }
 
-        const data = await response.json();
+        let data: any;
+        const contentType = response.headers.get('content-type');
+        const isJson = contentType && contentType.includes('application/json');
+
+        try {
+            if (isJson) {
+                data = await response.json();
+            } else {
+                const text = await response.text();
+                throw new ApiError(
+                    `Server returned non-JSON response: ${text.substring(0, 100)}...`,
+                    'INVALID_RESPONSE',
+                    response.status
+                );
+            }
+        } catch (parseError) {
+            if (parseError instanceof ApiError) throw parseError;
+            throw new ApiError(
+                'Failed to parse server response. The hive might be down.',
+                'PARSE_ERROR',
+                response.status
+            );
+        }
 
         if (!response.ok) {
             throw new ApiError(
-                data.error?.message || 'Request failed',
+                data.error?.message || data.message || 'Request failed',
                 data.error?.code || 'UNKNOWN_ERROR',
                 response.status
             );
@@ -585,6 +607,19 @@ export const AdminAPI = {
             body: JSON.stringify({ transactionId })
         });
         return response.data.order;
+    },
+
+    updateUserStatus: async (id: string, status: 'active' | 'banned' | 'suspended') => {
+        const response = await apiRequest<{ success: boolean; data: { user: any } }>(`/admin/users/${id}/status`, {
+            method: 'PATCH',
+            body: JSON.stringify({ status })
+        });
+        return response.data.user;
+    },
+
+    getUser: async (id: string) => {
+        const response = await apiRequest<{ success: boolean; data: { user: any } }>(`/admin/users/${id}`);
+        return response.data.user;
     }
 };
 
