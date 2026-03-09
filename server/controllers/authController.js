@@ -7,10 +7,11 @@ import config from '../config/config.js';
  * Helper to set cookies
  */
 const setTokenCookies = (res, accessToken, refreshToken) => {
+  const isProd = config.env === 'production' || process.env.NODE_ENV === 'production';
   const cookieOptions = {
     httpOnly: true,
-    secure: config.env === 'production' || process.env.NODE_ENV === 'production',
-    sameSite: 'none', // Required for cross-site auth (e.g. if frontend and backend are on different domains)
+    secure: isProd,
+    sameSite: isProd ? 'none' : 'lax', // 'none' requires secure=true; use 'lax' in dev
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days (matching refresh token)
   };
 
