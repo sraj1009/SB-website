@@ -21,9 +21,26 @@ import api from './services/api';
 import { MOCK_PRODUCTS } from './constants.ts';
 import { Category, Product, CartItem, User } from './types.ts';
 import BeeCharacter from './components/BeeCharacter.tsx';
+import { useProducts, useProductFilter } from './hooks/useProducts.ts';
+
+// NoResults component for better UX
+const NoResults: React.FC<{ searchQuery: string; onClearFilters: () => void }> = ({ searchQuery, onClearFilters }) => (
+  <div className="flex flex-col items-center justify-center py-24 px-6 text-center bg-white rounded-[4rem] shadow-honey border-4 border-dashed border-brand-primary/20 max-w-2xl mx-auto">
+    <div className="text-8xl mb-6 animate-float flex justify-center">🐝</div>
+    <h3 className="text-3xl font-black text-brand-black mb-4">No products found</h3>
+    <p className="text-gray-500 font-bold mb-8 max-w-md">
+      Our bees couldn't find anything matching "{searchQuery}". Try different keywords or clear your filters.
+    </p>
+    <button
+      onClick={onClearFilters}
+      className="bg-brand-black text-brand-primary px-8 py-4 rounded-2xl font-black shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center gap-3 text-lg"
+    >
+      <span>🔄</span> Clear Filters
+    </button>
+  </div>
+);
 
 const App: React.FC = () => {
-  const [products, setProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
@@ -39,7 +56,6 @@ const App: React.FC = () => {
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 5000]);
   const [minRating, setMinRating] = useState<number | null>(null);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const [isFiltering, setIsFiltering] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
 
@@ -67,66 +83,42 @@ const App: React.FC = () => {
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [isAllProductsInView, setIsAllProductsInView] = useState(false);
 
-  // Data Fetching
-  const fetchProducts = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      // Map sort types
-      let mappedSortBy: string = 'createdAt';
-      let sortOrder: 'asc' | 'desc' = 'desc';
+  // Use custom hooks for products and filtering
+  const { products, isLoading } = useProducts({
+    selectedCategory,
+    searchQuery,
+    sortBy,
+    priceRange,
+    selectedLanguage,
+  });
 
-      if (sortBy === 'price-low') {
-        mappedSortBy = 'price';
-        sortOrder = 'asc';
-      } else if (sortBy === 'price-high') {
-        mappedSortBy = 'price';
-        sortOrder = 'desc';
-      } else if (sortBy === 'rating') {
-        mappedSortBy = 'rating';
-        sortOrder = 'desc';
-      }
+  const { filteredProducts } = useProductFilter({
+    selectedCategory,
+    searchQuery,
+    priceRange,
+    minRating,
+    sortBy,
+    selectedLanguage,
+    products,
+  });
 
-      const response = await api.products.getProducts({
-        category: selectedCategory === Category.ALL ? undefined : selectedCategory,
-        search: searchQuery,
-        sortBy: mappedSortBy,
-        sortOrder,
-        minPrice: priceRange[0],
-        maxPrice: priceRange[1],
-        language: selectedLanguage || undefined,
-        limit: 100, // Fetch enough for current UI needs
-      });
-
-      // Map backend products to frontend types if needed (e.g., _id vs id)
-      const mappedProducts = response.products.map((p: any) => ({
-        ...p,
-        id: p._id || p.id,
-      }));
-
-      setProducts(mappedProducts);
-    } catch (err) {
-      console.error('Failed to fetch products:', err);
-      // Fallback to MOCK_PRODUCTS in case of total failure for UX stability during migration
-      if (products.length === 0) setProducts(MOCK_PRODUCTS);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [selectedCategory, searchQuery, sortBy, priceRange, selectedLanguage]);
+  // Data Fetching - now handled by useProducts hook
 
   useEffect(() => {
-    fetchProducts();
-  }, [fetchProducts]);
-
-  useEffect(() => {
-    try {
-      const savedUser = localStorage.getItem('singglebee_user');
-      if (savedUser && savedUser !== 'undefined' && savedUser !== 'null') {
-        setUser(JSON.parse(savedUser));
+    const verifySession = async () => {
+      try {
+        const userData = await api.auth.getProfile();
+        setUser(userData);
+        // Optionally sync with localStorage for offline fallback
+        localStorage.setItem('singglebee_user', JSON.stringify(userData));
+      } catch (e) {
+        // Clear invalid session data
+        setUser(null);
+        localStorage.removeItem('singglebee_user');
       }
-    } catch (e) {
-      console.warn('Could not load user session', e);
-      localStorage.removeItem('singglebee_user');
-    }
+    };
+
+    verifySession();
   }, []);
 
   // Auto-scroll testimonials for mobile
@@ -191,136 +183,8 @@ const App: React.FC = () => {
     };
   }, [showShop]);
 
-  // Simple relevance scoring for search
-  const calculateRelevance = (product: Product, query: string): number => {
-    const q = query.toLowerCase();
-    const title = product.title.toLowerCase();
-    const author = product.author?.toLowerCase() || '';
-    const desc = product.description.toLowerCase();
-    let score = 0;
-
-    // Exact matches (Highest priority)
-    if (title === q) score += 100;
-    if (title.includes(q)) score += 50;
-    if (author.includes(q)) score += 40;
-    if (desc.includes(q)) score += 20;
-
-    // Word matching
-    const queryWords = q.split(/\s+/).filter((w) => w.length > 2);
-    const titleWords = title.split(/\s+/);
-    const authorWords = author.split(/\s+/);
-
-    for (const qWord of queryWords) {
-      // Check if any title word starts with query word
-      if (titleWords.some((tw) => tw.startsWith(qWord))) score += 15;
-      // Check if any title word includes query word
-      if (titleWords.some((tw) => tw.includes(qWord))) score += 8;
-      // Check author words
-      if (authorWords.some((aw) => aw.startsWith(qWord))) score += 10;
-      if (authorWords.some((aw) => aw.includes(qWord))) score += 5;
-
-      // Check language
-      if (product.language?.toLowerCase().includes(qWord.toLowerCase())) score += 60; // High priority for explicit language search
-    }
-
-    // Levenshtein-like similarity for short queries (catch typos)
-    if (q.length >= 3 && q.length <= 10) {
-      // Check if any word in title is similar to query
-      for (const tw of titleWords) {
-        if (tw.length >= 3) {
-          // Simple similarity: count matching characters
-          let matches = 0;
-          const shorter = q.length < tw.length ? q : tw;
-          const longer = q.length >= tw.length ? q : tw;
-          for (let i = 0; i < shorter.length; i++) {
-            if (longer.includes(shorter[i])) matches++;
-          }
-          const similarity = matches / longer.length;
-          if (similarity >= 0.6) score += Math.round(similarity * 10);
-        }
-      }
-    }
-
-    return score;
-  };
-
-  // Filtering Logic
-  const filteredProducts = useMemo(() => {
-    let result = products;
-
-    // Strict Language Filter (overrides search if active, or works with it)
-    if (selectedLanguage) {
-      result = result.filter((p) => p.language === selectedLanguage);
-    }
-
-    // Books category groups BOOKS, POEM_BOOK, and STORY_BOOK
-    const booksCategories = [Category.BOOKS, Category.POEM_BOOK, Category.STORY_BOOK];
-
-    // Category Filter
-    if (selectedCategory !== Category.ALL) {
-      result = result.filter((product) => {
-        if (selectedCategory === Category.BOOKS) {
-          return booksCategories.includes(product.category);
-        }
-        return product.category === selectedCategory;
-      });
-    }
-
-    // Price Range Filter
-    result = result.filter(
-      (product) => product.price >= priceRange[0] && product.price <= priceRange[1]
-    );
-
-    // Minimum Rating Filter
-    if (minRating !== null) {
-      result = result.filter((product) => product.rating >= minRating);
-    }
-
-    // Apply fuzzy search with relevance scoring
-    if (searchQuery.trim()) {
-      const scoredProducts = result.map((product) => ({
-        product,
-        score: calculateRelevance(product, searchQuery),
-      }));
-
-      // Filter to only products with some relevance, then sort by score
-      result = scoredProducts
-        .filter((sp) => sp.score > 0)
-        .sort((a, b) => b.score - a.score)
-        .map((sp) => sp.product);
-    }
-
-    // Apply sorting (only if not searching, as search already sorts by relevance)
-    if (!searchQuery.trim()) {
-      switch (sortBy) {
-        case 'price-low':
-          result = [...result].sort((a, b) => a.price - b.price);
-          break;
-        case 'price-high':
-          result = [...result].sort((a, b) => b.price - a.price);
-          break;
-        case 'rating':
-          result = [...result].sort((a, b) => b.rating - a.rating);
-          break;
-        case 'newest':
-          result = [...result].sort((a, b) => b.id - a.id);
-          break;
-        default:
-          result = [...result].sort((a, b) => a.id - b.id);
-          break;
-      }
-    }
-
-    // Always sort unavailable products (Coming Soon / Out of Stock) to the bottom
-    result = [...result].sort((a, b) => {
-      const aUnavailable = a.isComingSoon || a.isOutOfStock;
-      const bUnavailable = b.isComingSoon || b.isOutOfStock;
-      if (aUnavailable === bUnavailable) return 0;
-      return aUnavailable ? 1 : -1;
-    });
-
-    return result;
-  }, [products, selectedCategory, searchQuery, priceRange, minRating, sortBy, selectedLanguage]);
+  // Simple relevance scoring for search - now handled by useProductFilter hook
+  // calculateRelevance is available from useProductFilter if needed
 
   // Filtering Simulation with Staggered Exit
   useEffect(() => {
@@ -346,6 +210,14 @@ const App: React.FC = () => {
 
     return () => window.clearTimeout(exitTimer);
   }, [selectedCategory, searchQuery, priceRange, minRating, filteredProducts, selectedLanguage]);
+
+  const clearAllFilters = () => {
+    setSearchQuery('');
+    setSelectedCategory(Category.ALL);
+    setSelectedLanguage(null);
+    setPriceRange([0, 5000]);
+    setMinRating(null);
+  };
 
   const handleLoginSuccess = (userData: User) => {
     setUser(userData);
@@ -954,6 +826,8 @@ const App: React.FC = () => {
                       index={idx}
                     />
                   ))
+                ) : searchQuery.trim() || selectedCategory !== Category.ALL || selectedLanguage || minRating !== null || priceRange[0] > 0 || priceRange[1] < 5000 ? (
+                  <NoResults searchQuery={searchQuery || 'filtered products'} onClearFilters={clearAllFilters} />
                 ) : (
                   <div className="col-span-full py-32 text-center animate-fade-in bg-white rounded-[4rem] shadow-honey border-4 border-dashed border-brand-primary/20">
                     <div className="text-6xl mb-6 animate-buzz inline-flex justify-center">

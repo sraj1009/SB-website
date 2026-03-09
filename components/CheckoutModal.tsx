@@ -179,6 +179,8 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
       !formData.zip
     ) {
       setSubmissionError('Please fill in all required fields');
+      const firstEmpty = Object.entries(formData).find(([k, v]) => !v && k !== 'landmark');
+      if (firstEmpty) setFocusedField(firstEmpty[0]);
       return;
     }
     if (!isValidEmail(formData.email)) {
@@ -380,38 +382,67 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                   </div>
 
                   {/* Promo Code Section */}
-                  <div className="mt-8 space-y-3">
+                  <div className="mt-8 pt-6 border-t border-brand-light/30">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                        Promo Code (Optional)
+                      </span>
+                    </div>
                     <div className="flex gap-2">
                       <div className="relative flex-1 group/promo">
-                        <div className={`absolute -inset-[1px] bg-brand-primary rounded-xl blur-sm opacity-0 transition duration-500 ${isValidatingCoupon ? 'opacity-20 blur-md' : 'group-hover/promo:opacity-10'}`}></div>
+                        <div
+                          className={`absolute -inset-[1px] bg-brand-primary rounded-xl blur-sm opacity-0 transition duration-500 ${isValidatingCoupon ? 'opacity-20 blur-md' : 'group-hover/promo:opacity-10'}`}
+                        ></div>
                         <input
                           type="text"
                           value={couponCode}
                           onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                          placeholder="PROMO CODE"
+                          placeholder="HIVE10"
                           disabled={isValidatingCoupon || !!appliedCoupon}
-                          className={`relative w-full bg-brand-light/50 border-2 rounded-xl px-4 py-3 text-xs font-black tracking-widest outline-none transition-all
-                            ${appliedCoupon ? 'border-brand-meadow bg-brand-meadow/5 text-brand-meadow' : 'border-brand-primary/10 focus:border-brand-primary focus:bg-white'}
+                          className={`relative w-full bg-brand-light/30 border-2 rounded-xl px-4 py-3 text-sm font-black tracking-widest outline-none transition-all
+                            ${appliedCoupon ? 'border-brand-meadow bg-brand-meadow/5 text-brand-meadow' : 'border-transparent focus:border-brand-primary focus:bg-white'}
                             ${couponError ? 'border-brand-rose bg-brand-rose/5' : ''}
                           `}
                         />
                       </div>
                       <button
                         type="button"
-                        onClick={appliedCoupon ? () => { setAppliedCoupon(null); setCouponCode(''); } : handleApplyCoupon}
+                        onClick={
+                          appliedCoupon
+                            ? () => {
+                                setAppliedCoupon(null);
+                                setCouponCode('');
+                              }
+                            : handleApplyCoupon
+                        }
                         disabled={isValidatingCoupon || (!couponCode && !appliedCoupon)}
-                        className={`px-5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-sm
-                          ${appliedCoupon
-                            ? 'bg-brand-rose text-white hover:bg-rose-600'
-                            : 'bg-brand-black text-brand-primary hover:bg-brand-primary hover:text-white disabled:opacity-50'
+                        className={`px-6 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-sm
+                          ${
+                            appliedCoupon
+                              ? 'bg-brand-rose text-white hover:bg-rose-600'
+                              : 'bg-brand-black text-brand-primary hover:bg-brand-primary hover:text-white disabled:opacity-30'
                           }
                         `}
                       >
-                        {isValidatingCoupon ? '⏳' : appliedCoupon ? 'Remove' : 'Apply'}
+                        {isValidatingCoupon ? (
+                          <span className="inline-block animate-spin">⏳</span>
+                        ) : appliedCoupon ? (
+                          'Remove'
+                        ) : (
+                          'Apply'
+                        )}
                       </button>
                     </div>
-                    {couponError && <p className="text-[9px] font-black text-brand-rose ml-1 animate-buzz">❌ {couponError}</p>}
-                    {appliedCoupon && <p className="text-[9px] font-black text-brand-meadow ml-1">✅ {appliedCoupon.code} Applied!</p>}
+                    {couponError && (
+                      <p className="text-[9px] font-black text-brand-rose mt-2 ml-1 animate-buzz">
+                        ❌ {couponError}
+                      </p>
+                    )}
+                    {appliedCoupon && (
+                      <p className="text-[9px] font-black text-brand-meadow mt-2 ml-1">
+                        ✅ {appliedCoupon.code} Applied Successfully!
+                      </p>
+                    )}
                   </div>
 
                   <div className="mt-8 pt-8 border-t-2 border-brand-light grid grid-cols-2 gap-6">

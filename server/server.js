@@ -16,7 +16,15 @@ const startServer = async () => {
 
     // Seed admin user on first run (Manual run recommended for production)
     // await seedAdmin();
-    await seedProducts();
+    // Check if products exist before seeding to prevent duplicates
+    const Product = (await import('./models/Product.js')).default;
+    const productCount = await Product.countDocuments();
+    if (productCount === 0) {
+      await seedProducts();
+      logger.info('Products seeded successfully');
+    } else {
+      logger.info(`Products already exist (${productCount} found). Skipping seed.`);
+    }
 
     // Start Express server
     const server = app.listen(PORT, () => {

@@ -1,4 +1,7 @@
+version: '3.8'
+
 services:
+  # Backend (Node.js + Express)
   backend:
     build:
       context: ./server
@@ -15,33 +18,87 @@ services:
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
       - GEMINI_API_KEY=${GEMINI_API_KEY}
       - REDIS_URL=redis://redis:6379
+      - CASHFREE_APP_ID=${CASHFREE_APP_ID}
+      - CASHFREE_SECRET_KEY=${CASHFREE_SECRET_KEY}
+      - CASHFREE_ENV=production
+      - FRONTEND_URL=http://localhost:3000
     depends_on:
       - mongodb
       - redis
+    networks:
+      - singglebee-network
+    restart: unless-stopped
+    volumes:
+      - ./server/logs:/app/logs
 
+  # Frontend (React + Nginx)
   frontend:
     build:
       context: .
       dockerfile: Dockerfile
     ports:
       - "3000:80"
+      - "443:443"
     depends_on:
       - backend
+    networks:
+      - singglebee-network
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
 
+  # MongoDB Database
   mongodb:
-    image: mongo:latest
+    image: mongo:7.0
     ports:
       - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USERNAME:-admin}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD}
+      - MONGO_INITDB_DATABASE=singglebee
     volumes:
       - mongodb_data:/data/db
+      - ./server/scripts/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+    networks:
+      - singglebee-network
+    restart: unless-stopped
 
+  # Redis Cache
   redis:
-    image: redis:alpine
+    image: redis:7.2-alpine
     ports:
       - "6379:6379"
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-}
     volumes:
       - redis_data:/data
+    networks:
+      - singglebee-network
+    restart: unless-stopped
+
+  # Nginx Reverse Proxy (Optional - for production SSL termination)
+  nginx-proxy:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - singglebee-network
+    restart: unless-stopped
+    profiles:
+      - production
 
 volumes:
   mongodb_data:
+    driver: local
   redis_data:
+    driver: local
+
+networks:
+  singglebee-network:
+    driver: bridge

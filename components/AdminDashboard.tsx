@@ -146,11 +146,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
-              className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-bold transition-all duration-200 ${
-                activeTab === item.id
+              className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-bold transition-all duration-200 ${activeTab === item.id
                   ? 'bg-amber-500/15 text-amber-400'
                   : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'
-              }`}
+                }`}
             >
               <span className="text-lg shrink-0">{item.icon}</span>
               {!sidebarCollapsed && <span className="truncate">{item.label}</span>}
@@ -445,11 +444,10 @@ const OrdersTab = ({
           <button
             key={s}
             onClick={() => onStatusFilterChange(s)}
-            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${
-              statusFilter === s
+            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${statusFilter === s
                 ? 'bg-gray-900 text-white'
                 : 'bg-white border border-gray-200 text-gray-500 hover:border-gray-400'
-            }`}
+              }`}
           >
             {s}
           </button>
@@ -462,11 +460,10 @@ const OrdersTab = ({
           <button
             key={p}
             onClick={() => onPaymentFilterChange(p)}
-            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${
-              paymentFilter === p
+            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${paymentFilter === p
                 ? 'bg-gray-900 text-white'
                 : 'bg-white border border-gray-200 text-gray-500 hover:border-gray-400'
-            }`}
+              }`}
           >
             {p}
           </button>
@@ -534,13 +531,12 @@ const OrdersTab = ({
                     <td className="px-6 py-4">
                       <div className="flex flex-col gap-1">
                         <span
-                          className={`inline-block w-fit px-2 py-0.5 rounded text-[9px] font-bold uppercase ${
-                            order.payment?.status === 'success'
+                          className={`inline-block w-fit px-2 py-0.5 rounded text-[9px] font-bold uppercase ${order.payment?.status === 'success'
                               ? 'bg-emerald-100 text-emerald-700'
                               : order.payment?.method === 'upi_manual'
                                 ? 'bg-amber-100 text-amber-700'
                                 : 'bg-gray-100 text-gray-500'
-                          }`}
+                            }`}
                         >
                           {order.payment?.status || 'pending'}
                         </span>
@@ -754,13 +750,12 @@ const CustomersTab = ({
                     </td>
                     <td className="px-6 py-4">
                       <span
-                        className={`px-2 py-0.5 rounded text-[9px] font-black uppercase ${
-                          customer.status === 'active'
+                        className={`px-2 py-0.5 rounded text-[9px] font-black uppercase ${customer.status === 'active'
                             ? 'bg-emerald-100 text-emerald-600'
                             : customer.status === 'suspended'
                               ? 'bg-amber-100 text-amber-600'
                               : 'bg-rose-100 text-rose-600'
-                        }`}
+                          }`}
                       >
                         {customer.status}
                       </span>
@@ -909,18 +904,94 @@ const LoadingState = ({ tab }: { tab: string }) => (
   </div>
 );
 
-const ErrorState = ({ error, onRetry }: { error: string; onRetry: () => void }) => (
-  <div className="bg-rose-50 border border-rose-200 rounded-2xl p-8 text-center">
-    <p className="text-rose-600 font-black text-sm mb-2">Connection Error</p>
-    <p className="text-rose-400 text-xs mb-4">{error}</p>
-    <button
-      onClick={onRetry}
-      className="bg-rose-600 text-white px-5 py-2 rounded-xl text-xs font-black hover:bg-rose-700 transition-colors"
-    >
-      Retry
-    </button>
-  </div>
-);
+const ErrorState = ({ error, onRetry }: { error: string; onRetry: () => void }) => {
+  const isAuthError =
+    error.toLowerCase().includes('token') ||
+    error.toLowerCase().includes('authentication') ||
+    error.toLowerCase().includes('unauthorized');
+
+  const [email, setEmail] = React.useState('');
+  const [password, setPassword] = React.useState('');
+  const [isLoggingIn, setIsLoggingIn] = React.useState(false);
+  const [loginError, setLoginError] = React.useState('');
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoggingIn(true);
+    setLoginError('');
+    try {
+      const user = await api.auth.signin(email, password);
+      if (user.role !== 'admin') {
+        throw new Error('You do not have admin privileges.');
+      }
+      localStorage.setItem('singglebee_user', JSON.stringify(user));
+      onRetry(); // Retry fetching dashboard data
+    } catch (err: any) {
+      setLoginError(err.message || 'Login failed');
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
+  return (
+    <div className="bg-rose-50 border border-rose-200 rounded-2xl p-8 text-center max-w-md mx-auto mt-10 shadow-sm">
+      <div className="w-16 h-16 bg-rose-100 rounded-full flex items-center justify-center text-2xl mx-auto mb-4">
+        {isAuthError ? '🔒' : '⚠️'}
+      </div>
+      <p className="text-rose-700 font-black text-lg mb-2">
+        {isAuthError ? 'Authentication Required' : 'Connection Error'}
+      </p>
+      <p className="text-rose-500 text-sm mb-6 font-medium">{error}</p>
+
+      {isAuthError ? (
+        <form onSubmit={handleLogin} className="space-y-4 text-left">
+          <div className="bg-rose-100/50 p-4 rounded-xl mb-4 border border-rose-100">
+            <p className="text-xs text-rose-700 font-bold text-center">
+              Your session has expired or is invalid. Please sign in again to continue.
+            </p>
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-rose-800 mb-1 ml-1">Admin Email</label>
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-4 py-3 rounded-xl border border-rose-200 focus:border-rose-400 focus:ring-2 focus:ring-rose-200 outline-none transition-all text-sm"
+              placeholder="admin@singglebee.com"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-rose-800 mb-1 ml-1">Password</label>
+            <input
+              type="password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-4 py-3 rounded-xl border border-rose-200 focus:border-rose-400 focus:ring-2 focus:ring-rose-200 outline-none transition-all text-sm"
+              placeholder="••••••••"
+            />
+          </div>
+          {loginError && <p className="text-xs text-red-500 font-bold text-center">{loginError}</p>}
+          <button
+            type="submit"
+            disabled={isLoggingIn}
+            className="w-full bg-rose-600 text-white px-5 py-3.5 rounded-xl text-sm font-black hover:bg-rose-700 transition-colors shadow-md disabled:opacity-70 flex justify-center items-center gap-2 mt-2"
+          >
+            {isLoggingIn ? 'Authenticating...' : 'Sign In & Retry'}
+          </button>
+        </form>
+      ) : (
+        <button
+          onClick={onRetry}
+          className="bg-rose-600 text-white px-8 py-3 rounded-xl text-sm font-black hover:bg-rose-700 transition-colors shadow-sm inline-flex items-center gap-2"
+        >
+          🔄 Retry Connection
+        </button>
+      )}
+    </div>
+  );
+};
 
 const getStatusColor = (status: string) => {
   switch (status?.toLowerCase()) {

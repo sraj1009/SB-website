@@ -176,13 +176,7 @@ export const AuthAPI = {
     email: string;
     password: string;
     phone?: string;
-    address?: {
-      street?: string;
-      landmark?: string;
-      city?: string;
-      state?: string;
-      zipCode?: string;
-    };
+    address?: string;
   }) => {
     const response: any = await apiRequest<{
       success: boolean;
