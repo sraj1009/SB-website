@@ -333,23 +333,18 @@ export const getAllProductsAdmin = async (req, res, next) => {
     ]);
 
     const result = {
-      data: {
-        products,
-        pagination: {
-          page: parseInt(page),
-          limit: parseInt(limit),
-          total,
-          totalPages: Math.ceil(total / limit),
-        },
+      products,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        totalPages: Math.ceil(total / limit),
       },
     };
 
-    // Store in cache
-    await apiCache.set(cacheKey, result);
-
     res.json({
       success: true,
-      ...result,
+      data: result,
     });
   } catch (error) {
     next(error);

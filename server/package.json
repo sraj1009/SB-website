@@ -54,7 +54,7 @@
   "author": "SINGGLEBEE",
   "license": "ISC",
   "devDependencies": {
-    "agenda": "^6.2.3",
+    "agenda": "^5.0.0",
     "jest": "^30.2.0",
     "mongodb-memory-server": "^11.0.1",
     "supertest": "^7.2.2"

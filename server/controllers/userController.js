@@ -188,25 +188,45 @@ export const getDashboardStats = async (req, res, next) => {
       Order.countDocuments(),
       Order.countDocuments({ status: 'pending' }),
       Order.find().sort({ createdAt: -1 }).limit(5).populate('user', 'fullName email').lean(),
-      Product.find({ stockQuantity: { $lte: 5 }, isDeleted: { $ne: true } })
+      Product.find({
+        $or: [{ stockQuantity: { $lte: 5 } }, { isOutOfStock: true }],
+        isDeleted: { $ne: true },
+      })
         .select('title sku stockQuantity status')
         .limit(10)
         .lean(),
       Order.aggregate([
         {
-          $group: {
-            _id: '$status',
-            count: { $sum: 1 },
-            totalRevenue: { $sum: '$pricing.total' },
+          $facet: {
+            byStatus: [
+              {
+                $group: {
+                  _id: '$status',
+                  count: { $sum: 1 },
+                },
+              },
+            ],
+            totalRevenue: [
+              {
+                $match: { 'payment.status': 'success' },
+              },
+              {
+                $group: {
+                  _id: null,
+                  amount: { $sum: '$pricing.total' },
+                },
+              },
+            ],
           },
         },
       ]),
     ]);
 
-    // Calculate total revenue from paid orders
-    const paidOrders = orderStats.find((s) => s._id === 'paid') || { totalRevenue: 0 };
-    const deliveredOrders = orderStats.find((s) => s._id === 'delivered') || { totalRevenue: 0 };
-    const totalRevenue = paidOrders.totalRevenue + deliveredOrders.totalRevenue;
+    const revenueAmount = orderStats[0].totalRevenue[0]?.amount || 0;
+    const ordersByStatus = orderStats[0].byStatus.reduce((acc, s) => {
+      acc[s._id] = s.count;
+      return acc;
+    }, {});
 
     res.json({
       success: true,
@@ -216,12 +236,9 @@ export const getDashboardStats = async (req, res, next) => {
           totalProducts,
           totalOrders,
           pendingOrders,
-          totalRevenue,
+          totalRevenue: revenueAmount,
         },
-        ordersByStatus: orderStats.reduce((acc, s) => {
-          acc[s._id] = s.count;
-          return acc;
-        }, {}),
+        ordersByStatus,
         recentOrders,
         lowStockProducts,
       },

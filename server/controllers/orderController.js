@@ -69,6 +69,35 @@ export const createOrder = async (req, res, next) => {
         await product.save({ session });
       }
 
+      // Calculate coupon discount
+      let discount = 0;
+      let coupon = null;
+      if (couponCode) {
+        coupon = await Coupon.findOne({
+          code: couponCode.toUpperCase(),
+          isActive: true,
+          expiryDate: { $gt: new Date() },
+        }).session(session);
+
+        if (coupon) {
+          if (subtotal >= coupon.minOrderAmount) {
+            if (coupon.discountType === 'percentage') {
+              discount = Math.round((subtotal * coupon.discountAmount) / 100);
+              if (coupon.maxDiscountAmount) {
+                discount = Math.min(discount, coupon.maxDiscountAmount);
+              }
+            } else {
+              discount = coupon.discountAmount;
+            }
+            subtotal = Math.max(0, subtotal - discount);
+
+            // Increment usage
+            coupon.usedCount += 1;
+            await coupon.save({ session });
+          }
+        }
+      }
+
       // Calculate shipping (free above 1499)
       const shippingFee = subtotal >= 1499 ? 0 : 99;
       const total = subtotal + shippingFee;
