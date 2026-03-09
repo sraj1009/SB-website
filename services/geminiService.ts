@@ -1,6 +1,5 @@
-
-import { GoogleGenAI } from "@google/genai";
-import { Product } from "../types.ts";
+import { GoogleGenAI } from '@google/genai';
+import { Product } from '../types.ts';
 
 export const getShoppingAssistantResponse = async (
   query: string,
@@ -10,9 +9,12 @@ export const getShoppingAssistantResponse = async (
     // Fix: Create new instance inside function to use up-to-date process.env.API_KEY
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-    const productContext = products.map(p =>
-      `- ${p.title} by ${p.author} (₹${p.price}, ${p.category}): ${p.description.substring(0, 100)}...`
-    ).join('\n');
+    const productContext = products
+      .map(
+        (p) =>
+          `- ${p.title} by ${p.author} (₹${p.price}, ${p.category}): ${p.description.substring(0, 100)}...`
+      )
+      .join('\n');
 
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
@@ -30,9 +32,12 @@ export const getShoppingAssistantResponse = async (
       - If the user asks for something not in the catalog, suggest the closest alternative or let them know what we have.`,
     });
 
-    return response.text || "I'm sorry, I'm having a bit of trouble finding that information in the hive.";
+    return (
+      response.text ||
+      "I'm sorry, I'm having a bit of trouble finding that information in the hive."
+    );
   } catch (error) {
-    console.error("Hive Assistant Error:", error);
-    return "The hive mind is momentarily offline. Please try again in a bit!";
+    console.error('Hive Assistant Error:', error);
+    return 'The hive mind is momentarily offline. Please try again in a bit!';
   }
 };

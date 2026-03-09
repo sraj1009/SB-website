@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef } from 'react';
 
 const InteractiveParticles: React.FC = () => {
@@ -32,7 +31,7 @@ const InteractiveParticles: React.FC = () => {
         this.baseX = x;
         this.baseY = y;
         this.size = Math.random() * 2.5 + 0.5;
-        this.density = (Math.random() * 20) + 5;
+        this.density = Math.random() * 20 + 5;
         this.angle = Math.random() * Math.PI * 2;
         this.speed = Math.random() * 0.3 + 0.1;
         this.color = Math.random() > 0.5 ? '#FFC107' : '#E65100';
@@ -120,12 +119,7 @@ const InteractiveParticles: React.FC = () => {
     };
   }, []);
 
-  return (
-    <canvas 
-      ref={canvasRef} 
-      className="fixed inset-0 pointer-events-none z-[5]"
-    />
-  );
+  return <canvas ref={canvasRef} className="fixed inset-0 pointer-events-none z-[5]" />;
 };
 
 export default InteractiveParticles;

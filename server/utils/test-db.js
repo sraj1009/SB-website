@@ -14,21 +14,21 @@ console.log('Testing MongoDB connection...');
 console.log(`URI: ${MONGODB_URI}`);
 
 const connectDB = async () => {
-    try {
-        const conn = await mongoose.connect(MONGODB_URI, {
-            serverSelectionTimeoutMS: 5000,
-        });
-        console.log(`Successfully connected to MongoDB Host: ${conn.connection.host}`);
-        console.log('Connection test PASSED.');
-        await mongoose.disconnect();
-        process.exit(0);
-    } catch (error) {
-        console.error('Connection test FAILED.');
-        console.error('Error name:', error.name);
-        console.error('Error message:', error.message);
-        if (error.cause) console.error('Error cause:', error.cause);
-        process.exit(1);
-    }
+  try {
+    const conn = await mongoose.connect(MONGODB_URI, {
+      serverSelectionTimeoutMS: 5000,
+    });
+    console.log(`Successfully connected to MongoDB Host: ${conn.connection.host}`);
+    console.log('Connection test PASSED.');
+    await mongoose.disconnect();
+    process.exit(0);
+  } catch (error) {
+    console.error('Connection test FAILED.');
+    console.error('Error name:', error.name);
+    console.error('Error message:', error.message);
+    if (error.cause) console.error('Error cause:', error.cause);
+    process.exit(1);
+  }
 };
 
 connectDB();

@@ -1,38 +1,62 @@
 {
-    "name": "singglebee-backend",
-    "version": "1.0.0",
-    "description": "Production-ready MERN backend for SINGGLEBEE e-commerce",
-    "main": "server.js",
-    "type": "module",
-    "scripts": {
-        "start": "node server.js",
-        "dev": "node --watch server.js",
-        "seed": "node utils/seedAdmin.js"
-    },
-    "dependencies": {
-        "@google/generative-ai": "^0.24.1",
-        "axios": "^1.7.9",
-        "bcryptjs": "^2.4.3",
-        "cloudinary": "^1.41.3",
-        "compression": "^1.8.1",
-        "cors": "^2.8.5",
-        "crypto": "^1.0.1",
-        "dotenv": "^16.4.5",
-        "express": "^4.21.2",
-        "express-mongo-sanitize": "^2.2.0",
-        "express-rate-limit": "^7.5.0",
-        "helmet": "^8.0.0",
-        "joi": "^17.13.3",
-        "jsonwebtoken": "^9.0.2",
-        "mongoose": "^8.9.5",
-        "multer": "^2.1.1",
-        "multer-storage-cloudinary": "^4.0.0",
-        "node-cache": "^5.1.2",
-        "winston": "^3.17.0"
-    },
-    "engines": {
-        "node": ">=18.0.0"
-    },
-    "author": "SINGGLEBEE",
-    "license": "ISC"
+  "name": "singglebee-backend",
+  "version": "1.0.0",
+  "description": "Production-ready MERN backend for SINGGLEBEE e-commerce",
+  "main": "server.js",
+  "type": "module",
+  "imports": {
+    "#config/*": "./config/*.js",
+    "#controllers/*": "./controllers/*.js",
+    "#models/*": "./models/*.js",
+    "#routes/*": "./routes/*.js",
+    "#utils/*": "./utils/*.js",
+    "#services/*": "./services/*.js",
+    "#middleware/*": "./middleware/*.js"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "seed": "node utils/seedAdmin.js",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --detectOpenHandles"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "axios": "^1.7.9",
+    "bcryptjs": "^2.4.3",
+    "cloudinary": "^1.41.3",
+    "compression": "^1.8.1",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "crypto": "^1.0.1",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "express-mongo-sanitize": "^2.2.0",
+    "express-prom-bundle": "^8.0.0",
+    "express-rate-limit": "^7.5.0",
+    "helmet": "^8.0.0",
+    "ioredis": "^5.10.0",
+    "joi": "^17.13.3",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.9.5",
+    "multer": "^2.1.1",
+    "multer-storage-cloudinary": "^4.0.0",
+    "node-cache": "^5.1.2",
+    "nodemailer": "^8.0.1",
+    "prom-client": "^15.1.3",
+    "sharp": "^0.34.5",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1",
+    "winston": "^3.17.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "author": "SINGGLEBEE",
+  "license": "ISC",
+  "devDependencies": {
+    "agenda": "^6.2.3",
+    "jest": "^30.2.0",
+    "mongodb-memory-server": "^11.0.1",
+    "supertest": "^7.2.2"
+  }
 }

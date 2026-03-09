@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { Product } from '../types';
 
@@ -34,10 +33,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose }) => 
 
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 md:p-12 animate-fade-in">
-      <div
-        className="absolute inset-0 bg-brand-black/40 backdrop-blur-xl"
-        onClick={onClose}
-      />
+      <div className="absolute inset-0 bg-brand-black/40 backdrop-blur-xl" onClick={onClose} />
 
       <div className="relative bg-white/90 backdrop-blur-md rounded-[3.5rem] shadow-[0_30px_100px_rgba(0,0,0,0.3)] overflow-hidden w-full max-w-5xl max-h-[90vh] flex flex-col md:flex-row animate-slide-up border border-white/50">
         {/* Close Button */}
@@ -80,7 +76,10 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose }) => 
               {product.title}
             </h2>
             <p className="text-gray-400 font-bold text-xl mb-10 italic">
-              by <span className="text-brand-black not-italic hover:text-brand-primary transition-colors cursor-pointer">{product.author}</span>
+              by{' '}
+              <span className="text-brand-black not-italic hover:text-brand-primary transition-colors cursor-pointer">
+                {product.author}
+              </span>
             </p>
 
             {/* Price */}
@@ -88,12 +87,16 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose }) => 
               <span className="text-5xl font-black text-brand-black tracking-tighter">
                 ₹{product.price.toLocaleString('en-IN')}
               </span>
-              <span className="text-gray-400 text-sm font-bold uppercase tracking-widest bg-gray-100 px-2 py-0.5 rounded">Inclusive of all taxes</span>
+              <span className="text-gray-400 text-sm font-bold uppercase tracking-widest bg-gray-100 px-2 py-0.5 rounded">
+                Inclusive of all taxes
+              </span>
             </div>
 
             {/* Description Snapshot */}
             <div className="space-y-4 mb-12">
-              <h4 className="text-[10px] uppercase tracking-[0.2em] font-black text-gray-400">The Hive Snapshot</h4>
+              <h4 className="text-[10px] uppercase tracking-[0.2em] font-black text-gray-400">
+                The Hive Snapshot
+              </h4>
               <p className="text-gray-600 font-medium leading-relaxed text-lg line-clamp-4">
                 {product.description}
               </p>
@@ -106,9 +109,11 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose }) => 
               onClick={handleAddToCart}
               disabled={addStatus !== 'idle'}
               className={`group/hive-modal flex items-center justify-center gap-4 w-full py-5 rounded-[2rem] text-[12px] font-black uppercase tracking-[0.25em] shadow-[0_25px_60px_rgba(0,0,0,0.3)] transition-all transform hover:scale-[1.02] active:scale-95 border
-                ${addStatus === 'idle'
-                  ? 'bg-brand-black text-brand-primary border-brand-primary/20 hover:bg-brand-primary hover:text-white hover:shadow-brand-primary/30'
-                  : ''}
+                ${
+                  addStatus === 'idle'
+                    ? 'bg-brand-black text-brand-primary border-brand-primary/20 hover:bg-brand-primary hover:text-white hover:shadow-brand-primary/30'
+                    : ''
+                }
                 ${addStatus === 'loading' ? 'bg-brand-dark/60 text-white cursor-wait border-white/10' : ''}
                 ${addStatus === 'success' ? 'bg-brand-meadow text-white border-brand-meadow/50' : ''}
               `}
@@ -121,7 +126,10 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose }) => 
                 <>
                   <span className="relative w-5 h-5 transition-transform duration-500 group-hover/hive-modal:buzz">
                     <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full">
-                      <path d="M12 2L4.5 20.29L5.21 21L12 18L18.79 21L19.5 20.29L12 2Z" fillOpacity="0.3" />
+                      <path
+                        d="M12 2L4.5 20.29L5.21 21L12 18L18.79 21L19.5 20.29L12 2Z"
+                        fillOpacity="0.3"
+                      />
                       <path d="M12 4L6 18.5H18L12 4Z" />
                       <circle cx="12" cy="13" r="1.5" />
                     </svg>

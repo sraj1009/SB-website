@@ -1,11 +1,11 @@
 import express from 'express';
 import {
-    getProductReviews,
-    createReview,
-    updateReview,
-    deleteReview,
-    voteReview,
-    getMyReviews
+  getProductReviews,
+  createReview,
+  updateReview,
+  deleteReview,
+  voteReview,
+  getMyReviews,
 } from '../../../controllers/reviewController.js';
 import { authenticate, optionalAuth } from '../../../middleware/auth.js';
 import validate from '../../../middleware/validate.js';
@@ -15,17 +15,17 @@ const router = express.Router();
 
 // Review validation schema
 const createReviewSchema = Joi.object({
-    rating: Joi.number().min(1).max(5).required(),
-    title: Joi.string().trim().max(100).optional(),
-    comment: Joi.string().trim().max(1000).optional(),
-    images: Joi.array().items(Joi.string().uri()).max(5).optional()
+  rating: Joi.number().min(1).max(5).required(),
+  title: Joi.string().trim().max(100).optional(),
+  comment: Joi.string().trim().max(1000).optional(),
+  images: Joi.array().items(Joi.string().uri()).max(5).optional(),
 });
 
 const updateReviewSchema = Joi.object({
-    rating: Joi.number().min(1).max(5).optional(),
-    title: Joi.string().trim().max(100).optional().allow(''),
-    comment: Joi.string().trim().max(1000).optional().allow(''),
-    images: Joi.array().items(Joi.string().uri()).max(5).optional()
+  rating: Joi.number().min(1).max(5).optional(),
+  title: Joi.string().trim().max(100).optional().allow(''),
+  comment: Joi.string().trim().max(1000).optional().allow(''),
+  images: Joi.array().items(Joi.string().uri()).max(5).optional(),
 }).min(1);
 
 // ============ PRODUCT REVIEW ROUTES ============
@@ -42,7 +42,12 @@ router.get('/products/:productId/reviews', getProductReviews);
  * @desc    Create review for a product
  * @access  Private
  */
-router.post('/products/:productId/reviews', authenticate, validate(createReviewSchema), createReview);
+router.post(
+  '/products/:productId/reviews',
+  authenticate,
+  validate(createReviewSchema),
+  createReview
+);
 
 // ============ USER REVIEW ROUTES ============
 

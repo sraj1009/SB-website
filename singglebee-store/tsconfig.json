@@ -1,8 +1,6 @@
 {
-    "compilerOptions": {
-        "types": []
-    },
-    "include": [
-        "**/*.ts"
-    ]
+  "compilerOptions": {
+    "types": []
+  },
+  "include": ["**/*.ts"]
 }

@@ -1,10 +1,10 @@
 import express from 'express';
 import {
-    getAddresses,
-    addAddress,
-    updateAddress,
-    deleteAddress,
-    setDefaultAddress
+  getAddresses,
+  addAddress,
+  updateAddress,
+  deleteAddress,
+  setDefaultAddress,
 } from '../../../controllers/addressController.js';
 import { authenticate } from '../../../middleware/auth.js';
 import validate from '../../../middleware/validate.js';
@@ -17,25 +17,31 @@ router.use(authenticate);
 
 // Address validation schema
 const addressSchema = Joi.object({
-    label: Joi.string().trim().max(50).optional(),
-    fullName: Joi.string().trim().required(),
-    phone: Joi.string().pattern(/^[0-9]{10}$/).required().messages({
-        'string.pattern.base': 'Phone must be 10 digits'
+  label: Joi.string().trim().max(50).optional(),
+  fullName: Joi.string().trim().required(),
+  phone: Joi.string()
+    .pattern(/^[0-9]{10}$/)
+    .required()
+    .messages({
+      'string.pattern.base': 'Phone must be 10 digits',
     }),
-    street: Joi.string().trim().required(),
-    landmark: Joi.string().trim().optional(),
-    city: Joi.string().trim().required(),
-    state: Joi.string().trim().required(),
-    zipCode: Joi.string().pattern(/^[0-9]{6}$/).required().messages({
-        'string.pattern.base': 'ZIP code must be 6 digits'
+  street: Joi.string().trim().required(),
+  landmark: Joi.string().trim().optional(),
+  city: Joi.string().trim().required(),
+  state: Joi.string().trim().required(),
+  zipCode: Joi.string()
+    .pattern(/^[0-9]{6}$/)
+    .required()
+    .messages({
+      'string.pattern.base': 'ZIP code must be 6 digits',
     }),
-    country: Joi.string().trim().default('India'),
-    isDefault: Joi.boolean().optional()
+  country: Joi.string().trim().default('India'),
+  isDefault: Joi.boolean().optional(),
 });
 
 const updateAddressSchema = addressSchema.fork(
-    ['fullName', 'phone', 'street', 'city', 'state', 'zipCode'],
-    (schema) => schema.optional()
+  ['fullName', 'phone', 'street', 'city', 'state', 'zipCode'],
+  (schema) => schema.optional()
 );
 
 /**

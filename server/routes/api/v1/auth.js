@@ -1,24 +1,76 @@
 import express from 'express';
-import { signup, signin, refreshToken, logout, getMe, updateMe } from '../../../controllers/authController.js';
-import { forgotPassword, resetPassword, changePassword } from '../../../controllers/passwordController.js';
+import {
+  signup,
+  signin,
+  refreshToken,
+  logout,
+  getMe,
+  updateMe,
+} from '../../../controllers/authController.js';
+import {
+  forgotPassword,
+  resetPassword,
+  changePassword,
+} from '../../../controllers/passwordController.js';
 import { authenticate } from '../../../middleware/auth.js';
 import { authLimiter } from '../../../middleware/rateLimiter.js';
 import validate from '../../../middleware/validate.js';
-import { signupSchema, signinSchema, refreshTokenSchema, updateProfileSchema } from '../../../validators/authValidators.js';
+import {
+  signupSchema,
+  signinSchema,
+  refreshTokenSchema,
+  updateProfileSchema,
+} from '../../../validators/authValidators.js';
 
 const router = express.Router();
 
 /**
- * @route   POST /api/v1/auth/signup
- * @desc    Register a new user
- * @access  Public
+ * @swagger
+ * /api/v1/auth/signup:
+ *   post:
+ *     summary: Register a new user
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [fullName, email, password]
+ *             properties:
+ *               fullName: {type: string}
+ *               email: {type: string, format: email}
+ *               password: {type: string, format: password}
+ *               phone: {type: string}
+ *     responses:
+ *       201:
+ *         description: User created successfully
+ *       400:
+ *         description: Invalid input
  */
 router.post('/signup', authLimiter, validate(signupSchema), signup);
 
 /**
- * @route   POST /api/v1/auth/signin
- * @desc    Sign in user
- * @access  Public
+ * @swagger
+ * /api/v1/auth/signin:
+ *   post:
+ *     summary: Sign in user
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email, password]
+ *             properties:
+ *               email: {type: string, format: email}
+ *               password: {type: string}
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *       401:
+ *         description: Invalid credentials
  */
 router.post('/signin', authLimiter, validate(signinSchema), signin);
 
@@ -72,4 +124,3 @@ router.post('/reset-password', authLimiter, resetPassword);
 router.post('/change-password', authenticate, changePassword);
 
 export default router;
-

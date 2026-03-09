@@ -18,17 +18,19 @@
  *
  * @param p - Raw product object from API response
  */
-export function normalizeProduct<T extends { _id?: string; id?: number }>(p: T): T & { id: number; originalId: string } {
-    const mongoId = (p._id as string) || '';
-    // Use last 8 hex chars → 32-bit number (reduces collision surface vs "last 6")
-    const numericId =
-        typeof p._id === 'string' && p._id.length >= 8
-            ? parseInt(p._id.slice(-8), 16) >>> 0   // unsigned 32-bit
-            : p.id ?? Math.floor(Math.random() * 0xffffffff);
+export function normalizeProduct<T extends { _id?: string; id?: number }>(
+  p: T
+): T & { id: number; originalId: string } {
+  const mongoId = (p._id as string) || '';
+  // Use last 8 hex chars → 32-bit number (reduces collision surface vs "last 6")
+  const numericId =
+    typeof p._id === 'string' && p._id.length >= 8
+      ? parseInt(p._id.slice(-8), 16) >>> 0 // unsigned 32-bit
+      : (p.id ?? Math.floor(Math.random() * 0xffffffff));
 
-    return {
-        ...p,
-        id: numericId,
-        originalId: mongoId,
-    };
+  return {
+    ...p,
+    id: numericId,
+    originalId: mongoId,
+  };
 }

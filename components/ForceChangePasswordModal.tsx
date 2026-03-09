@@ -7,20 +7,27 @@ interface ForceChangePasswordModalProps {
   onClose: () => void;
 }
 
-const ForceChangePasswordModal: React.FC<ForceChangePasswordModalProps> = ({ onSuccess, onClose }) => {
+const ForceChangePasswordModal: React.FC<ForceChangePasswordModalProps> = ({
+  onSuccess,
+  onClose,
+}) => {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const passwordValid = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(newPassword);
+  const passwordValid = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(
+    newPassword
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     if (!passwordValid) {
-      setError('New password must be 8+ chars with uppercase, lowercase, number, and special character (@$!%*?&)');
+      setError(
+        'New password must be 8+ chars with uppercase, lowercase, number, and special character (@$!%*?&)'
+      );
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -44,8 +51,12 @@ const ForceChangePasswordModal: React.FC<ForceChangePasswordModalProps> = ({ onS
         <div className="w-20 h-20 bg-brand-rose/20 rounded-[2rem] flex items-center justify-center mx-auto mb-6">
           <BeeCharacter size="3rem" />
         </div>
-        <h1 className="text-2xl font-black text-brand-black mb-2 text-center">Change Password Required</h1>
-        <p className="text-gray-500 font-bold text-sm mb-8 text-center">For security, please set a new password before continuing.</p>
+        <h1 className="text-2xl font-black text-brand-black mb-2 text-center">
+          Change Password Required
+        </h1>
+        <p className="text-gray-500 font-bold text-sm mb-8 text-center">
+          For security, please set a new password before continuing.
+        </p>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
@@ -53,7 +64,7 @@ const ForceChangePasswordModal: React.FC<ForceChangePasswordModalProps> = ({ onS
             <input
               type="password"
               value={currentPassword}
-              onChange={e => setCurrentPassword(e.target.value)}
+              onChange={(e) => setCurrentPassword(e.target.value)}
               required
               className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-5 py-4 font-semibold focus:border-brand-primary outline-none"
               placeholder="Enter current password"
@@ -64,18 +75,20 @@ const ForceChangePasswordModal: React.FC<ForceChangePasswordModalProps> = ({ onS
             <input
               type="password"
               value={newPassword}
-              onChange={e => setNewPassword(e.target.value)}
+              onChange={(e) => setNewPassword(e.target.value)}
               required
               className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-5 py-4 font-semibold focus:border-brand-primary outline-none"
               placeholder="8+ chars, upper, lower, number, special"
             />
           </div>
           <div>
-            <label className="block text-xs font-black text-gray-700 mb-2">Confirm New Password</label>
+            <label className="block text-xs font-black text-gray-700 mb-2">
+              Confirm New Password
+            </label>
             <input
               type="password"
               value={confirmPassword}
-              onChange={e => setConfirmPassword(e.target.value)}
+              onChange={(e) => setConfirmPassword(e.target.value)}
               required
               className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-5 py-4 font-semibold focus:border-brand-primary outline-none"
               placeholder="Re-enter new password"

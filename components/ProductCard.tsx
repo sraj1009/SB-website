@@ -46,7 +46,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   isWishlisted = false,
   onToggleWishlist,
   index = 0,
-  isExiting = false
+  isExiting = false,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [addStatus, setAddStatus] = useState<'idle' | 'loading' | 'success'>('idle');
@@ -57,11 +57,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
     if (addStatus !== 'idle') return;
 
     setAddStatus('loading');
-    setTimeout(() => {
-      onAddToCart(product);
-      setAddStatus('success');
-      setTimeout(() => setAddStatus('idle'), 1500);
-    }, 600);
+    // Remove artificial delay for local cart
+    onAddToCart(product);
+    setAddStatus('success');
+    setTimeout(() => setAddStatus('idle'), 2000);
   };
 
   const handleQuickView = (e: React.MouseEvent) => {
@@ -96,7 +95,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
       <div className="relative w-full aspect-[3/4] bg-gradient-to-br from-amber-50/50 to-orange-50/50 mb-4 p-4 lg:p-6 transition-all duration-500">
         {/* Image */}
         <img
-          src={product.image}
+          src={product.thumbnailUrl || product.image}
           alt={product.title}
           onLoad={() => setImageLoaded(true)}
           className={`w-full h-full object-contain transition-all duration-700 ease-out z-10 relative
@@ -108,7 +107,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
         {/* Floating "Add to Hive" Overlay - Premium Redesign */}
         {!isExiting && (
-          <div className={`absolute bottom-6 left-1/2 -translate-x-1/2 z-30 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] ${isHovered || product.isOutOfStock || product.isComingSoon ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3 pointer-events-none'}`}>
+          <div
+            className={`absolute bottom-6 left-1/2 -translate-x-1/2 z-30 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] ${isHovered || product.isOutOfStock || product.isComingSoon ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3 pointer-events-none'}`}
+          >
             <button
               onClick={handleAddToCart}
               disabled={addStatus !== 'idle' || product.isOutOfStock || product.isComingSoon}
@@ -126,15 +127,30 @@ const ProductCard: React.FC<ProductCardProps> = ({
               {addStatus === 'loading' ? (
                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : addStatus === 'success' ? (
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={4}>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-4 h-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={4}
+                >
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
               ) : (
                 !(product.isOutOfStock || product.isComingSoon) && (
                   <div className="relative w-4 h-4 transition-transform duration-500 group-hover/hive:buzz">
                     {/* Subtle Bee/Hive Icon Concept */}
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-full h-full">
-                      <path d="M12 2L4.5 20.29L5.21 21L12 18L18.79 21L19.5 20.29L12 2Z" fillOpacity="0.3" />
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      className="w-full h-full"
+                    >
+                      <path
+                        d="M12 2L4.5 20.29L5.21 21L12 18L18.79 21L19.5 20.29L12 2Z"
+                        fillOpacity="0.3"
+                      />
                       <path d="M12 4L6 18.5H18L12 4Z" />
                       <circle cx="12" cy="13" r="1.5" className="animate-pulse" />
                     </svg>
@@ -142,19 +158,31 @@ const ProductCard: React.FC<ProductCardProps> = ({
                 )
               )}
               <span className="whitespace-nowrap">
-                {product.isOutOfStock ? 'Sold Out' : product.isComingSoon ? 'Coming Soon' : addStatus === 'loading' ? 'Adding' : addStatus === 'success' ? 'Added!' : 'Add to Hive'}
+                {product.isOutOfStock
+                  ? 'Sold Out'
+                  : product.isComingSoon
+                    ? 'Coming Soon'
+                    : addStatus === 'loading'
+                      ? 'Adding'
+                      : addStatus === 'success'
+                        ? 'Added!'
+                        : 'Add to Hive'}
               </span>
             </button>
           </div>
         )}
 
         {/* Subtle Depth Overlay on Hover */}
-        <div className={`absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent transition-opacity duration-700 z-20 ${isHovered ? 'opacity-100' : 'opacity-0'}`} />
+        <div
+          className={`absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent transition-opacity duration-700 z-20 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
+        />
 
         {/* Top Left - Status Badge */}
         {badge && (
           <div className="absolute top-3 left-3 z-10">
-            <span className={`${badge.color} text-[10px] font-bold px-3 py-1.5 rounded-full shadow-lg uppercase tracking-wider`}>
+            <span
+              className={`${badge.color} text-[10px] font-bold px-3 py-1.5 rounded-full shadow-lg uppercase tracking-wider`}
+            >
               {badge.text}
             </span>
           </div>
@@ -162,7 +190,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
         {/* Top Right - Wishlist Action */}
         {!isExiting && onToggleWishlist && (
-          <div className={`absolute top-3 right-3 z-30 transition-all duration-500 ${isHovered ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4 pointer-events-none'}`}>
+          <div
+            className={`absolute top-3 right-3 z-30 transition-all duration-500 ${isHovered ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4 pointer-events-none'}`}
+          >
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -177,11 +207,15 @@ const ProductCard: React.FC<ProductCardProps> = ({
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
-                fill={isWishlisted ? "currentColor" : "none"}
+                fill={isWishlisted ? 'currentColor' : 'none'}
                 stroke="currentColor"
                 className="w-5 h-5 stroke-2"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z"
+                />
               </svg>
             </button>
           </div>
@@ -229,11 +263,16 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
           {/* Rating */}
           <div className="flex items-center gap-1 sm:gap-1.5 bg-amber-50 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-md sm:rounded-lg">
-            <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500 fill-current" viewBox="0 0 20 20">
+            <svg
+              className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500 fill-current"
+              viewBox="0 0 20 20"
+            >
               <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
             </svg>
             <span className="text-xs sm:text-sm font-bold text-gray-700">{product.rating}</span>
-            <span className="text-[10px] sm:text-xs text-gray-400 hidden xs:inline">({product.reviewCount})</span>
+            <span className="text-[10px] sm:text-xs text-gray-400 hidden xs:inline">
+              ({product.reviewCount})
+            </span>
           </div>
         </div>
       </div>

@@ -18,7 +18,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
   setMinRating,
   onClear,
   isOpenMobile = false,
-  onCloseMobile = () => { }
+  onCloseMobile = () => {},
 }) => {
   const minPrice = priceRange[0];
   const maxPrice = priceRange[1];
@@ -29,7 +29,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
   const [localMax, setLocalMax] = useState(maxPrice.toString());
   const [expandedSections, setExpandedSections] = useState({
     price: true,
-    rating: true
+    rating: true,
   });
 
   useEffect(() => {
@@ -50,7 +50,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
   };
 
   const toggleSection = (section: 'price' | 'rating') => {
-    setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
+    setExpandedSections((prev) => ({ ...prev, [section]: !prev[section] }));
   };
 
   const hasActiveFilters = minPrice > 0 || maxPrice < 5000 || minRating !== null;
@@ -61,8 +61,18 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
       <div className="flex items-center justify-between pb-3 border-b border-gray-100">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 bg-amber-50 rounded-lg flex items-center justify-center">
-            <svg className="w-5 h-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+            <svg
+              className="w-5 h-5 text-amber-600"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+              />
             </svg>
           </div>
           <div>
@@ -76,8 +86,18 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
           onClick={onCloseMobile}
           className="lg:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
         >
-          <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          <svg
+            className="w-5 h-5 text-gray-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         </button>
       </div>
@@ -88,9 +108,21 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
           {(minPrice > 0 || maxPrice < 5000) && (
             <span className="inline-flex items-center gap-1.5 bg-amber-50 text-amber-700 text-xs font-medium px-3 py-1.5 rounded-full">
               ₹{minPrice} - ₹{maxPrice}
-              <button onClick={() => { onPriceChange(0, 5000); setLocalMin('0'); setLocalMax('5000'); }} className="hover:text-amber-900">
+              <button
+                onClick={() => {
+                  onPriceChange(0, 5000);
+                  setLocalMin('0');
+                  setLocalMax('5000');
+                }}
+                className="hover:text-amber-900"
+              >
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </span>
@@ -100,7 +132,12 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
               {minRating}+ Stars
               <button onClick={() => onRatingChange(null)} className="hover:text-amber-900">
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </span>
@@ -119,7 +156,9 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
           </h4>
           <svg
             className={`w-4 h-4 text-gray-500 transition-transform ${expandedSections.price ? 'rotate-180' : ''}`}
-            fill="none" viewBox="0 0 24 24" stroke="currentColor"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
           >
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
@@ -131,37 +170,41 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => handlePresetPrice(0, 500)}
-                className={`text-[10px] font-bold px-2 py-2 rounded-lg transition-all ${minPrice === 0 && maxPrice === 500
-                  ? 'bg-amber-500 text-white shadow-sm'
-                  : 'bg-white text-gray-500 border border-gray-100 hover:border-amber-200'
-                  }`}
+                className={`text-[10px] font-bold px-2 py-2 rounded-lg transition-all ${
+                  minPrice === 0 && maxPrice === 500
+                    ? 'bg-amber-500 text-white shadow-sm'
+                    : 'bg-white text-gray-500 border border-gray-100 hover:border-amber-200'
+                }`}
               >
                 Under ₹500
               </button>
               <button
                 onClick={() => handlePresetPrice(500, 1000)}
-                className={`text-xs font-medium px-3 py-2.5 rounded-xl transition-all ${minPrice === 500 && maxPrice === 1000
-                  ? 'bg-amber-500 text-white shadow-sm'
-                  : 'bg-white text-gray-500 border border-gray-100 hover:border-amber-200'
-                  }`}
+                className={`text-xs font-medium px-3 py-2.5 rounded-xl transition-all ${
+                  minPrice === 500 && maxPrice === 1000
+                    ? 'bg-amber-500 text-white shadow-sm'
+                    : 'bg-white text-gray-500 border border-gray-100 hover:border-amber-200'
+                }`}
               >
                 ₹500 - ₹1000
               </button>
               <button
                 onClick={() => handlePresetPrice(1000, 2000)}
-                className={`text-xs font-medium px-3 py-2.5 rounded-xl transition-all ${minPrice === 1000 && maxPrice === 2000
-                  ? 'bg-amber-500 text-white shadow-sm'
-                  : 'bg-white text-gray-500 border border-gray-100 hover:border-amber-200'
-                  }`}
+                className={`text-xs font-medium px-3 py-2.5 rounded-xl transition-all ${
+                  minPrice === 1000 && maxPrice === 2000
+                    ? 'bg-amber-500 text-white shadow-sm'
+                    : 'bg-white text-gray-500 border border-gray-100 hover:border-amber-200'
+                }`}
               >
                 ₹1000 - ₹2000
               </button>
               <button
                 onClick={() => handlePresetPrice(2000, 5000)}
-                className={`text-xs font-medium px-3 py-2.5 rounded-xl transition-all ${minPrice === 2000 && maxPrice === 5000
-                  ? 'bg-amber-500 text-white shadow-sm'
-                  : 'bg-white text-gray-500 border border-gray-100 hover:border-amber-200'
-                  }`}
+                className={`text-xs font-medium px-3 py-2.5 rounded-xl transition-all ${
+                  minPrice === 2000 && maxPrice === 5000
+                    ? 'bg-amber-500 text-white shadow-sm'
+                    : 'bg-white text-gray-500 border border-gray-100 hover:border-amber-200'
+                }`}
               >
                 ₹2000+
               </button>
@@ -170,7 +213,9 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
             {/* Custom Range */}
             <div className="flex items-center gap-1.5">
               <div className="relative flex-1">
-                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-[10px]">₹</span>
+                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-[10px]">
+                  ₹
+                </span>
                 <input
                   type="number"
                   value={localMin}
@@ -181,7 +226,9 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
               </div>
               <span className="text-gray-300 text-[10px]">/</span>
               <div className="relative flex-1">
-                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-[10px]">₹</span>
+                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-[10px]">
+                  ₹
+                </span>
                 <input
                   type="number"
                   value={localMax}
@@ -212,7 +259,9 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
           </h4>
           <svg
             className={`w-4 h-4 text-gray-500 transition-transform ${expandedSections.rating ? 'rotate-180' : ''}`}
-            fill="none" viewBox="0 0 24 24" stroke="currentColor"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
           >
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
@@ -224,10 +273,11 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
               <button
                 key={rating}
                 onClick={() => onRatingChange(minRating === rating ? null : rating)}
-                className={`flex items-center gap-2 w-full px-2 py-1.5 rounded-lg transition-all ${minRating === rating
-                  ? 'bg-amber-500 text-white shadow-sm'
-                  : 'bg-white border border-gray-100 hover:border-amber-200'
-                  }`}
+                className={`flex items-center gap-2 w-full px-2 py-1.5 rounded-lg transition-all ${
+                  minRating === rating
+                    ? 'bg-amber-500 text-white shadow-sm'
+                    : 'bg-white border border-gray-100 hover:border-amber-200'
+                }`}
               >
                 <div className="flex gap-0.5">
                   {[...Array(5)].map((_, i) => (
@@ -241,7 +291,9 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
                     </svg>
                   ))}
                 </div>
-                <span className={`text-[10px] font-bold ${minRating === rating ? 'text-white' : 'text-gray-500'}`}>
+                <span
+                  className={`text-[10px] font-bold ${minRating === rating ? 'text-white' : 'text-gray-500'}`}
+                >
                   {rating}+
                 </span>
               </button>
@@ -257,7 +309,12 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
           className="w-full py-2 text-[10px] text-gray-400 hover:text-rose-500 font-bold transition-colors flex items-center justify-center gap-1.5 border border-gray-100 rounded-lg hover:border-rose-100 hover:bg-rose-50/50"
         >
           <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={3}
+              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+            />
           </svg>
           Clear Filters
         </button>
@@ -275,26 +332,28 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
       </div>
 
       {/* Mobile Drawer */}
-      {isOpenMobile && createPortal(
-        <div className="fixed inset-0 z-[500] lg:hidden" style={{ touchAction: 'none' }}>
-          {/* Backdrop */}
-          <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={onCloseMobile}
-          />
-          {/* Drawer Panel */}
-          <div
-            className="absolute inset-y-0 left-0 w-[85vw] max-w-sm bg-white shadow-2xl flex flex-col animate-slide-in-left"
-            style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}
-          >
-            {/* Scrollable Content */}
-            <div className="flex-1 overflow-y-auto p-5 overscroll-contain">
-              {content}
+      {isOpenMobile &&
+        createPortal(
+          <div className="fixed inset-0 z-[500] lg:hidden" style={{ touchAction: 'none' }}>
+            {/* Backdrop */}
+            <div
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              onClick={onCloseMobile}
+            />
+            {/* Drawer Panel */}
+            <div
+              className="absolute inset-y-0 left-0 w-[85vw] max-w-sm bg-white shadow-2xl flex flex-col animate-slide-in-left"
+              style={{
+                paddingTop: 'env(safe-area-inset-top)',
+                paddingBottom: 'env(safe-area-inset-bottom)',
+              }}
+            >
+              {/* Scrollable Content */}
+              <div className="flex-1 overflow-y-auto p-5 overscroll-contain">{content}</div>
             </div>
-          </div>
-        </div>,
-        document.body
-      )}
+          </div>,
+          document.body
+        )}
     </>
   );
 };

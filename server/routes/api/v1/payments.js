@@ -1,9 +1,9 @@
 import express from 'express';
 import {
-    createPaymentSession,
-    handleWebhook,
-    getPaymentStatus,
-    markProofUploaded
+  createPaymentSession,
+  handleWebhook,
+  getPaymentStatus,
+  markProofUploaded,
 } from '../../../controllers/paymentController.js';
 import { authenticate } from '../../../middleware/auth.js';
 import { paymentLimiter } from '../../../middleware/rateLimiter.js';

@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Product } from '../types';
 import { getShoppingAssistantResponse } from '../services/geminiService';
@@ -31,14 +30,17 @@ const Assistant: React.FC<AssistantProps> = ({ products }) => {
 
     const userMessage = query.trim();
     setQuery('');
-    setMessages(prev => [...prev, { role: 'user', text: userMessage }]);
+    setMessages((prev) => [...prev, { role: 'user', text: userMessage }]);
     setIsLoading(true);
 
     try {
       const response = await getShoppingAssistantResponse(userMessage, products);
-      setMessages(prev => [...prev, { role: 'assistant', text: response }]);
+      setMessages((prev) => [...prev, { role: 'assistant', text: response }]);
     } catch (error) {
-      setMessages(prev => [...prev, { role: 'assistant', text: "Sorry, the hive is a bit busy. Please try again later!" }]);
+      setMessages((prev) => [
+        ...prev,
+        { role: 'assistant', text: 'Sorry, the hive is a bit busy. Please try again later!' },
+      ]);
     } finally {
       setIsLoading(false);
     }
@@ -54,28 +56,45 @@ const Assistant: React.FC<AssistantProps> = ({ products }) => {
                 <BeeCharacter size="2.8rem" />
               </span>
               <div>
-                <span className="text-brand-primary font-black uppercase tracking-widest text-[10px] block">Hive Assistant</span>
-                <span className="text-white/50 text-[8px] font-bold uppercase tracking-widest">Powered by SINGGLEBEE</span>
+                <span className="text-brand-primary font-black uppercase tracking-widest text-[10px] block">
+                  Hive Assistant
+                </span>
+                <span className="text-white/50 text-[8px] font-bold uppercase tracking-widest">
+                  Powered by SINGGLEBEE
+                </span>
               </div>
             </div>
-            <button onClick={() => setIsOpen(false)} className="text-white hover:text-brand-rose transition-colors font-black text-sm">✕</button>
+            <button
+              onClick={() => setIsOpen(false)}
+              className="text-white hover:text-brand-rose transition-colors font-black text-sm"
+            >
+              ✕
+            </button>
           </div>
 
           <div className="flex-grow overflow-y-auto p-6 space-y-4 custom-scrollbar bg-brand-light/10">
             {messages.length === 0 && (
               <div className="text-center py-12 flex flex-col items-center gap-4">
-                <div className="w-16 h-16 bg-brand-primary/10 rounded-full flex items-center justify-center text-3xl">🍯</div>
+                <div className="w-16 h-16 bg-brand-primary/10 rounded-full flex items-center justify-center text-3xl">
+                  🍯
+                </div>
                 <p className="text-gray-400 font-bold text-sm italic max-w-[200px]">
                   "Buzzing with excitement to help! Ask me anything about our books or treats."
                 </p>
               </div>
             )}
             {messages.map((msg, i) => (
-              <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}>
-                <div className={`max-w-[85%] px-5 py-3 rounded-[1.5rem] text-sm font-semibold leading-relaxed ${msg.role === 'user'
-                  ? 'bg-brand-black text-brand-primary shadow-sm rounded-tr-none'
-                  : 'bg-white text-gray-700 shadow-sm border border-brand-primary/10 rounded-tl-none'
-                  }`}>
+              <div
+                key={i}
+                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}
+              >
+                <div
+                  className={`max-w-[85%] px-5 py-3 rounded-[1.5rem] text-sm font-semibold leading-relaxed ${
+                    msg.role === 'user'
+                      ? 'bg-brand-black text-brand-primary shadow-sm rounded-tr-none'
+                      : 'bg-white text-gray-700 shadow-sm border border-brand-primary/10 rounded-tl-none'
+                  }`}
+                >
                   {msg.text}
                 </div>
               </div>
@@ -99,7 +118,7 @@ const Assistant: React.FC<AssistantProps> = ({ products }) => {
               <input
                 type="text"
                 value={query}
-                onChange={e => setQuery(e.target.value)}
+                onChange={(e) => setQuery(e.target.value)}
                 placeholder="Message the hive..."
                 className="flex-grow pl-5 pr-4 py-3.5 rounded-2xl bg-brand-light/50 border-2 border-transparent focus:border-brand-primary outline-none text-sm font-bold shadow-inner transition-all"
               />
@@ -109,7 +128,12 @@ const Assistant: React.FC<AssistantProps> = ({ products }) => {
                 className="w-12 h-12 bg-brand-black text-brand-primary rounded-2xl flex items-center justify-center hover:bg-brand-dark transition-all shadow-premium active:scale-95 disabled:opacity-50 disabled:grayscale"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 12h14M12 5l7 7-7 7" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={3}
+                    d="M5 12h14M12 5l7 7-7 7"
+                  />
                 </svg>
               </button>
             </div>
@@ -119,8 +143,9 @@ const Assistant: React.FC<AssistantProps> = ({ products }) => {
 
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-16 h-16 rounded-[1.5rem] shadow-premium-hover flex items-center justify-center text-3xl transition-all duration-300 hover:scale-105 active:scale-95 border-4 border-white ${isOpen ? 'bg-brand-rose text-white rotate-90' : 'bg-brand-primary text-brand-black'
-          }`}
+        className={`w-16 h-16 rounded-[1.5rem] shadow-premium-hover flex items-center justify-center text-3xl transition-all duration-300 hover:scale-105 active:scale-95 border-4 border-white ${
+          isOpen ? 'bg-brand-rose text-white rotate-90' : 'bg-brand-primary text-brand-black'
+        }`}
       >
         {isOpen ? '✕' : <BeeCharacter size="2.5rem" />}
       </button>

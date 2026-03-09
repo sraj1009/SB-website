@@ -4,17 +4,22 @@ import isAdmin from '../../../middleware/admin.js';
 import validate from '../../../middleware/validate.js';
 
 // User management
-import { getAllUsers, getUser, updateUserStatus, getDashboardStats } from '../../../controllers/userController.js';
+import {
+  getAllUsers,
+  getUser,
+  updateUserStatus,
+  getDashboardStats,
+} from '../../../controllers/userController.js';
 
 // Product management
 import { getAllProductsAdmin } from '../../../controllers/productController.js';
 
 // Order management
 import {
-    getAllOrders,
-    getOrderAdmin,
-    updateOrderStatus,
-    markPaymentComplete
+  getAllOrders,
+  getOrderAdmin,
+  updateOrderStatus,
+  markPaymentComplete,
 } from '../../../controllers/orderController.js';
 
 // Review moderation
@@ -65,22 +70,32 @@ router.patch('/users/:id/status', updateUserStatus);
 
 // ============ PRODUCT MANAGEMENT ============
 
-import { uploadCloudinary } from '../../../utils/cloudinary.js';
+import multer from 'multer';
+import { processAndUploadImage } from '../../../utils/imageProcessor.js';
+
+const upload = multer({ storage: multer.memoryStorage() });
 
 /**
  * @route   POST /api/v1/admin/upload-image
- * @desc    Upload product image to Cloudinary
+ * @desc    Upload product image to Cloudinary (Optimized with Sharp)
  * @access  Admin
  */
-router.post('/upload-image', uploadCloudinary.single('image'), (req, res) => {
+router.post('/upload-image', upload.single('image'), async (req, res, next) => {
+  try {
     if (!req.file) {
-        return res.status(400).json({ success: false, error: { message: 'No image uploaded' } });
+      return res.status(400).json({ success: false, error: { message: 'No image uploaded' } });
     }
+
+    const { url, thumbnailUrl } = await processAndUploadImage(req.file.buffer, req.file.originalname);
+
     res.json({
-        success: true,
-        message: 'Image uploaded successfully',
-        data: { url: req.file.path }
+      success: true,
+      message: 'Image uploaded and optimized successfully',
+      data: { url, thumbnailUrl },
     });
+  } catch (err) {
+    next(err);
+  }
 });
 
 /**
@@ -144,39 +159,39 @@ router.patch('/reviews/:reviewId/approve', moderateReview);
  * @access  Admin
  */
 router.get('/audit-logs', async (req, res, next) => {
-    try {
-        const { page = 1, limit = 50, action, actorId } = req.query;
-        const skip = (Number(page) - 1) * Number(limit);
+  try {
+    const { page = 1, limit = 50, action, actorId } = req.query;
+    const skip = (Number(page) - 1) * Number(limit);
 
-        const filter = {};
-        if (action) filter.action = action;
-        if (actorId) filter.actor = actorId;
+    const filter = {};
+    if (action) filter.action = action;
+    if (actorId) filter.actor = actorId;
 
-        const [logs, total] = await Promise.all([
-            AuditLog.find(filter)
-                .sort({ createdAt: -1 })
-                .skip(skip)
-                .limit(Number(limit))
-                .populate('actor', 'fullName email')
-                .lean(),
-            AuditLog.countDocuments(filter)
-        ]);
+    const [logs, total] = await Promise.all([
+      AuditLog.find(filter)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(Number(limit))
+        .populate('actor', 'fullName email')
+        .lean(),
+      AuditLog.countDocuments(filter),
+    ]);
 
-        res.json({
-            success: true,
-            data: {
-                logs,
-                pagination: {
-                    page: Number(page),
-                    limit: Number(limit),
-                    total,
-                    totalPages: Math.ceil(total / Number(limit))
-                }
-            }
-        });
-    } catch (error) {
-        next(error);
-    }
+    res.json({
+      success: true,
+      data: {
+        logs,
+        pagination: {
+          page: Number(page),
+          limit: Number(limit),
+          total,
+          totalPages: Math.ceil(total / Number(limit)),
+        },
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
 });
 
 /**
@@ -185,16 +200,15 @@ router.get('/audit-logs', async (req, res, next) => {
  * @access  Admin
  */
 router.get('/audit-logs/security', async (req, res, next) => {
-    try {
-        const logs = await AuditLog.getSecurityLogs(100);
-        res.json({
-            success: true,
-            data: { logs }
-        });
-    } catch (error) {
-        next(error);
-    }
+  try {
+    const logs = await AuditLog.getSecurityLogs(100);
+    res.json({
+      success: true,
+      data: { logs },
+    });
+  } catch (error) {
+    next(error);
+  }
 });
 
 export default router;
-

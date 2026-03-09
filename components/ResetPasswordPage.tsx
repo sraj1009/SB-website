@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import BeeCharacter from './BeeCharacter';
 import api from '../services/api';
 
-const navigate = (path: string) => { window.location.href = path; };
+const navigate = (path: string) => {
+  window.location.href = path;
+};
 
 const ResetPasswordPage: React.FC = () => {
   const searchParams = new URLSearchParams(window.location.search);
@@ -13,7 +15,9 @@ const ResetPasswordPage: React.FC = () => {
   const [success, setSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const passwordValid = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(password);
+  const passwordValid = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(
+    password
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,7 +27,9 @@ const ResetPasswordPage: React.FC = () => {
       return;
     }
     if (!passwordValid) {
-      setError('Password must be 8+ chars with uppercase, lowercase, number, and special character (@$!%*?&)');
+      setError(
+        'Password must be 8+ chars with uppercase, lowercase, number, and special character (@$!%*?&)'
+      );
       return;
     }
     if (password !== confirmPassword) {
@@ -50,7 +56,10 @@ const ResetPasswordPage: React.FC = () => {
             <span className="text-4xl">⚠️</span>
           </div>
           <h1 className="text-2xl font-black text-brand-black mb-4">Invalid Reset Link</h1>
-          <p className="text-gray-500 font-bold mb-8">This link is invalid or expired. Please request a new password reset from the login page.</p>
+          <p className="text-gray-500 font-bold mb-8">
+            This link is invalid or expired. Please request a new password reset from the login
+            page.
+          </p>
           <button
             onClick={() => navigate('/')}
             className="w-full bg-brand-primary text-brand-black font-black py-4 rounded-2xl"
@@ -70,7 +79,9 @@ const ResetPasswordPage: React.FC = () => {
             <BeeCharacter size="4rem" />
           </div>
           <h1 className="text-2xl font-black text-brand-black mb-4">Password Reset!</h1>
-          <p className="text-gray-500 font-bold mb-8">You can now sign in with your new password.</p>
+          <p className="text-gray-500 font-bold mb-8">
+            You can now sign in with your new password.
+          </p>
           <button
             onClick={() => navigate('/')}
             className="w-full bg-brand-black text-brand-primary font-black py-4 rounded-2xl"
@@ -89,7 +100,9 @@ const ResetPasswordPage: React.FC = () => {
           <BeeCharacter size="3rem" />
         </div>
         <h1 className="text-3xl font-black text-brand-black mb-2 text-center">Set New Password</h1>
-        <p className="text-gray-500 font-bold text-sm mb-8 text-center">Enter your new password below</p>
+        <p className="text-gray-500 font-bold text-sm mb-8 text-center">
+          Enter your new password below
+        </p>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
@@ -97,7 +110,7 @@ const ResetPasswordPage: React.FC = () => {
             <input
               type="password"
               value={password}
-              onChange={e => setPassword(e.target.value)}
+              onChange={(e) => setPassword(e.target.value)}
               required
               className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-5 py-4 font-semibold focus:border-brand-primary outline-none"
               placeholder="8+ chars, upper, lower, number, special"
@@ -108,7 +121,7 @@ const ResetPasswordPage: React.FC = () => {
             <input
               type="password"
               value={confirmPassword}
-              onChange={e => setConfirmPassword(e.target.value)}
+              onChange={(e) => setConfirmPassword(e.target.value)}
               required
               className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-5 py-4 font-semibold focus:border-brand-primary outline-none"
               placeholder="Re-enter password"

@@ -1,46 +1,25 @@
-# Use specific Node.js version
-FROM node:18-alpine AS base
+# Stage 1: Build
+FROM node:20-alpine AS build
 
-# Configure working directory
 WORKDIR /app
-
-# ---- Backend Build & Serve ----
-FROM base AS backend
-
-WORKDIR /app/server
 
 # Install dependencies
-COPY server/package*.json ./
-RUN npm install --production
-
-# Copy server code
-COPY server/ ./
-
-# Expose API port
-EXPOSE 5000
-
-# Start command
-CMD ["npm", "start"]
-
-# ---- Frontend Build & Serve (Alternative to Vercel) ----
-FROM base AS frontend-build
-
-WORKDIR /app
-
-# Install frontend dependencies
 COPY package*.json ./
-RUN npm install
+RUN npm ci
 
-# Copy frontend code
-COPY . ./
-# Note: Ensure .env.production is set or passed as build args
+# Copy source and build
+COPY . .
+# Set build-time env vars if needed
 RUN npm run build
 
-# Use Nginx to serve static files
-FROM nginx:alpine AS frontend
+# Stage 2: Production
+FROM nginx:stable-alpine
 
-COPY --from=frontend-build /app/dist /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copy build artifacts to nginx
+COPY --from=build /app/dist /usr/share/nginx/html
+
+# Add custom nginx config to handle SPA routing if needed
+# COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 

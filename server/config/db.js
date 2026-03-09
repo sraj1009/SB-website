@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import config from './config.js';
 import logger from '../utils/logger.js';
 
 const MAX_RETRIES = 5;
@@ -11,8 +12,8 @@ const INITIAL_DELAY_MS = 1000;
  */
 const connectDB = async (attempt = 1) => {
   try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI, {
-      maxPoolSize: 10,
+    const conn = await mongoose.connect(config.mongoose.url, {
+      maxPoolSize: 50,
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,
     });
@@ -47,7 +48,7 @@ const connectDB = async (attempt = 1) => {
       `Retrying in ${delay / 1000}s... (${error.message})`
     );
 
-    await new Promise(resolve => setTimeout(resolve, delay));
+    await new Promise((resolve) => setTimeout(resolve, delay));
     return connectDB(attempt + 1);
   }
 };

@@ -4,29 +4,32 @@ import mongoose from 'mongoose';
  * Password Reset Token Model
  * For secure password reset flow
  */
-const passwordResetSchema = new mongoose.Schema({
+const passwordResetSchema = new mongoose.Schema(
+  {
     user: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
     },
     token: {
-        type: String,
-        required: true,
-        unique: true
+      type: String,
+      required: true,
+      unique: true,
     },
     expiresAt: {
-        type: Date,
-        required: true,
-        default: () => new Date(Date.now() + 60 * 60 * 1000) // 1 hour
+      type: Date,
+      required: true,
+      default: () => new Date(Date.now() + 60 * 60 * 1000), // 1 hour
     },
     isUsed: {
-        type: Boolean,
-        default: false
-    }
-}, {
-    timestamps: true
-});
+      type: Boolean,
+      default: false,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
 
 // Index for token lookup and TTL
 // passwordResetSchema.index({ token: 1 }, { unique: true }); // Already defined in schema path
@@ -35,21 +38,18 @@ passwordResetSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 }); // Auto-
 
 // Check if token is valid
 passwordResetSchema.methods.isValid = function () {
-    return !this.isUsed && this.expiresAt > new Date();
+  return !this.isUsed && this.expiresAt > new Date();
 };
 
 // Mark as used
 passwordResetSchema.methods.markUsed = async function () {
-    this.isUsed = true;
-    await this.save();
+  this.isUsed = true;
+  await this.save();
 };
 
 // Static: Invalidate all tokens for a user
 passwordResetSchema.statics.invalidateAllForUser = async function (userId) {
-    await this.updateMany(
-        { user: userId, isUsed: false },
-        { isUsed: true }
-    );
+  await this.updateMany({ user: userId, isUsed: false }, { isUsed: true });
 };
 
 const PasswordReset = mongoose.model('PasswordReset', passwordResetSchema);

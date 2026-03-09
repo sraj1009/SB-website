@@ -1,10 +1,10 @@
 import express from 'express';
 import {
-    getWishlist,
-    addToWishlist,
-    removeFromWishlist,
-    clearWishlist,
-    checkWishlist
+  getWishlist,
+  addToWishlist,
+  removeFromWishlist,
+  clearWishlist,
+  checkWishlist,
 } from '../../../controllers/wishlistController.js';
 import { authenticate } from '../../../middleware/auth.js';
 

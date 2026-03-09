@@ -1,4 +1,3 @@
-
 export enum Category {
   FICTION = 'Fiction',
   SELF_HELP = 'Self-Help',
@@ -12,7 +11,7 @@ export enum Category {
   BOOKS = 'Books',
   POEM_BOOK = 'Poem Book',
   STORY_BOOK = 'Story Book',
-  ALL = 'All'
+  ALL = 'All',
 }
 
 export interface Review {
@@ -31,6 +30,7 @@ export interface Product {
   rating: number; // 1-5
   reviewCount: number;
   image: string;
+  thumbnailUrl?: string;
   category: Category;
   description: string;
   bestseller?: boolean;

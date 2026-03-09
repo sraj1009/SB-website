@@ -10,48 +10,50 @@ let transporter = null;
  * Initialize email transporter based on env config
  */
 async function getTransporter() {
-    if (transporter) return transporter;
+  if (transporter) return transporter;
 
-    // SendGrid via API (uses axios - no extra deps)
-    if (process.env.SENDGRID_API_KEY) {
-        return { type: 'sendgrid', apiKey: process.env.SENDGRID_API_KEY };
+  // SendGrid via API (uses axios - no extra deps)
+  if (process.env.SENDGRID_API_KEY) {
+    return { type: 'sendgrid', apiKey: process.env.SENDGRID_API_KEY };
+  }
+
+  // SMTP via Nodemailer
+  if (process.env.SMTP_HOST) {
+    try {
+      const nodemailer = await import('nodemailer');
+      transporter = nodemailer.default.createTransport({
+        host: process.env.SMTP_HOST,
+        port: parseInt(process.env.SMTP_PORT || '587', 10),
+        secure: process.env.SMTP_SECURE === 'true',
+        auth: process.env.SMTP_USER
+          ? {
+              user: process.env.SMTP_USER,
+              pass: process.env.SMTP_PASS,
+            }
+          : undefined,
+      });
+      return transporter;
+    } catch (err) {
+      logger.error(`Nodemailer not installed. Run: npm install nodemailer`);
+      return null;
     }
+  }
 
-    // SMTP via Nodemailer
-    if (process.env.SMTP_HOST) {
-        try {
-            const nodemailer = await import('nodemailer');
-            transporter = nodemailer.default.createTransport({
-                host: process.env.SMTP_HOST,
-                port: parseInt(process.env.SMTP_PORT || '587', 10),
-                secure: process.env.SMTP_SECURE === 'true',
-                auth: process.env.SMTP_USER ? {
-                    user: process.env.SMTP_USER,
-                    pass: process.env.SMTP_PASS
-                } : undefined
-            });
-            return transporter;
-        } catch (err) {
-            logger.error(`Nodemailer not installed. Run: npm install nodemailer`);
-            return null;
-        }
-    }
-
-    return null;
+  return null;
 }
 
 /**
  * Send password reset email
  */
 export async function sendPasswordResetEmail(toEmail, resetUrl) {
-    const transport = await getTransporter();
-    if (!transport) {
-        throw new Error('No email transport configured');
-    }
+  const transport = await getTransporter();
+  if (!transport) {
+    throw new Error('No email transport configured');
+  }
 
-    const fromEmail = process.env.EMAIL_FROM || process.env.SMTP_USER || 'noreply@singglebee.com';
-    const subject = 'Reset your SINGGLEBEE password';
-    const html = `
+  const fromEmail = process.env.EMAIL_FROM || process.env.SMTP_USER || 'noreply@singglebee.com';
+  const subject = 'Reset your SINGGLEBEE password';
+  const html = `
         <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
             <h2 style="color: #F59E0B;">SINGGLEBEE</h2>
             <p>You requested a password reset. Click the link below to set a new password:</p>
@@ -62,45 +64,45 @@ export async function sendPasswordResetEmail(toEmail, resetUrl) {
         </div>
     `;
 
-    if (transport.type === 'sendgrid') {
-        const axios = (await import('axios')).default;
-        await axios.post(
-            'https://api.sendgrid.com/v3/mail/send',
-            {
-                personalizations: [{ to: [{ email: toEmail }] }],
-                from: { email: fromEmail, name: 'SINGGLEBEE' },
-                subject,
-                content: [{ type: 'text/html', value: html }]
-            },
-            {
-                headers: {
-                    'Authorization': `Bearer ${transport.apiKey}`,
-                    'Content-Type': 'application/json'
-                }
-            }
-        );
-        logger.info(`Password reset email sent to ${toEmail} via SendGrid`);
-    } else {
-        await transport.sendMail({
-            from: fromEmail,
-            to: toEmail,
-            subject,
-            html
-        });
-        logger.info(`Password reset email sent to ${toEmail} via SMTP`);
-    }
+  if (transport.type === 'sendgrid') {
+    const axios = (await import('axios')).default;
+    await axios.post(
+      'https://api.sendgrid.com/v3/mail/send',
+      {
+        personalizations: [{ to: [{ email: toEmail }] }],
+        from: { email: fromEmail, name: 'SINGGLEBEE' },
+        subject,
+        content: [{ type: 'text/html', value: html }],
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${transport.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+    logger.info(`Password reset email sent to ${toEmail} via SendGrid`);
+  } else {
+    await transport.sendMail({
+      from: fromEmail,
+      to: toEmail,
+      subject,
+      html,
+    });
+    logger.info(`Password reset email sent to ${toEmail} via SMTP`);
+  }
 }
 
 /**
  * Send order confirmation email
  */
 export async function sendOrderConfirmationEmail(toEmail, orderId, totalAmount) {
-    const transport = await getTransporter();
-    if (!transport) return;
+  const transport = await getTransporter();
+  if (!transport) return;
 
-    const fromEmail = process.env.EMAIL_FROM || process.env.SMTP_USER || 'noreply@singglebee.com';
-    const subject = `Order confirmed - #${orderId}`;
-    const html = `
+  const fromEmail = process.env.EMAIL_FROM || process.env.SMTP_USER || 'noreply@singglebee.com';
+  const subject = `Order confirmed - #${orderId}`;
+  const html = `
         <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
             <h2 style="color: #F59E0B;">SINGGLEBEE</h2>
             <p>Thank you for your order!</p>
@@ -112,33 +114,33 @@ export async function sendOrderConfirmationEmail(toEmail, orderId, totalAmount) 
         </div>
     `;
 
-    try {
-        if (transport.type === 'sendgrid') {
-            const axios = (await import('axios')).default;
-            await axios.post(
-                'https://api.sendgrid.com/v3/mail/send',
-                {
-                    personalizations: [{ to: [{ email: toEmail }] }],
-                    from: { email: fromEmail, name: 'SINGGLEBEE' },
-                    subject,
-                    content: [{ type: 'text/html', value: html }]
-                },
-                {
-                    headers: {
-                        'Authorization': `Bearer ${transport.apiKey}`,
-                        'Content-Type': 'application/json'
-                    }
-                }
-            );
-        } else {
-            await transport.sendMail({ from: fromEmail, to: toEmail, subject, html });
+  try {
+    if (transport.type === 'sendgrid') {
+      const axios = (await import('axios')).default;
+      await axios.post(
+        'https://api.sendgrid.com/v3/mail/send',
+        {
+          personalizations: [{ to: [{ email: toEmail }] }],
+          from: { email: fromEmail, name: 'SINGGLEBEE' },
+          subject,
+          content: [{ type: 'text/html', value: html }],
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${transport.apiKey}`,
+            'Content-Type': 'application/json',
+          },
         }
-    } catch (err) {
-        logger.error(`Order confirmation email failed: ${err.message}`);
+      );
+    } else {
+      await transport.sendMail({ from: fromEmail, to: toEmail, subject, html });
     }
+  } catch (err) {
+    logger.error(`Order confirmation email failed: ${err.message}`);
+  }
 }
 
 export default {
-    sendPasswordResetEmail,
-    sendOrderConfirmationEmail
+  sendPasswordResetEmail,
+  sendOrderConfirmationEmail,
 };
