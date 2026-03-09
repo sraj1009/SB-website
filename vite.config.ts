@@ -56,12 +56,26 @@ export default defineConfig(({ mode }) => {
       environment: 'jsdom',
       setupFiles: ['./test/setup.ts'],
       css: true,
+      exclude: [
+        'node_modules/**',
+        'server/**',
+        'dist/**',
+        'coverage/**',
+        '**/*.config.*',
+      ],
+      include: [
+        'test/**/*.{test,spec}.{js,ts,tsx}',
+        'components/**/*.{test,spec}.{js,ts,tsx}',
+        'hooks/**/*.{test,spec}.{js,ts,tsx}',
+        'services/**/*.{test,spec}.{js,ts,tsx}',
+      ],
       coverage: {
         provider: 'v8',
         reporter: ['text', 'json', 'html'],
         exclude: [
           'node_modules/',
           'test/',
+          'server/',
           '**/*.d.ts',
           '**/*.config.*',
           'dist/',
