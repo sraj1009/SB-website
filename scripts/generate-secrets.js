@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
-const crypto = require('crypto');
+import crypto from 'crypto';
+import fs from 'fs';
 
 // Generate cryptographically secure secrets
 function generateSecureSecret(length = 64) {
@@ -43,7 +44,6 @@ console.log('- Clear your terminal history after storing these securely');
 console.log('- Use environment-specific secrets (dev vs prod)');
 
 // Save to .env.local for development (gitignored)
-const fs = require('fs');
 const envContent = `
 # Development Environment Variables
 # DO NOT COMMIT TO GIT - Already in .gitignore
