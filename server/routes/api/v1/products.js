@@ -18,6 +18,7 @@ import {
   productQuerySchema,
 } from '../../../validators/productValidators.js';
 import { cacheMiddleware, clearCache } from '../../../middleware/cacheMiddleware.js';
+import { upload } from '../../../controllers/uploadController.js';
 
 const router = express.Router();
 
@@ -90,14 +91,14 @@ router.get('/:id/related', productCache, getRelatedProducts);
  * @desc    Create new product
  * @access  Admin
  */
-router.post('/', authenticate, isAdmin, validate(createProductSchema), createProduct);
+router.post('/', authenticate, isAdmin, upload.single('image'), validate(createProductSchema), createProduct);
 
 /**
  * @route   PUT /api/v1/products/:id
  * @desc    Update product
  * @access  Admin
  */
-router.put('/:id', authenticate, isAdmin, validate(updateProductSchema), updateProduct);
+router.put('/:id', authenticate, isAdmin, upload.single('image'), validate(updateProductSchema), updateProduct);
 
 /**
  * @route   PATCH /api/v1/products/:id/stock

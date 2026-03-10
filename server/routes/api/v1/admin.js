@@ -1,40 +1,36 @@
 import express from 'express';
 import { authenticate } from '../../../middleware/auth.js';
-import isAdmin from '../../../middleware/admin.js';
+import { adminOnly } from '../../../middleware/adminOnly.js';
 import validate from '../../../middleware/validate.js';
+import { upload } from '../../../controllers/uploadController.js';
 
-// User management
+// Admin controllers
 import {
-  getAllUsers,
-  getUser,
-  updateUserStatus,
   getDashboardStats,
-} from '../../../controllers/userController.js';
+  getAdminProducts,
+  getAdminProduct,
+  createAdminProduct,
+  updateAdminProduct,
+  deleteAdminProduct,
+  getAdminOrders,
+  verifyOrder,
+} from '../../../controllers/adminController.js';
 
-// Product management
-import { getAllProductsAdmin } from '../../../controllers/productController.js';
-
-// Order management
+// Validation schemas
 import {
-  getAllOrders,
-  getOrderAdmin,
-  updateOrderStatus,
-  markPaymentComplete,
-} from '../../../controllers/orderController.js';
-
-// Review moderation
-import { getAllReviews, moderateReview } from '../../../controllers/reviewController.js';
-
-// Audit logs
-import AuditLog from '../../../models/AuditLog.js';
-
-import { updateOrderStatusSchema, markPaymentSchema } from '../../../validators/orderValidators.js';
+  createProductSchema,
+  updateProductSchema,
+  verifyOrderSchema,
+  statsQuerySchema,
+  adminProductQuerySchema,
+  adminOrderQuerySchema,
+} from '../../../validators/adminValidators.js';
 
 const router = express.Router();
 
 // All admin routes require authentication + admin role
 router.use(authenticate);
-router.use(isAdmin);
+router.use(adminOnly);
 
 // ============ DASHBOARD ============
 
@@ -43,179 +39,59 @@ router.use(isAdmin);
  * @desc    Get dashboard statistics
  * @access  Admin
  */
-router.get('/stats', getDashboardStats);
-
-// ============ USER MANAGEMENT ============
-
-/**
- * @route   GET /api/v1/admin/users
- * @desc    Get all users
- * @access  Admin
- */
-router.get('/users', getAllUsers);
-
-/**
- * @route   GET /api/v1/admin/users/:id
- * @desc    Get single user
- * @access  Admin
- */
-router.get('/users/:id', getUser);
-
-/**
- * @route   PATCH /api/v1/admin/users/:id/status
- * @desc    Update user status (ban/unban/suspend)
- * @access  Admin
- */
-router.patch('/users/:id/status', updateUserStatus);
+router.get('/stats', validate(statsQuerySchema, 'query'), getDashboardStats);
 
 // ============ PRODUCT MANAGEMENT ============
 
-import multer from 'multer';
-import { processAndUploadImage } from '../../../utils/imageProcessor.js';
-
-const upload = multer({ storage: multer.memoryStorage() });
-
-/**
- * @route   POST /api/v1/admin/upload-image
- * @desc    Upload product image to Cloudinary (Optimized with Sharp)
- * @access  Admin
- */
-router.post('/upload-image', upload.single('image'), async (req, res, next) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ success: false, error: { message: 'No image uploaded' } });
-    }
-
-    const { url, thumbnailUrl } = await processAndUploadImage(req.file.buffer, req.file.originalname);
-
-    res.json({
-      success: true,
-      message: 'Image uploaded and optimized successfully',
-      data: { url, thumbnailUrl },
-    });
-  } catch (err) {
-    next(err);
-  }
-});
-
 /**
  * @route   GET /api/v1/admin/products
- * @desc    Get all products (including deleted)
+ * @desc    Get all products for admin
  * @access  Admin
  */
-router.get('/products', getAllProductsAdmin);
+router.get('/products', validate(adminProductQuerySchema, 'query'), getAdminProducts);
+
+/**
+ * @route   GET /api/v1/admin/products/:id
+ * @desc    Get single product for admin
+ * @access  Admin
+ */
+router.get('/products/:id', getAdminProduct);
+
+/**
+ * @route   POST /api/v1/admin/products
+ * @desc    Create new product
+ * @access  Admin
+ */
+router.post('/products', upload.single('image'), validate(createProductSchema), createAdminProduct);
+
+/**
+ * @route   PUT /api/v1/admin/products/:id
+ * @desc    Update product
+ * @access  Admin
+ */
+router.put('/products/:id', upload.single('image'), validate(updateProductSchema), updateAdminProduct);
+
+/**
+ * @route   DELETE /api/v1/admin/products/:id
+ * @desc    Delete product (soft delete)
+ * @access  Admin
+ */
+router.delete('/products/:id', deleteAdminProduct);
 
 // ============ ORDER MANAGEMENT ============
 
 /**
  * @route   GET /api/v1/admin/orders
- * @desc    Get all orders
+ * @desc    Get all orders for admin
  * @access  Admin
  */
-router.get('/orders', getAllOrders);
+router.get('/orders', validate(adminOrderQuerySchema, 'query'), getAdminOrders);
 
 /**
- * @route   GET /api/v1/admin/orders/:id
- * @desc    Get single order
+ * @route   PUT /api/v1/admin/orders/:id/verify
+ * @desc    Verify or reject order
  * @access  Admin
  */
-router.get('/orders/:id', getOrderAdmin);
-
-/**
- * @route   PATCH /api/v1/admin/orders/:id/status
- * @desc    Update order status
- * @access  Admin
- */
-router.patch('/orders/:id/status', validate(updateOrderStatusSchema), updateOrderStatus);
-
-/**
- * @route   PATCH /api/v1/admin/orders/:id/payment
- * @desc    Mark payment as complete
- * @access  Admin
- */
-router.patch('/orders/:id/payment', validate(markPaymentSchema), markPaymentComplete);
-
-/**
- * @route   POST /api/v1/admin/orders/:id/verify
- * @desc    Verify order payment (mark as paid) - convenience endpoint
- * @access  Admin
- */
-router.post('/orders/:id/verify', validate(markPaymentSchema), markPaymentComplete);
-
-// ============ REVIEW MODERATION ============
-
-/**
- * @route   GET /api/v1/admin/reviews
- * @desc    Get all reviews for moderation
- * @access  Admin
- */
-router.get('/reviews', getAllReviews);
-
-/**
- * @route   PATCH /api/v1/admin/reviews/:reviewId/approve
- * @desc    Approve or reject a review
- * @access  Admin
- */
-router.patch('/reviews/:reviewId/approve', moderateReview);
-
-// ============ AUDIT LOGS ============
-
-/**
- * @route   GET /api/v1/admin/audit-logs
- * @desc    Get admin audit logs
- * @access  Admin
- */
-router.get('/audit-logs', async (req, res, next) => {
-  try {
-    const { page = 1, limit = 50, action, actorId } = req.query;
-    const skip = (Number(page) - 1) * Number(limit);
-
-    const filter = {};
-    if (action) filter.action = action;
-    if (actorId) filter.actor = actorId;
-
-    const [logs, total] = await Promise.all([
-      AuditLog.find(filter)
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(Number(limit))
-        .populate('actor', 'fullName email')
-        .lean(),
-      AuditLog.countDocuments(filter),
-    ]);
-
-    res.json({
-      success: true,
-      data: {
-        logs,
-        pagination: {
-          page: Number(page),
-          limit: Number(limit),
-          total,
-          totalPages: Math.ceil(total / Number(limit)),
-        },
-      },
-    });
-  } catch (error) {
-    next(error);
-  }
-});
-
-/**
- * @route   GET /api/v1/admin/audit-logs/security
- * @desc    Get security-related audit logs
- * @access  Admin
- */
-router.get('/audit-logs/security', async (req, res, next) => {
-  try {
-    const logs = await AuditLog.getSecurityLogs(100);
-    res.json({
-      success: true,
-      data: { logs },
-    });
-  } catch (error) {
-    next(error);
-  }
-});
+router.put('/orders/:id/verify', validate(verifyOrderSchema), verifyOrder);
 
 export default router;

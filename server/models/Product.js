@@ -13,31 +13,44 @@ const reviewSchema = new mongoose.Schema(
 
 const productSchema = new mongoose.Schema(
   {
-    name: {
-      type: String,
-      required: [true, 'Product name is required'],
-      trim: true,
-      maxlength: [200, 'Name cannot exceed 200 characters'],
-    },
+    // Required fields
     title: {
-      // Kept as alias for legacy support during migration
       type: String,
+      required: [true, 'Product title is required'],
       trim: true,
-    },
-    description: {
-      type: String,
-      trim: true,
-      maxlength: [2000, 'Description cannot exceed 2000 characters'],
+      maxlength: [200, 'Title cannot exceed 200 characters'],
     },
     author: {
       type: String,
-      default: 'SINGGLEBEE',
+      required: [true, 'Author is required'],
       trim: true,
+      default: 'SINGGLEBEE',
     },
     price: {
       type: Number,
       required: [true, 'Price is required'],
       min: [0, 'Price cannot be negative'],
+    },
+    category: {
+      type: String,
+      required: [true, 'Category is required'],
+      enum: {
+        values: ['Books', 'Poem Book', 'Story Book', 'Stationeries', 'Foods', 'Honey'],
+        message: 'Invalid category',
+      },
+    },
+    description: {
+      type: String,
+      required: [true, 'Description is required'],
+      trim: true,
+      maxlength: [2000, 'Description cannot exceed 2000 characters'],
+    },
+    
+    // Optional fields
+    name: {
+      type: String,
+      trim: true,
+      maxlength: [200, 'Name cannot exceed 200 characters'],
     },
     discount: {
       type: Number,
@@ -58,31 +71,29 @@ const productSchema = new mongoose.Schema(
       uppercase: true,
       trim: true,
     },
-    category: {
-      type: String,
-      required: [true, 'Category is required'],
-      enum: {
-        values: [
-          'Fiction',
-          'Self-Help',
-          'Technology',
-          'Sci-Fi',
-          'Business',
-          'Mystery',
-          'Biography',
-          'Foods',
-          'Stationeries',
-          'Books',
-          'Poem Book',
-          'Story Book',
-          'All',
-        ],
-        message: 'Invalid category',
+    
+    // Enhanced images array with structure
+    images: [{
+      url: {
+        type: String,
+        required: true,
+        trim: true,
       },
-    },
-    images: {
-      type: [String],
-      default: [],
+      alt: {
+        type: String,
+        trim: true,
+        default: '',
+      },
+      isPrimary: {
+        type: Boolean,
+        default: false,
+      },
+    }],
+    
+    // Legacy single image field for backward compatibility
+    image: {
+      type: String,
+      trim: true,
     },
     thumbnailUrl: {
       type: String,
@@ -91,7 +102,7 @@ const productSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: {
-        values: ['active', 'out_of_stock', 'disabled'],
+        values: ['active', 'inactive', 'out_of_stock'],
         message: 'Invalid status',
       },
       default: 'active',
@@ -100,17 +111,14 @@ const productSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    isComingSoon: {
-      type: Boolean,
-      default: false,
-    },
-    isOutOfStock: {
-      type: Boolean,
-      default: false,
-    },
     language: {
       type: String,
-      trim: true,
+      required: [true, 'Language is required'],
+      enum: {
+        values: ['Tamil', 'English', 'Bilingual'],
+        message: 'Invalid language',
+      },
+      default: 'English',
     },
     pages: {
       type: Number,
@@ -118,7 +126,7 @@ const productSchema = new mongoose.Schema(
     },
     format: {
       type: String,
-      enum: ['Hardcover', 'Paperback', 'Kindle', 'Box', 'Pack', 'Jar', 'Set'],
+      enum: ['Hardcover', 'Paperback', 'Digital', 'Box', 'Pack', 'Jar', 'Set'],
     },
     rating: {
       type: Number,
@@ -136,6 +144,17 @@ const productSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
       select: false,
+    },
+    
+    // Admin-only fields
+    adminNotes: {
+      type: String,
+      trim: true,
+      maxlength: [500, 'Admin notes cannot exceed 500 characters'],
+    },
+    costPrice: {
+      type: Number,
+      min: [0, 'Cost price cannot be negative'],
     },
   },
   {
@@ -161,7 +180,7 @@ productSchema.index({ isDeleted: 1 });
 
 // Auto-generate SKU if not provided
 productSchema.pre('save', async function (next) {
-  // Sync name/title
+  // Sync name/title for backward compatibility
   if (this.name && !this.title) this.title = this.name;
   if (this.title && !this.name) this.name = this.title;
 
@@ -173,10 +192,17 @@ productSchema.pre('save', async function (next) {
     this.sku = `SB-${prefix}-${timestamp}${random}`;
   }
 
-  // Auto-update isOutOfStock based on stock
-  this.isOutOfStock = this.stockQuantity <= 0;
-  if (this.isOutOfStock && this.status === 'active') {
+  // Auto-update status based on stock
+  if (this.stockQuantity <= 0 && this.status === 'active') {
     this.status = 'out_of_stock';
+  } else if (this.stockQuantity > 0 && this.status === 'out_of_stock') {
+    this.status = 'active';
+  }
+
+  // Sync legacy image field with images array
+  if (this.images && this.images.length > 0 && !this.image) {
+    const primaryImage = this.images.find(img => img.isPrimary) || this.images[0];
+    this.image = primaryImage.url;
   }
 
   next();
@@ -250,8 +276,13 @@ productSchema.methods.adjustStock = async function (quantity) {
   }
 
   this.stockQuantity = newStock;
-  this.isOutOfStock = newStock <= 0;
-  this.status = newStock <= 0 ? 'out_of_stock' : 'active';
+  
+  // Auto-update status based on stock
+  if (newStock <= 0) {
+    this.status = 'out_of_stock';
+  } else if (this.status === 'out_of_stock') {
+    this.status = 'active';
+  }
 
   await this.save();
   return this;

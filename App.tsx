@@ -12,6 +12,8 @@ import Footer from './components/Footer.tsx';
 import SupportPage, { SupportPageType } from './components/SupportPage.tsx';
 const AuthModal = React.lazy(() => import('./components/AuthModal.tsx'));
 const AdminDashboard = React.lazy(() => import('./components/AdminDashboard.tsx'));
+const AdminHive = React.lazy(() => import('./components/AdminHive.tsx'));
+const AdminHiveTest = React.lazy(() => import('./components/AdminHiveTest.tsx'));
 import CookieConsent from './components/CookieConsent.tsx';
 import Assistant from './components/Assistant.tsx';
 import InteractiveParticles from './components/InteractiveParticles.tsx';
@@ -63,6 +65,8 @@ const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
+  const [showAdminHive, setShowAdminHive] = useState(false);
+  const [showAdminTest, setShowAdminTest] = useState(false);
   const isInitialRender = useRef(true);
   const lastGoodProducts = useRef<Product[]>([]);
   const testimonialRef = useRef<HTMLDivElement>(null);
@@ -892,18 +896,44 @@ const App: React.FC = () => {
       <Assistant products={products} />
 
       {user?.role === 'admin' && (
-        <button
-          onClick={() => setShowAdmin(true)}
-          className="fixed bottom-6 left-6 z-50 w-14 h-14 bg-brand-black text-brand-primary rounded-full shadow-2xl hover:scale-110 active:scale-95 transition-all flex items-center justify-center text-2xl border-2 border-brand-primary/20 hover:shadow-honey"
-          aria-label="Admin Dashboard"
-        >
-          👑
-        </button>
+        <>
+          <button
+            onClick={() => setShowAdmin(true)}
+            className="fixed bottom-6 left-6 z-50 w-14 h-14 bg-brand-black text-brand-primary rounded-full shadow-2xl hover:scale-110 active:scale-95 transition-all flex items-center justify-center text-2xl border-2 border-brand-primary/20 hover:shadow-honey"
+            aria-label="Admin Dashboard"
+          >
+            👑
+          </button>
+          <button
+            onClick={() => setShowAdminHive(true)}
+            className="fixed bottom-6 left-24 z-50 w-14 h-14 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-full shadow-2xl hover:scale-110 active:scale-95 transition-all flex items-center justify-center text-xl border-2 border-amber-300/20 hover:shadow-honey"
+            aria-label="Admin Hive"
+          >
+            🐝
+          </button>
+          <button
+            onClick={() => setShowAdminTest(true)}
+            className="fixed bottom-6 left-44 z-50 w-14 h-14 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-full shadow-2xl hover:scale-110 active:scale-95 transition-all flex items-center justify-center text-xl border-2 border-blue-300/20 hover:shadow-honey"
+            aria-label="Admin Test"
+          >
+            🧪
+          </button>
+        </>
       )}
 
       {showAdmin && (
         <React.Suspense fallback={null}>
           <AdminDashboard onClose={() => setShowAdmin(false)} />
+        </React.Suspense>
+      )}
+      {showAdminHive && (
+        <React.Suspense fallback={null}>
+          <AdminHive onClose={() => setShowAdminHive(false)} />
+        </React.Suspense>
+      )}
+      {showAdminTest && (
+        <React.Suspense fallback={null}>
+          <AdminHiveTest />
         </React.Suspense>
       )}
       <CookieConsent />

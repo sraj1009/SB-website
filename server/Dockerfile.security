@@ -1,0 +1,72 @@
+# SECURITY HARDENED DOCKERFILE - SINGGLEBEE BACKEND
+# Multi-stage build for minimal attack surface and security
+
+# Build stage
+FROM node:18-alpine AS builder
+
+# Install security tools and build dependencies
+RUN apk add --no-cache \
+    dumb-init \
+    ca-certificates \
+    && rm -rf /var/cache/apk/*
+
+# Set secure working directory
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies with security audit
+RUN npm ci --only=production --ignore-scripts && \
+    npm audit fix --audit-level moderate
+
+# Copy source code
+COPY . .
+
+# Build the application
+RUN npm run build
+
+# Production stage - Minimal runtime image
+FROM gcr.io/distroless/nodejs18-debian11 AS production
+
+# Create non-root user with minimal permissions
+# Note: distroless images don't allow user creation, so we use node user
+USER 65534:65534
+
+# Set secure working directory
+WORKDIR /app
+
+# Copy built application from builder
+COPY --from=builder --chown=65534:65534 /app/dist ./dist
+COPY --from=builder --chown=65534:65534 /app/node_modules ./node_modules
+COPY --from=builder --chown=65534:65534 /app/package*.json ./
+
+# Create required directories with proper permissions
+RUN mkdir -p /app/logs /app/uploads && \
+    chmod 750 /app/logs /app/uploads
+
+# Security hardening
+# Set file permissions
+RUN chmod -R 644 /app/dist /app/node_modules && \
+    chmod 755 /app/dist/server.js && \
+    find /app -type f -name "*.js" -exec chmod 644 {} \; && \
+    find /app -type d -exec chmod 755 {} \;
+
+# Expose port (documentation only - actual port mapping done in compose)
+EXPOSE 5000
+
+# Health check for monitoring
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD node -e "require('http').get('http://localhost:5000/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"
+
+# Use dumb-init as PID 1 for proper signal handling
+ENTRYPOINT ["dumb-init", "--"]
+
+# Run the application with non-root user
+CMD ["node", "dist/server.js"]
+
+# Security labels
+LABEL security.scan.enabled="true" \
+      security.policy="production" \
+      security.compliance="PCI-DSS" \
+      maintainer="security-team@singglebee.com"

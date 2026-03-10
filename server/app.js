@@ -24,6 +24,7 @@ import addressRoutes from './routes/api/v1/addresses.js';
 import reviewRoutes from './routes/api/v1/reviews.js';
 import assistantRoutes from './routes/assistant.js';
 import couponRoutes from './routes/api/v1/coupons.js';
+import uploadRoutes from './routes/api/v1/upload.js';
 import { authLimiter, paymentLimiter, apiLimiter } from './middleware/rateLimiter.js';
 
 const app = express();
@@ -217,6 +218,7 @@ app.use('/api/v1/wishlist', apiLimiter, wishlistRoutes);
 app.use('/api/v1/addresses', apiLimiter, addressRoutes);
 app.use('/api/v1/reviews', apiLimiter, reviewRoutes);
 app.use('/api/v1/coupons', apiLimiter, couponRoutes);
+app.use('/api/v1/upload', apiLimiter, uploadRoutes);
 app.use('/api/v1/assistant', apiLimiter, assistantRoutes);
 
 // Admin routes

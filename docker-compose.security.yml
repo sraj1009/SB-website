@@ -1,0 +1,320 @@
+# SECURITY HARDENED DOCKER COMPOSE - SINGGLEBEE PLATFORM
+# Zero-trust architecture with network isolation and security hardening
+
+version: '3.8'
+
+# Security-hardened networks
+networks:
+  singglebee-internal:
+    driver: bridge
+    internal: true  # No external internet access for internal services
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
+  singglebee-frontend:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.21.0.0/24
+
+# Secrets management (production use)
+secrets:
+  mongodb_root_password:
+    external: true
+  mongodb_user_password:
+    external: true
+  redis_password:
+    external: true
+  jwt_access_secret:
+    external: true
+  jwt_refresh_secret:
+    external: true
+  cashfree_app_id:
+    external: true
+  cashfree_secret_key:
+    external: true
+
+services:
+  # Backend API - Security Hardened
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile.security
+    image: singglebee/backend:secure
+    container_name: singglebee-backend
+    restart: unless-stopped
+    
+    # Security: Non-root user and read-only filesystem
+    user: "65534:65534"
+    read_only: true
+    
+    # Minimal writable volumes (only where needed)
+    volumes:
+      - ./server/logs:/app/logs:rw
+      - ./server/uploads:/app/uploads:rw
+      - /tmp:/tmp:rw
+    
+    # Environment variables (use secrets in production)
+    env_file:
+      - ./server/.env
+    environment:
+      - NODE_ENV=production
+      - PORT=5000
+    
+    # Secrets (production)
+    secrets:
+      - mongodb_root_password
+      - mongodb_user_password
+      - redis_password
+      - jwt_access_secret
+      - jwt_refresh_secret
+      - cashfree_app_id
+      - cashfree_secret_key
+    
+    # Network isolation
+    networks:
+      - singglebee-internal
+      - singglebee-frontend
+    
+    # Security limits
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:5000/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    
+    # Security: No direct host port exposure (goes through nginx)
+    depends_on:
+      - mongodb
+      - redis
+
+  # Frontend - Security Hardened
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend.security
+    image: singglebee/frontend:secure
+    container_name: singglebee-frontend
+    restart: unless-stopped
+    
+    # Security: Non-root user and read-only filesystem
+    user: "1000:1000"
+    read_only: true
+    
+    networks:
+      - singglebee-frontend
+    
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+    
+    depends_on:
+      - backend
+
+  # MongoDB - Security Hardened
+  mongodb:
+    image: mongo:7.0
+    container_name: singglebee-mongodb
+    restart: unless-stopped
+    
+    # Security: Non-root user
+    user: "999:999"
+    
+    # Security: Read-only except for data directory
+    read_only: true
+    volumes:
+      - mongodb_data:/data/db:rw
+      - mongodb_config:/data/configdb:rw
+      - ./server/scripts/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+    
+    # Security: No port exposure to host
+    expose:
+      - "27017"
+    
+    # Network isolation
+    networks:
+      - singglebee-internal
+    
+    # Security: Authentication and encryption
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME_FILE=/run/secrets/mongodb_root_password
+      - MONGO_INITDB_ROOT_PASSWORD_FILE=/run/secrets/mongodb_root_password
+      - MONGO_INITDB_DATABASE=singglebee
+    
+    secrets:
+      - mongodb_root_password
+    
+    # Security: Enable authentication and TLS
+    command: >
+      mongod
+      --auth
+      --bind_ip_all
+      --port 27017
+      --dbpath /data/db
+      --configdb /data/configdb
+      --enableEncryption
+      --encryptionKeyFile /run/secrets/mongodb_encryption_key
+      --encryptionMode aes256-gcm-sha256
+    
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # Redis - Security Hardened
+  redis:
+    image: redis:7.2-alpine
+    container_name: singglebee-redis
+    restart: unless-stopped
+    
+    # Security: Non-root user
+    user: "999:999"
+    
+    # Security: Read-only except for data directory
+    read_only: true
+    volumes:
+      - redis_data:/data:rw
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+    
+    # Security: No port exposure to host
+    expose:
+      - "6379"
+    
+    # Network isolation
+    networks:
+      - singglebee-internal
+    
+    # Security: Authentication and dangerous command renaming
+    command: >
+      redis-server /usr/local/etc/redis/redis.conf
+      --requirepass-file /run/secrets/redis_password
+      --rename-command CONFIG ""
+      --rename-command FLUSHALL ""
+      --rename-command FLUSHDB ""
+      --rename-command KEYS ""
+      --rename-command SHUTDOWN ""
+    
+    secrets:
+      - redis_password
+    
+    # Security: Memory limits and health check
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 30s
+
+  # Nginx Reverse Proxy - Security Hardened
+  nginx:
+    image: nginx:alpine
+    container_name: singglebee-nginx
+    restart: unless-stopped
+    
+    # Security: Non-root user
+    user: "101:101"
+    
+    # Security: Read-only except for logs
+    read_only: true
+    volumes:
+      - ./nginx/nginx.security.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - nginx_logs:/var/log/nginx:rw
+      - nginx_cache:/var/cache/nginx:rw
+    
+    # Port exposure (only to external)
+    ports:
+      - "80:80"
+      - "443:443"
+    
+    networks:
+      - singglebee-frontend
+    
+    # Security: Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+    
+    depends_on:
+      - frontend
+      - backend
+    
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Security Monitoring - Fail2Ban
+  fail2ban:
+    image: lscr.io/linuxserver/fail2ban:latest
+    container_name: singglebee-fail2ban
+    restart: unless-stopped
+    
+    # Security: Read-only except for config
+    read_only: true
+    volumes:
+      - ./security/fail2ban/config:/config:rw
+      - nginx_logs:/var/log/nginx:ro
+      - ./server/logs:/var/log/app:ro
+    
+    networks:
+      - singglebee-frontend
+    
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
+
+# Persistent volumes with security
+volumes:
+  mongodb_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /var/lib/singglebee/mongodb
+  mongodb_config:
+    driver: local
+  redis_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /var/lib/singglebee/redis
+  nginx_logs:
+    driver: local
+  nginx_cache:
+    driver: local

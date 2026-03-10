@@ -160,7 +160,19 @@ export const getProduct = async (req, res, next) => {
  */
 export const createProduct = async (req, res, next) => {
   try {
-    const product = await Product.create(req.body);
+    // Handle image upload if present
+    let imageUrl = null;
+    if (req.file) {
+      imageUrl = `/uploads/${req.file.filename}`;
+    }
+    
+    // Create product with image URL
+    const productData = {
+      ...req.body,
+      image: imageUrl || req.body.image
+    };
+    
+    const product = await Product.create(productData);
 
     logger.info(`Product created: ${product.title} (${product.sku})`);
 
@@ -181,9 +193,21 @@ export const createProduct = async (req, res, next) => {
  */
 export const updateProduct = async (req, res, next) => {
   try {
+    // Handle image upload if present
+    let imageUrl = req.body.image;
+    if (req.file) {
+      imageUrl = `/uploads/${req.file.filename}`;
+    }
+    
+    // Update product with image URL
+    const updateData = {
+      ...req.body,
+      image: imageUrl
+    };
+    
     const product = await Product.findOneAndUpdate(
       { _id: req.params.id, isDeleted: { $ne: true } },
-      req.body,
+      updateData,
       { new: true, runValidators: true }
     );
 
