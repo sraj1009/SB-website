@@ -133,13 +133,20 @@ export const handleWebhook = async (req, res, next) => {
     const signature = req.headers['x-webhook-signature'];
     const timestamp = req.headers['x-webhook-timestamp'];
 
-    // Verify signature if Cashfree is configured
+    // Verify signature when Cashfree is configured (REQUIRED for security)
     if (cashfreeService.isConfigured()) {
-      const isValid = cashfreeService.verifyWebhookSignature(
-        req.rawBody || payload,
-        signature,
-        timestamp
-      );
+      if (!signature || !timestamp) {
+        logger.warn('Webhook missing signature or timestamp');
+        return res.status(401).json({
+          success: false,
+          error: {
+            code: 'MISSING_SIGNATURE',
+            message: 'Webhook signature and timestamp are required',
+          },
+        });
+      }
+      const rawPayload = req.rawBody || Buffer.from(JSON.stringify(payload));
+      const isValid = cashfreeService.verifyWebhookSignature(rawPayload, signature, timestamp);
 
       if (!isValid) {
         logger.warn('Invalid webhook signature received');
@@ -270,13 +277,15 @@ export const handleWebhook = async (req, res, next) => {
         break;
       }
 
-      case 'PAYMENT_USER_DROPPED': {
+      case 'PAYMENT_USER_DROPPED':
+      case 'ORDER_CANCELLED':
+      case 'ORDER_CANCELLED_WEBHOOK': {
         const session = await PaymentSession.findOne({ sessionId });
-        if (session && session.status === 'pending') {
+        if (session && session.status === 'pending' && !session.orderCreated) {
           session.status = 'failed';
           await session.save();
 
-          // Release stock lock
+          // Release stock lock atomically
           const Product = mongoose.model('Product');
           for (const item of session.items) {
             await Product.findByIdAndUpdate(item.product, {
@@ -284,7 +293,8 @@ export const handleWebhook = async (req, res, next) => {
             });
           }
 
-          logger.info(`Session ${sessionId} marked as user dropped via webhook, stock restored`);
+          logger.info(`Session ${sessionId} marked as cancelled/dropped via webhook, stock restored`);
+          paymentsCounter.inc({ gateway: 'cashfree', status: 'cancelled' });
         }
         break;
       }

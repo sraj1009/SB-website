@@ -25,7 +25,8 @@ const envVarsSchema = Joi.object()
     CASHFREE_APP_ID: Joi.string().allow('').description('Cashfree App ID'),
     CASHFREE_SECRET_KEY: Joi.string().allow('').description('Cashfree Secret Key'),
     CASHFREE_ENV: Joi.string().valid('sandbox', 'production').default('sandbox'),
-    FRONTEND_URL: Joi.string().default('http://localhost:3000'),
+    FRONTEND_URL: Joi.string().default('http://localhost:5173'),
+    BACKEND_URL: Joi.string().allow('').optional().description('Backend URL for webhooks (e.g. https://api.singglebee.com)'),
     ADMIN_EMAIL: Joi.string().email().required(),
     ADMIN_PASSWORD: Joi.string().required(),
     GEMINI_API_KEY: Joi.string().required(),
@@ -59,6 +60,8 @@ export default {
     env: envVars.CASHFREE_ENV,
     version: envVars.CASHFREE_API_VERSION || '2023-08-01',
   },
+  frontendUrl: envVars.FRONTEND_URL,
+  backendUrl: envVars.BACKEND_URL || `http://localhost:${envVars.PORT}`,
   admin: {
     email: envVars.ADMIN_EMAIL,
     password: envVars.ADMIN_PASSWORD,

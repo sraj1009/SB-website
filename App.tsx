@@ -8,7 +8,6 @@ const CheckoutModal = React.lazy(() => import('./components/CheckoutModal.tsx'))
 const QuickViewModal = React.lazy(() => import('./components/QuickViewModal.tsx'));
 import FilterSidebar from './components/FilterSidebar.tsx';
 import Hero from './components/Hero.tsx';
-import HeroGlassmorphic from './components/HeroGlassmorphic.tsx';
 import Footer from './components/Footer.tsx';
 import SupportPage, { SupportPageType } from './components/SupportPage.tsx';
 const AuthModal = React.lazy(() => import('./components/AuthModal.tsx'));
@@ -24,9 +23,6 @@ import { MOCK_PRODUCTS } from './constants.ts';
 import { Category, Product, CartItem, User } from './types.ts';
 import BeeCharacter from './components/BeeCharacter.tsx';
 import { useProducts, useProductFilter } from './hooks/useProducts.ts';
-
-// Import glassmorphic styles
-import './styles/glassmorphic.css';
 
 // NoResults component for better UX
 const NoResults: React.FC<{ searchQuery: string; onClearFilters: () => void }> = ({ searchQuery, onClearFilters }) => (
@@ -479,7 +475,7 @@ const App: React.FC = () => {
           </div>
         ) : !showShop ? (
           <>
-            <HeroGlassmorphic onShopNow={() => goToShop(Category.ALL)} />
+            <Hero onShopNow={() => goToShop(Category.ALL)} />
 
             {/* Tamil Books Band */}
             <AutoScrollProductBand

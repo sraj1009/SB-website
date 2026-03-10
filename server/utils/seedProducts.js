@@ -13,6 +13,7 @@ import logger from './logger.js';
 // Mock products data (from existing frontend constants.ts)
 const SEED_PRODUCTS = [
   {
+    name: 'தமிழ் பாலபாடம் - 1',
     title: 'தமிழ் பாலபாடம் - 1',
     author: 'SINGGLEBEE',
     price: 199,
@@ -25,7 +26,7 @@ const SEED_PRODUCTS = [
     pages: 32,
     language: 'Tamil',
     format: 'Paperback',
-    stock: 50,
+    stockQuantity: 50,
     status: 'active',
     reviews: [
       {
@@ -44,6 +45,7 @@ const SEED_PRODUCTS = [
     ],
   },
   {
+    name: 'தமிழ் பாலபாடம் - 2',
     title: 'தமிழ் பாலபாடம் - 2',
     author: 'SINGGLEBEE',
     price: 199,
@@ -56,7 +58,7 @@ const SEED_PRODUCTS = [
     pages: 40,
     language: 'Tamil',
     format: 'Paperback',
-    stock: 40,
+    stockQuantity: 40,
     status: 'active',
     reviews: [
       {
@@ -76,6 +78,7 @@ const SEED_PRODUCTS = [
     ],
   },
   {
+    name: 'தமிழ் அரிச்சுவடி - 1',
     title: 'தமிழ் அரிச்சுவடி - 1',
     author: 'SINGGLEBEE',
     price: 179,
@@ -88,7 +91,7 @@ const SEED_PRODUCTS = [
     pages: 28,
     language: 'Tamil',
     format: 'Paperback',
-    stock: 60,
+    stockQuantity: 60,
     status: 'active',
     reviews: [
       {
@@ -107,6 +110,7 @@ const SEED_PRODUCTS = [
     ],
   },
   {
+    name: 'தமிழ் அரிச்சுவடி - 2',
     title: 'தமிழ் அரிச்சுவடி - 2',
     author: 'SINGGLEBEE',
     price: 179,
@@ -119,7 +123,7 @@ const SEED_PRODUCTS = [
     pages: 32,
     language: 'Tamil',
     format: 'Paperback',
-    stock: 45,
+    stockQuantity: 45,
     status: 'active',
     reviews: [
       {
@@ -138,6 +142,7 @@ const SEED_PRODUCTS = [
     ],
   },
   {
+    name: 'பட்டம் பறக்கும் பட்டம் - 1',
     title: 'பட்டம் பறக்கும் பட்டம் - 1',
     author: 'SINGGLEBEE',
     price: 259,
@@ -150,7 +155,7 @@ const SEED_PRODUCTS = [
     pages: 48,
     language: 'Tamil',
     format: 'Paperback',
-    stock: 35,
+    stockQuantity: 35,
     status: 'active',
     reviews: [
       {
@@ -169,6 +174,7 @@ const SEED_PRODUCTS = [
     ],
   },
   {
+    name: 'பட்டம் பறக்கும் பட்டம் - 2',
     title: 'பட்டம் பறக்கும் பட்டம் - 2',
     author: 'SINGGLEBEE',
     price: 259,
@@ -182,7 +188,7 @@ const SEED_PRODUCTS = [
     pages: 48,
     language: 'Tamil',
     format: 'Paperback',
-    stock: 5,
+    stockQuantity: 5,
     status: 'active',
     reviews: [
       {
@@ -201,6 +207,7 @@ const SEED_PRODUCTS = [
     ],
   },
   {
+    name: 'Kite Flies High - 1',
     title: 'Kite Flies High - 1',
     author: 'SINGGLEBEE',
     price: 259,
@@ -213,7 +220,7 @@ const SEED_PRODUCTS = [
     pages: 48,
     language: 'English',
     format: 'Paperback',
-    stock: 55,
+    stockQuantity: 55,
     status: 'active',
     reviews: [
       {
@@ -233,6 +240,7 @@ const SEED_PRODUCTS = [
     ],
   },
   {
+    name: 'Kite Flies High - 2',
     title: 'Kite Flies High - 2',
     author: 'SINGGLEBEE',
     price: 259,
@@ -246,7 +254,7 @@ const SEED_PRODUCTS = [
     pages: 48,
     language: 'English',
     format: 'Paperback',
-    stock: 8,
+    stockQuantity: 8,
     status: 'active',
     reviews: [
       {
@@ -264,6 +272,7 @@ const SEED_PRODUCTS = [
     ],
   },
   {
+    name: 'Tales of Goodness',
     title: 'Tales of Goodness',
     author: 'SINGGLEBEE',
     price: 359,
@@ -276,7 +285,7 @@ const SEED_PRODUCTS = [
     pages: 64,
     language: 'English',
     format: 'Paperback',
-    stock: 30,
+    stockQuantity: 30,
     status: 'active',
     reviews: [
       {
@@ -295,6 +304,7 @@ const SEED_PRODUCTS = [
     ],
   },
   {
+    name: 'Three Tiny Tales for Twilight Time',
     title: 'Three Tiny Tales for Twilight Time',
     author: 'SINGGLEBEE',
     price: 359,
@@ -307,7 +317,7 @@ const SEED_PRODUCTS = [
     pages: 56,
     language: 'English',
     format: 'Paperback',
-    stock: 25,
+    stockQuantity: 25,
     status: 'active',
     reviews: [
       {
@@ -349,8 +359,8 @@ const seedProducts = async () => {
 
       for (const seedProd of SEED_PRODUCTS) {
         await Product.findOneAndUpdate(
-          { title: seedProd.title },
-          { $set: { stock: seedProd.stock, status: 'active', isOutOfStock: false } }
+          { $or: [{ title: seedProd.title }, { name: seedProd.name }] },
+          { $set: { stockQuantity: seedProd.stockQuantity, status: 'active', isOutOfStock: false } }
         );
       }
       logger.info('Stock update complete.');
@@ -372,7 +382,7 @@ const seedProducts = async () => {
 
     // Log product summary
     products.forEach((p) => {
-      logger.info(`  - ${p.title} - ₹${p.price} - Stock: ${p.stock}`);
+      logger.info(`  - ${p.title} - ₹${p.price} - Stock: ${p.stockQuantity}`);
     });
   } catch (error) {
     logger.error(`Seed failed: ${error.message}`);

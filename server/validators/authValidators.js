@@ -32,17 +32,18 @@ export const signupSchema = Joi.object({
     }),
 
   address: Joi.object({
-    street: Joi.string().trim().max(200).optional(),
-    landmark: Joi.string().trim().max(100).optional(),
-    city: Joi.string().trim().max(50).optional(),
-    state: Joi.string().trim().max(50).optional(),
+    street: Joi.string().trim().max(200).allow('').optional(),
+    landmark: Joi.string().trim().max(100).allow('').optional(),
+    city: Joi.string().trim().max(50).allow('').optional(),
+    state: Joi.string().trim().max(50).allow('').optional(),
     zipCode: Joi.string()
       .pattern(/^[0-9]{6}$/)
+      .allow('')
       .optional()
       .messages({
         'string.pattern.base': 'ZIP code must be exactly 6 digits',
       }),
-    country: Joi.string().trim().max(50).default('India'),
+    country: Joi.string().trim().max(50).default('India').allow(''),
   }).optional(),
 });
 

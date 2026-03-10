@@ -1269,3 +1269,150 @@ html {
   text-align: center;
   box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
 }
+
+.success-icon {
+  width: 80px;
+  height: 80px;
+  background: rgba(16, 185, 129, 0.1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content-center;
+  margin: 0 auto 24px;
+  color: #10B981;
+}
+
+.bee-animation {
+  width: 64px;
+  height: 64px;
+  background: rgba(254, 243, 199, 1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content-center;
+  margin: 0 auto 24px;
+  color: #F59E0B;
+  animation: bounce 1s infinite;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.success-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 16px;
+}
+
+.success-message {
+  color: #6B7280;
+  margin-bottom: 24px;
+}
+
+.success-submessage {
+  font-size: 14px;
+  color: #9CA3AF;
+  margin-bottom: 24px;
+}
+
+.success-button {
+  padding: 12px 24px;
+  background: #F59E0B;
+  color: white;
+  border-radius: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.success-button:hover {
+  background: #D97706;
+}
+
+.success-button.newsletter {
+  background: #10B981;
+}
+
+.success-button.newsletter:hover {
+  background: #059669;
+}
+
+/* Two-Column Layout */
+.two-column-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 48px;
+}
+
+@media (min-width: 1024px) {
+  .two-column-layout {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .contact-newsletter-container {
+    padding: 48px 16px;
+  }
+  
+  .contact-form-container,
+  .newsletter-container,
+  .testimonial-carousel {
+    padding: 24px;
+  }
+  
+  .testimonial-text {
+    font-size: 18px;
+  }
+  
+  .success-modal-content {
+    padding: 24px;
+  }
+}
+
+/* Keyboard Navigation */
+.form-input:focus-visible,
+.btn-primary:focus-visible,
+.testimonial-nav:focus-visible,
+.success-button:focus-visible {
+  outline: 2px solid #F59E0B;
+  outline-offset: 2px;
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+  .glassmorphic-card {
+    border: 2px solid #374151;
+  }
+  
+  .form-input {
+    border: 2px solid #374151;
+  }
+  
+  .btn-primary {
+    border: 2px solid #059669;
+  }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  .bee-animation {
+    animation: none;
+  }
+  
+  .form-input,
+  .btn-primary,
+  .testimonial-nav,
+  .testimonial-dot,
+  .success-button {
+    transition: none;
+  }
+}

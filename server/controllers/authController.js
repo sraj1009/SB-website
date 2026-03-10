@@ -29,6 +29,9 @@ const setTokenCookies = (res, accessToken, refreshToken) => {
  * @access  Public
  */
 export const signup = async (req, res, next) => {
+  // Set content type header to ensure JSON response
+  res.setHeader('Content-Type', 'application/json');
+  
   try {
     const { fullName, email, password, phone, address } = req.body;
 
@@ -45,13 +48,15 @@ export const signup = async (req, res, next) => {
     }
 
     // Create user (map fullName to name for schema)
-    const user = await User.create({
+    const userData = {
       name: fullName,
       email,
       password,
       phone,
-      address,
-    });
+      address: address || {}, // Ensure address is an object even if not provided
+    };
+
+    const user = await User.create(userData);
 
     // Generate tokens
     const ip = req.headers['x-forwarded-for']?.split(',')[0] || req.ip;
@@ -74,7 +79,7 @@ export const signup = async (req, res, next) => {
       data: {
         user: {
           id: user._id,
-          fullName: user.fullName,
+          fullName: user.fullName || user.name,
           email: user.email,
           phone: user.phone,
           role: user.role,
@@ -87,6 +92,7 @@ export const signup = async (req, res, next) => {
       },
     });
   } catch (error) {
+    logger.error('Signup error:', error);
     next(error);
   }
 };
@@ -97,6 +103,9 @@ export const signup = async (req, res, next) => {
  * @access  Public
  */
 export const signin = async (req, res, next) => {
+  // Set content type header to ensure JSON response
+  res.setHeader('Content-Type', 'application/json');
+  
   try {
     const { email, password } = req.body;
 
@@ -172,6 +181,7 @@ export const signin = async (req, res, next) => {
       },
     });
   } catch (error) {
+    logger.error('Signin error:', error);
     next(error);
   }
 };
@@ -208,6 +218,7 @@ export const refreshToken = async (req, res, next) => {
     // Set cookies
     setTokenCookies(res, accessToken, newRefreshToken);
 
+    // Return tokens for clients using Authorization header (e.g. SPA localStorage)
     res.json({
       success: true,
       message: 'Tokens refreshed successfully',
@@ -218,6 +229,8 @@ export const refreshToken = async (req, res, next) => {
           email: user.email,
           role: user.role,
         },
+        accessToken,
+        refreshToken: newRefreshToken,
       },
     });
   } catch (error) {

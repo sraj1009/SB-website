@@ -82,7 +82,7 @@ app.use(
   })
 );
 
-// CORS - Strict origin configuration
+// CORS - More permissive for development, strict for production
 const corsOptions = {
   origin: (origin, callback) => {
     const allowedOrigins = [
@@ -92,9 +92,17 @@ const corsOptions = {
       'http://localhost:5173',
       'http://localhost:3000',
       'http://localhost:4173',
+      'http://127.0.0.1:5173',
+      'http://127.0.0.1:3000',
+      'http://127.0.0.1:4173',
     ];
 
-    if (!origin || allowedOrigins.includes(origin)) {
+    // Allow requests with no origin (like mobile apps, Postman, etc.)
+    if (!origin) {
+      return callback(null, true);
+    }
+
+    if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       logger.warn(`CORS blocked request from: ${origin}`);
@@ -103,9 +111,11 @@ const corsOptions = {
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-  exposedHeaders: ['X-Total-Count', 'X-Total-Pages'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-CSRF-Token'],
+  exposedHeaders: ['X-Total-Count', 'X-Total-Pages', 'Set-Cookie'],
   maxAge: 86400, // 24 hours
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 };
 
 app.use(cors(corsOptions));
@@ -133,6 +143,18 @@ app.use(mongoSanitize());
 
 // Optional: Basic XSS prevention on specific body fields can be added here,
 // but helmet and the frontend framework handle most of it securely.
+
+// ===========================================
+// JSON RESPONSE MIDDLEWARE
+// ===========================================
+// Ensure all responses are JSON formatted
+app.use((req, res, next) => {
+  // Set default content type for API routes
+  if (req.path.startsWith('/api/')) {
+    res.setHeader('Content-Type', 'application/json');
+  }
+  next();
+});
 
 // ===========================================
 // REQUEST LOGGING

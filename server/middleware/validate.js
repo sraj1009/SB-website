@@ -3,6 +3,9 @@
  */
 const validate = (schema, property = 'body') => {
   return (req, res, next) => {
+    // Ensure content type is set
+    res.setHeader('Content-Type', 'application/json');
+    
     const { error, value } = schema.validate(req[property], {
       abortEarly: false, // Return all errors, not just the first
       stripUnknown: true, // Remove unknown fields

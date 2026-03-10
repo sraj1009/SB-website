@@ -1,6 +1,7 @@
 import logger from '../utils/logger.js';
+import { AppError } from '../utils/AppError.js';
 
-// Fields that must never appear in logs
+// Fields that must never appear in logs (ensure .env vars never logged)
 const SENSITIVE_FIELDS = new Set([
   'password',
   'newPassword',
@@ -30,6 +31,9 @@ const sanitizeBody = (body) => {
  * Catches all errors and returns consistent error responses
  */
 const errorHandler = (err, req, res, next) => {
+  // Ensure content type is set to JSON
+  res.setHeader('Content-Type', 'application/json');
+  
   // Log the error — body is sanitized to avoid logging credentials
   logger.error(`${err.name}: ${err.message}`, {
     stack: err.stack,
@@ -114,7 +118,19 @@ const errorHandler = (err, req, res, next) => {
     });
   }
 
-  // Application specific errors
+  // Custom AppError (and subclasses)
+  if (err instanceof AppError) {
+    return res.status(err.statusCode).json({
+      success: false,
+      error: {
+        code: err.code,
+        message: err.message,
+        ...(err.details && { details: err.details }),
+      },
+    });
+  }
+
+  // Application errors with statusCode/code
   const statusCode = err.statusCode || 500;
   const errorCode = err.code || 'INTERNAL_SERVER_ERROR';
   const isProd = process.env.NODE_ENV === 'production';
@@ -133,6 +149,9 @@ const errorHandler = (err, req, res, next) => {
  * Not found handler - 404 for unmatched routes
  */
 export const notFoundHandler = (req, res) => {
+  // Ensure content type is set to JSON
+  res.setHeader('Content-Type', 'application/json');
+  
   res.status(404).json({
     success: false,
     error: {
