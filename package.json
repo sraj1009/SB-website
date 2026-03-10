@@ -21,6 +21,8 @@
     "test:payment": "vitest run tests/payment-service.test.ts",
     "security:audit": "npm audit --audit-level high",
     "security:fix": "npm audit fix",
+    "security:verify": "node scripts/verify-security.js",
+    "security:report": "node scripts/verify-security.js --report",
     "build:analyze": "vite build --mode analyze",
     "deploy:staging": "vercel --env staging",
     "deploy:prod": "vercel --env production",

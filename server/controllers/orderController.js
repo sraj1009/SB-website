@@ -14,7 +14,7 @@ import { notificationService } from '../utils/notification.js';
  */
 export const createOrder = async (req, res, next) => {
   try {
-    const { items, shippingAddress, paymentMethod = 'upi_manual', notes, couponCode } = req.body;
+    const { items, shippingAddress, paymentMethod = 'upi_manual', notes, couponCode, guestUser } = req.body;
 
     const order = await runInTransaction(async (session) => {
       // Build order items with product details
@@ -40,11 +40,12 @@ export const createOrder = async (req, res, next) => {
           };
         }
 
-        if (product.stockQuantity < item.quantity) {
+        // Check available stock (including reserved)
+        if (product.availableStock < item.quantity) {
           throw {
             statusCode: 400,
             code: 'INSUFFICIENT_STOCK',
-            message: `Insufficient stock for ${product.title}. Available: ${product.stockQuantity}`,
+            message: `Insufficient stock for ${product.title}. Available: ${product.availableStock}`,
           };
         }
 
@@ -59,15 +60,18 @@ export const createOrder = async (req, res, next) => {
           title: product.title,
           price: unitPrice,
           quantity: item.quantity,
-          image: product.images?.[0] || null,
+          image: product.images?.[0]?.url || product.image || null,
         });
 
         subtotal += unitPrice * item.quantity;
 
-        // Deduct stock using the proper instance method
-        await product.adjustStock(-item.quantity);
-        await product.save({ session });
+        // Reserve stock atomically
+        await product.reserveStock(item.quantity);
       }
+
+      // Calculate tax (GST 18% for India)
+      const taxRate = 0.18; // 18% GST
+      const taxAmount = Math.round(subtotal * taxRate);
 
       // Calculate coupon discount
       let discount = 0;
@@ -100,17 +104,19 @@ export const createOrder = async (req, res, next) => {
 
       // Calculate shipping (free above 1499)
       const shippingFee = subtotal >= 1499 ? 0 : 99;
-      const total = subtotal + shippingFee;
+      const total = subtotal + taxAmount + shippingFee;
 
       // Create order
       const newOrder = new Order({
-        user: req.user._id,
+        user: req.user?._id || null,
+        guestUser: guestUser || null,
         items: orderItems,
         shippingAddress,
         pricing: {
-          subtotal,
+          subtotal: subtotal + discount, // Original subtotal before discount
           shippingFee,
           discount,
+          taxAmount,
           total,
         },
         couponCode: coupon?.code,
@@ -120,13 +126,15 @@ export const createOrder = async (req, res, next) => {
           status: 'pending',
         },
         notes,
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent'),
       });
 
       await newOrder.save({ session });
       return newOrder;
     });
 
-    logger.info(`Order created: ${order.orderId} by user ${req.user.email}`);
+    logger.info(`Order created: ${order.orderId} by user ${req.user?.email || guestUser?.email}`);
 
     // Increment Prometheus counter
     ordersCreatedCounter.inc({ status: 'success' });
@@ -134,7 +142,7 @@ export const createOrder = async (req, res, next) => {
     // Send order confirmation email (if configured)
     try {
       const emailService = (await import('../services/emailService.js')).default;
-      const toEmail = shippingAddress?.email;
+      const toEmail = shippingAddress?.email || (req.user?.email);
       if (toEmail) {
         await emailService.sendOrderConfirmationEmail(toEmail, order.orderId, order.pricing.total);
       }
@@ -171,21 +179,59 @@ export const createOrder = async (req, res, next) => {
 /**
  * @desc    Get user's orders
  * @route   GET /api/v1/orders
- * @access  Private
+ * @access  Private/Public (for guest users)
  */
 export const getMyOrders = async (req, res, next) => {
   try {
-    const { page = 1, limit = 10, status } = req.query;
+    const { 
+      page = 1, 
+      limit = 10, 
+      status, 
+      sortBy = 'createdAt', 
+      sortOrder = 'desc',
+      startDate,
+      endDate 
+    } = req.query;
 
-    const filter = { user: req.user._id };
+    // Build filter based on user authentication
+    const filter = {};
+    if (req.user) {
+      filter.user = req.user._id;
+    } else if (req.query.guestEmail) {
+      // Guest user access via email
+      filter['guestUser.email'] = req.query.guestEmail;
+    } else {
+      return res.status(401).json({
+        success: false,
+        error: {
+          code: 'AUTHENTICATION_REQUIRED',
+          message: 'Authentication required or guest email must be provided',
+        },
+      });
+    }
+
     if (status) {
       filter.status = status;
     }
 
+    if (startDate || endDate) {
+      filter.createdAt = {};
+      if (startDate) filter.createdAt.$gte = new Date(startDate);
+      if (endDate) filter.createdAt.$lte = new Date(endDate);
+    }
+
+    const sort = {};
+    sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
+
     const skip = (Number(page) - 1) * Number(limit);
 
     const [orders, total] = await Promise.all([
-      Order.find(filter).sort({ createdAt: -1 }).skip(skip).limit(Number(limit)).lean(),
+      Order.find(filter)
+        .populate('items.product', 'title images')
+        .sort(sort)
+        .skip(skip)
+        .limit(Number(limit))
+        .lean(),
       Order.countDocuments(filter),
     ]);
 
@@ -198,6 +244,8 @@ export const getMyOrders = async (req, res, next) => {
           limit: Number(limit),
           total,
           totalPages: Math.ceil(total / Number(limit)),
+          hasNextPage: Number(page) < Math.ceil(total / Number(limit)),
+          hasPrevPage: Number(page) > 1,
         },
       },
     });

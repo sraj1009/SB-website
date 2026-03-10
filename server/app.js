@@ -5,7 +5,10 @@ import compression from 'compression';
 import mongoSanitize from 'express-mongo-sanitize';
 import cookieParser from 'cookie-parser';
 import promBundle from 'express-prom-bundle';
-import config from './config/config.js';
+import { initializeTracing } from './otel/tracing.js';
+
+// Initialize OpenTelemetry first
+initializeTracing();
 import { globalLimiter } from './middleware/rateLimiter.js';
 import errorHandler, { notFoundHandler } from './middleware/errorHandler.js';
 import logger from './utils/logger.js';
@@ -25,7 +28,10 @@ import reviewRoutes from './routes/api/v1/reviews.js';
 import assistantRoutes from './routes/assistant.js';
 import couponRoutes from './routes/api/v1/coupons.js';
 import uploadRoutes from './routes/api/v1/upload.js';
-import { authLimiter, paymentLimiter, apiLimiter } from './middleware/rateLimiter.js';
+import twoFactorRoutes from './routes/api/v1/twoFactor.js';
+import gdprRoutes from './routes/api/v1/gdpr.js';
+import paymentWebhookRoutes from './routes/api/v1/paymentWebhooks.js';
+import { authLimiter, paymentLimiter, apiLimiter, adminLimiter } from './middleware/rateLimiter.js';
 
 const app = express();
 
@@ -63,14 +69,16 @@ app.use(
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'", 'https://sdk.cashfree.com', 'https://www.googletagmanager.com'],
-        styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+        scriptSrc: ["'self'", 'https://sdk.cashfree.com'], // Removed unsafe-inline
+        styleSrc: ["'self'", 'https://fonts.googleapis.com'], // Removed unsafe-inline
         imgSrc: ["'self'", 'data:', 'https://res.cloudinary.com', 'https://*.cashfree.com', 'https://www.google-analytics.com'],
         connectSrc: ["'self'", 'https://*.cashfree.com', 'https://api.cashfree.com', 'https://www.google-analytics.com', 'https://stats.g.doubleclick.net'],
         fontSrc: ["'self'", 'https://fonts.gstatic.com'],
         frameSrc: ["'self'", 'https://*.cashfree.com'],
         objectSrc: ["'none'"],
         upgradeInsecureRequests: [],
+        // Add nonce support for dynamic scripts
+        scriptSrcAttr: ["'none'"],
       },
     },
     crossOriginEmbedderPolicy: false,
@@ -80,6 +88,12 @@ app.use(
       includeSubDomains: true,
       preload: true,
     },
+    // Additional security headers
+    permittedCrossDomainPolicies: false,
+    referrerPolicy: { policy: "strict-origin-when-cross-origin" },
+    xssFilter: true,
+    noSniff: true,
+    originAgentCluster: true,
   })
 );
 
@@ -221,8 +235,17 @@ app.use('/api/v1/coupons', apiLimiter, couponRoutes);
 app.use('/api/v1/upload', apiLimiter, uploadRoutes);
 app.use('/api/v1/assistant', apiLimiter, assistantRoutes);
 
-// Admin routes
-app.use('/api/v1/admin', adminRoutes);
+// Admin routes with strict rate limiting
+app.use('/api/v1/admin', adminLimiter, adminRoutes);
+
+// 2FA routes (admin only)
+app.use('/api/v1/admin/2fa', adminLimiter, twoFactorRoutes);
+
+// GDPR routes (users)
+app.use('/api/v1/users', gdprRoutes);
+
+// Payment webhook routes (public endpoints)
+app.use('/api/v1/payments', paymentWebhookRoutes);
 
 // ===========================================
 // ERROR HANDLING

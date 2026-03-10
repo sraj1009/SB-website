@@ -63,6 +63,25 @@ const productSchema = new mongoose.Schema(
       required: [true, 'Stock quantity is required'],
       min: [0, 'Stock cannot be negative'],
       default: 0,
+      validate: {
+        validator: function(value) {
+          return Number.isInteger(value);
+        },
+        message: 'Stock quantity must be an integer'
+      }
+    },
+    // Stock tracking for enterprise features
+    stockThreshold: {
+      type: Number,
+      default: 10,
+      min: [0, 'Stock threshold cannot be negative'],
+      description: 'Low stock alert threshold'
+    },
+    reservedStock: {
+      type: Number,
+      default: 0,
+      min: [0, 'Reserved stock cannot be negative'],
+      description: 'Stock reserved in pending orders'
     },
     sku: {
       type: String,
@@ -193,9 +212,10 @@ productSchema.pre('save', async function (next) {
   }
 
   // Auto-update status based on stock
-  if (this.stockQuantity <= 0 && this.status === 'active') {
+  const availableStock = this.stockQuantity - this.reservedStock;
+  if (availableStock <= 0 && this.status === 'active') {
     this.status = 'out_of_stock';
-  } else if (this.stockQuantity > 0 && this.status === 'out_of_stock') {
+  } else if (availableStock > 0 && this.status === 'out_of_stock') {
     this.status = 'active';
   }
 
@@ -267,23 +287,84 @@ productSchema.statics.findActive = function (filter = {}) {
   return this.find({ ...filter, isDeleted: false, status: { $ne: 'disabled' } });
 };
 
-// Adjust stock
-productSchema.methods.adjustStock = async function (quantity) {
-  const newStock = this.stockQuantity + quantity;
+// Virtual for available stock
+productSchema.virtual('availableStock').get(function () {
+  return this.stockQuantity - this.reservedStock;
+});
 
-  if (newStock < 0) {
-    throw new Error('Insufficient stock');
-  }
+// Virtual for low stock warning
+productSchema.virtual('isLowStock').get(function () {
+  return this.availableStock <= this.stockThreshold && this.availableStock > 0;
+});
 
-  this.stockQuantity = newStock;
+// Static method for atomic stock operations
+productSchema.statics.atomicStockUpdate = async function(productId, quantity, operation = 'reserve') {
+  const updateField = operation === 'reserve' ? 'reservedStock' : 'stockQuantity';
+  const modifier = operation === 'reserve' ? quantity : -quantity;
   
-  // Auto-update status based on stock
-  if (newStock <= 0) {
-    this.status = 'out_of_stock';
-  } else if (this.status === 'out_of_stock') {
-    this.status = 'active';
+  const product = await this.findByIdAndUpdate(
+    productId,
+    { 
+      $inc: { [updateField]: modifier },
+      $set: { updatedAt: new Date() }
+    },
+    { new: true, runValidators: true }
+  );
+
+  if (!product) {
+    throw new Error('Product not found');
   }
 
+  // Auto-update status
+  const availableStock = product.stockQuantity - product.reservedStock;
+  if (availableStock <= 0 && product.status === 'active') {
+    product.status = 'out_of_stock';
+    await product.save();
+  } else if (availableStock > 0 && product.status === 'out_of_stock') {
+    product.status = 'active';
+    await product.save();
+  }
+
+  return product;
+};
+
+// Instance method for stock reservation
+productSchema.methods.reserveStock = async function(quantity) {
+  if (quantity > this.availableStock) {
+    throw new Error('Insufficient stock available');
+  }
+
+  this.reservedStock += quantity;
+  await this.save();
+  return this;
+};
+
+// Instance method for stock release
+productSchema.methods.releaseStock = async function(quantity) {
+  if (quantity > this.reservedStock) {
+    throw new Error('Cannot release more stock than reserved');
+  }
+
+  this.reservedStock -= quantity;
+  await this.save();
+  return this;
+};
+
+// Instance method for final stock deduction
+productSchema.methods.deductStock = async function(quantity) {
+  if (quantity > this.reservedStock) {
+    throw new Error('Cannot deduct more stock than reserved');
+  }
+
+  this.reservedStock -= quantity;
+  this.stockQuantity -= quantity;
+  
+  // Auto-update status
+  const availableStock = this.stockQuantity - this.reservedStock;
+  if (availableStock <= 0) {
+    this.status = 'out_of_stock';
+  }
+  
   await this.save();
   return this;
 };

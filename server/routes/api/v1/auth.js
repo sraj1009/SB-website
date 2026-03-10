@@ -14,13 +14,16 @@ import {
 } from '../../../controllers/passwordController.js';
 import { authenticate } from '../../../middleware/auth.js';
 import { authLimiter } from '../../../middleware/rateLimiter.js';
-import validate from '../../../middleware/validate.js';
+import { validateRequest } from '../../../middleware/zodValidate.js';
 import {
   signupSchema,
   signinSchema,
   refreshTokenSchema,
   updateProfileSchema,
-} from '../../../validators/authValidators.js';
+  forgotPasswordSchema,
+  resetPasswordSchema,
+  changePasswordSchema,
+} from '../../../schemas/authSchemas.js';
 
 const router = express.Router();
 
@@ -48,7 +51,7 @@ const router = express.Router();
  *       400:
  *         description: Invalid input
  */
-router.post('/signup', authLimiter, validate(signupSchema), signup);
+router.post('/signup', authLimiter, validateRequest(signupSchema), signup);
 
 /**
  * @swagger
@@ -72,14 +75,14 @@ router.post('/signup', authLimiter, validate(signupSchema), signup);
  *       401:
  *         description: Invalid credentials
  */
-router.post('/signin', authLimiter, validate(signinSchema), signin);
+router.post('/signin', authLimiter, validateRequest(signinSchema), signin);
 
 /**
  * @route   POST /api/v1/auth/refresh
  * @desc    Refresh access token
  * @access  Public
  */
-router.post('/refresh', validate(refreshTokenSchema), refreshToken);
+router.post('/refresh', validateRequest(refreshTokenSchema), refreshToken);
 
 /**
  * @route   POST /api/v1/auth/logout
@@ -100,27 +103,27 @@ router.get('/me', authenticate, getMe);
  * @desc    Update current user profile
  * @access  Private
  */
-router.put('/me', authenticate, validate(updateProfileSchema), updateMe);
+router.put('/me', authenticate, validateRequest(updateProfileSchema), updateMe);
 
 /**
  * @route   POST /api/v1/auth/forgot-password
  * @desc    Request password reset
  * @access  Public
  */
-router.post('/forgot-password', authLimiter, forgotPassword);
+router.post('/forgot-password', authLimiter, validateRequest(forgotPasswordSchema), forgotPassword);
 
 /**
  * @route   POST /api/v1/auth/reset-password
  * @desc    Reset password with token
  * @access  Public
  */
-router.post('/reset-password', authLimiter, resetPassword);
+router.post('/reset-password', authLimiter, validateRequest(resetPasswordSchema), resetPassword);
 
 /**
  * @route   POST /api/v1/auth/change-password
  * @desc    Change password (logged in users)
  * @access  Private
  */
-router.post('/change-password', authenticate, changePassword);
+router.post('/change-password', authenticate, validateRequest(changePasswordSchema), changePassword);
 
 export default router;

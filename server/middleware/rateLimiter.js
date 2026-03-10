@@ -77,3 +77,30 @@ export const apiLimiter = rateLimit({
 
 // Stricter rate limiter for payment sessions
 export const paymentLimiter = authLimiter; // Reuse authLimiter logic for payments
+
+// Admin rate limiter - very strict for admin operations
+export const adminLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: isProd ? 10 : 100, // Very strict for admin routes
+  message: {
+    success: false,
+    error: {
+      code: 'ADMIN_RATE_LIMIT_EXCEEDED',
+      message: 'Admin rate limit exceeded. Please try again later.',
+    },
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res, next, options) => {
+    logger.warn(`Admin rate limit exceeded for IP: ${req.ip}, User: ${req.user?.email || 'unknown'}`);
+    rateLimitBlocksCounter.inc({ limiter_type: 'admin' });
+    res.status(options.statusCode).json(options.message);
+  },
+  keyGenerator: (req) => {
+    // For authenticated routes, use user ID + IP as key
+    if (req.user) {
+      return `admin_${req.user._id}_${req.headers['x-forwarded-for']?.split(',')[0] || req.ip}`;
+    }
+    return req.headers['x-forwarded-for']?.split(',')[0] || req.ip;
+  },
+});

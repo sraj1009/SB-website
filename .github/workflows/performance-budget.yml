@@ -1,0 +1,133 @@
+name: Performance Budget Check
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  performance-budget:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Build application
+      run: npm run build
+      
+    - name: Run Lighthouse CI
+      run: |
+        npm install -g @lhci/cli@0.12.x
+        lhci autorun
+      env:
+        LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+        
+    - name: Bundle size analysis
+      run: |
+        npx bundlesize
+        
+    - name: Check performance budgets
+      run: |
+        # Check bundle sizes
+        node scripts/check-bundle-size.js
+        
+        # Check Lighthouse scores
+        node scripts/check-lighthouse-scores.js
+        
+    - name: Upload Lighthouse results
+      uses: actions/upload-artifact@v3
+      with:
+        name: lighthouse-results
+        path: .lighthouseci/
+        
+    - name: Comment PR with results
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const fs = require('fs');
+          
+          // Read Lighthouse results
+          const lighthouseResults = JSON.parse(fs.readFileSync('.lighthouseci/lhr.json', 'utf8'));
+          const scores = {
+            performance: Math.round(lighthouseResults.lhr.categories.performance.score * 100),
+            accessibility: Math.round(lighthouseResults.lhr.categories.accessibility.score * 100),
+            'best-practices': Math.round(lighthouseResults.lhr.categories['best-practices'].score * 100),
+            seo: Math.round(lighthouseResults.lhr.categories.seo.score * 100),
+            pwa: Math.round(lighthouseResults.lhr.categories.pwa.score * 100)
+          };
+          
+          // Read bundle size results
+          const bundleResults = JSON.parse(fs.readFileSync('bundle-size-results.json', 'utf8'));
+          
+          // Create comment
+          const comment = `
+          ## 🚀 Performance Budget Results
+          
+          ### Lighthouse Scores
+          | Metric | Score | Status |
+          |--------|-------|--------|
+          | Performance | ${scores.performance} | ${scores.performance >= 95 ? '✅' : '❌'} |
+          | Accessibility | ${scores.accessibility} | ${scores.accessibility >= 100 ? '✅' : '❌'} |
+          | Best Practices | ${scores['best-practices']} | ${scores['best-practices'] >= 90 ? '✅' : '❌'} |
+          | SEO | ${scores.seo} | ${scores.seo >= 90 ? '✅' : '❌'} |
+          | PWA | ${scores.pwa} | ${scores.pwa >= 80 ? '✅' : '❌'} |
+          
+          ### Bundle Sizes
+          | File | Size | Budget | Status |
+          |------|------|--------|-------|
+          ${bundleResults.map(result => 
+            `| ${result.file} | ${result.size} | ${result.budget} | ${result.passed ? '✅' : '❌'} |`
+          ).join('\n          ')}
+          
+          ### Performance Metrics
+          | Metric | Value | Budget | Status |
+          |--------|-------|--------|-------|
+          | First Contentful Paint | ${lighthouseResults.lhr.audits['first-contentful-paint'].numericValue}ms | <1.5s | ${lighthouseResults.lhr.audits['first-contentful-paint'].numericValue < 1500 ? '✅' : '❌'} |
+          | Largest Contentful Paint | ${lighthouseResults.lhr.audits['largest-contentful-paint'].numericValue}ms | <2.5s | ${lighthouseResults.lhr.audits['largest-contentful-paint'].numericValue < 2500 ? '✅' : '❌'} |
+          | Time to Interactive | ${lighthouseResults.lhr.audits['interactive'].numericValue}ms | <3.8s | ${lighthouseResults.lhr.audits['interactive'].numericValue < 3800 ? '✅' : '❌'} |
+          | Cumulative Layout Shift | ${lighthouseResults.lhr.audits['cumulative-layout-shift'].numericValue} | <0.1 | ${lighthouseResults.lhr.audits['cumulative-layout-shift'].numericValue < 0.1 ? '✅' : '❌'} |
+          | Total Blocking Time | ${lighthouseResults.lhr.audits['total-blocking-time'].numericValue}ms | <200ms | ${lighthouseResults.lhr.audits['total-blocking-time'].numericValue < 200 ? '✅' | '❌'} |
+          
+          ${scores.performance < 95 || scores.accessibility < 100 || bundleResults.some(r => !r.passed) ? 
+            '❌ **Performance budget failed! Please address the issues above.' : 
+            '✅ **Performance budget passed!** All metrics within acceptable limits.'}
+          `;
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: comment
+          });
+          
+    - name: Fail on budget violation
+      run: |
+        # Read results and exit with error if any budget failed
+        const bundleResults = JSON.parse(require('fs').readFileSync('bundle-size-results.json', 'utf8'));
+        const lighthouseResults = JSON.parse(require('fs').readFileSync('.lighthouseci/lhr.json', 'utf8'));
+        
+        const performanceScore = Math.round(lighthouseResults.lhr.categories.performance.score * 100);
+        const accessibilityScore = Math.round(lighthouseResults.lhr.categories.accessibility.score * 100);
+        
+        const budgetFailed = bundleResults.some(r => !r.passed) || 
+                           performanceScore < 95 || 
+                           accessibilityScore < 100;
+        
+        if (budgetFailed) {
+          console.error('❌ Performance budget failed!');
+          process.exit(1);
+        } else {
+          console.log('✅ Performance budget passed!');
+        }

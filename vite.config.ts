@@ -3,21 +3,13 @@ import path from 'path';
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
+import { resolve } from 'path';
 
+// https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', '');
+  
   return {
-    server: {
-      port: 3000,
-      host: '0.0.0.0',
-      proxy: {
-        '/api/v1': {
-          target: 'http://localhost:5000',
-          changeOrigin: true,
-          secure: false,
-        },
-      },
-    },
     plugins: [
       react(),
       VitePWA({
@@ -49,9 +41,64 @@ export default defineConfig(({ mode }) => {
             },
           ],
         },
-      }),
+        workbox: {
+          globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
+          runtimeCaching: [
+            {
+              urlPattern: /^https:\/\/api\.singglebee\.com\/.*$/,
+              handler: 'NetworkFirst',
+              options: {
+                cacheName: 'api-cache',
+                expiration: {
+                  maxEntries: 100,
+                  maxAgeSeconds: 60 * 5 // 5 minutes
+                }
+              }
+            },
+            {
+              urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/,
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'images-cache',
+                expiration: {
+                  maxEntries: 200,
+                  maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
+                }
+              }
+            },
+            {
+              urlPattern: /\.(?:js|css)$/,
+              handler: 'StaleWhileRevalidate',
+              options: {
+                cacheName: 'static-resources',
+                expiration: {
+                  maxEntries: 100,
+                  maxAgeSeconds: 60 * 60 * 24 * 7 // 7 days
+                }
+              }
+            }
+          ]
+        },
+        strategies: 'generateSW',
+        devOptions: {
+          enabled: true, // Enable PWA in development
+          type: 'module'
+        }
+      })
     ],
+    server: {
+      port: 5173,
+      host: true,
+      proxy: {
+        '/api': {
+          target: 'http://localhost:5000',
+          changeOrigin: true,
+          secure: false,
+        },
+      },
+    },
     build: {
+      outDir: 'dist',
       rollupOptions: {
         output: {
           manualChunks: {
@@ -115,7 +162,12 @@ export default defineConfig(({ mode }) => {
         '@services': path.resolve(__dirname, './services'),
         '@hooks': path.resolve(__dirname, './hooks'),
         '@types': path.resolve(__dirname, './types'),
+        '@utils': path.resolve(__dirname, './utils'),
+        '@assets': path.resolve(__dirname, './assets')
       },
     },
+    optimizeDeps: {
+      include: ['react', 'react-dom', 'react-router-dom']
+    }
   };
 });

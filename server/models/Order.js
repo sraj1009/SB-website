@@ -46,7 +46,9 @@ const pricingSchema = new mongoose.Schema(
     subtotal: { type: Number, required: true },
     shippingFee: { type: Number, default: 0 },
     discount: { type: Number, default: 0 },
+    taxAmount: { type: Number, default: 0 },
     total: { type: Number, required: true },
+    currency: { type: String, default: 'INR' },
   },
   { _id: false }
 );
@@ -55,7 +57,7 @@ const paymentSchema = new mongoose.Schema(
   {
     method: {
       type: String,
-      enum: ['cashfree', 'upi_manual'],
+      enum: ['cashfree', 'upi_manual', 'cod'],
       default: 'upi_manual',
     },
     transactionId: String,
@@ -63,15 +65,24 @@ const paymentSchema = new mongoose.Schema(
     cashfreePaymentSessionId: String,
     status: {
       type: String,
-      enum: ['pending', 'success', 'failed'],
+      enum: ['pending', 'processing', 'success', 'failed', 'refunded'],
       default: 'pending',
     },
     paidAt: Date,
+    failureReason: String,
+    refundAmount: Number,
+    refundedAt: Date,
     proofUploaded: {
       type: Boolean,
       default: false,
     },
     proofUrl: String,
+    // Webhook verification
+    webhookVerified: {
+      type: Boolean,
+      default: false,
+    },
+    webhookSignature: String,
   },
   { _id: false }
 );
@@ -105,10 +116,39 @@ const orderSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: {
-        values: ['pending', 'paid', 'processing', 'shipped', 'delivered', 'cancelled'],
+        values: ['pending', 'paid', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'],
         message: 'Invalid order status',
       },
       default: 'pending',
+    },
+    // Guest checkout support
+    guestUser: {
+      email: String,
+      phone: String,
+      firstName: String,
+      lastName: String,
+    },
+    // Enterprise fields
+    affiliateId: String,
+    referralCode: String,
+    source: {
+      type: String,
+      enum: ['web', 'mobile', 'api', 'admin'],
+      default: 'web',
+    },
+    // Shipping and tracking
+    estimatedDelivery: Date,
+    actualDelivery: Date,
+    carrier: String,
+    trackingUrl: String,
+    // Audit fields
+    ipAddress: String,
+    userAgent: String,
+    // Priority support
+    priority: {
+      type: String,
+      enum: ['normal', 'express', 'priority'],
+      default: 'normal',
     },
     payment: paymentSchema,
     paymentStatus: {
@@ -190,17 +230,9 @@ orderSchema.methods.cancelAndRestoreStock = async function (reason = '') {
 
   const Product = mongoose.model('Product');
 
-  // Restore stock for all items
+  // Restore stock for all items using atomic operations
   for (const item of this.items) {
-    const product = await Product.findById(item.product);
-    if (product) {
-      product.stockQuantity += item.quantity;
-      product.isOutOfStock = false;
-      if (product.status === 'out_of_stock') {
-        product.status = 'active';
-      }
-      await product.save();
-    }
+    await Product.atomicStockUpdate(item.product, item.quantity, 'release');
   }
 
   this.status = 'cancelled';
@@ -209,6 +241,93 @@ orderSchema.methods.cancelAndRestoreStock = async function (reason = '') {
 
   await this.save();
   return this;
+};
+
+// Order status workflow methods
+orderSchema.methods.updateStatus = async function(newStatus, reason = '') {
+  const validTransitions = {
+    pending: ['paid', 'cancelled'],
+    paid: ['processing', 'cancelled'],
+    processing: ['shipped', 'cancelled'],
+    shipped: ['delivered'],
+    delivered: ['refunded'],
+    cancelled: [],
+    refunded: []
+  };
+
+  if (!validTransitions[this.status].includes(newStatus)) {
+    throw new Error(`Invalid status transition from ${this.status} to ${newStatus}`);
+  }
+
+  this.status = newStatus;
+
+  // Handle status-specific logic
+  switch (newStatus) {
+    case 'paid':
+      this.payment.status = 'success';
+      this.payment.paidAt = new Date();
+      // Deduct stock from inventory
+      const Product = mongoose.model('Product');
+      for (const item of this.items) {
+        await Product.atomicStockUpdate(item.product, item.quantity, 'deduct');
+      }
+      break;
+    case 'shipped':
+      this.trackingNumber = this.trackingNumber || `TRACK-${Date.now()}`;
+      this.estimatedDelivery = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+      break;
+    case 'delivered':
+      this.actualDelivery = new Date();
+      break;
+    case 'cancelled':
+      this.cancelledAt = new Date();
+      this.cancelReason = reason;
+      break;
+  }
+
+  await this.save();
+  return this;
+};
+
+// Payment verification method
+orderSchema.methods.verifyWebhook = function(signature, payload) {
+  const crypto = require('crypto');
+  const expectedSignature = crypto
+    .createHmac('sha256', process.env.CASHFREE_SECRET_KEY)
+    .update(JSON.stringify(payload))
+    .digest('base64');
+
+  const isValid = signature === expectedSignature;
+  if (isValid) {
+    this.payment.webhookVerified = true;
+    this.payment.webhookSignature = signature;
+  }
+
+  return isValid;
+};
+
+// Static method for order analytics
+orderSchema.statics.getOrderStats = async function(filter = {}) {
+  const stats = await this.aggregate([
+    { $match: filter },
+    {
+      $group: {
+        _id: '$status',
+        count: { $sum: 1 },
+        totalRevenue: { $sum: '$pricing.total' },
+        averageOrderValue: { $avg: '$pricing.total' }
+      }
+    }
+  ]);
+
+  return stats.reduce((acc, stat) => {
+    acc[stat._id] = {
+      count: stat.count,
+      totalRevenue: stat.totalRevenue,
+      averageOrderValue: stat.averageOrderValue
+    };
+    return acc;
+  }, {});
 };
 
 // Mark as paid

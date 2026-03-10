@@ -85,10 +85,6 @@ export const signup = async (req, res, next) => {
           role: user.role,
           address: user.address,
         },
-        tokens: {
-          accessToken,
-          refreshToken,
-        },
       },
     });
   } catch (error) {
@@ -174,10 +170,6 @@ export const signin = async (req, res, next) => {
           lastLogin: user.lastLogin,
           mustChangePassword: user.mustChangePassword,
         },
-        tokens: {
-          accessToken,
-          refreshToken,
-        },
       },
     });
   } catch (error) {
@@ -218,7 +210,7 @@ export const refreshToken = async (req, res, next) => {
     // Set cookies
     setTokenCookies(res, accessToken, newRefreshToken);
 
-    // Return tokens for clients using Authorization header (e.g. SPA localStorage)
+    // Return user info only (tokens are in httpOnly cookies)
     res.json({
       success: true,
       message: 'Tokens refreshed successfully',
@@ -229,8 +221,6 @@ export const refreshToken = async (req, res, next) => {
           email: user.email,
           role: user.role,
         },
-        accessToken,
-        refreshToken: newRefreshToken,
       },
     });
   } catch (error) {
