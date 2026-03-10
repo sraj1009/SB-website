@@ -135,6 +135,13 @@ router.patch('/orders/:id/status', validate(updateOrderStatusSchema), updateOrde
  */
 router.patch('/orders/:id/payment', validate(markPaymentSchema), markPaymentComplete);
 
+/**
+ * @route   POST /api/v1/admin/orders/:id/verify
+ * @desc    Verify order payment (mark as paid) - convenience endpoint
+ * @access  Admin
+ */
+router.post('/orders/:id/verify', validate(markPaymentSchema), markPaymentComplete);
+
 // ============ REVIEW MODERATION ============
 
 /**

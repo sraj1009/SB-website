@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { X, Plus, Minus, Trash2, Smartphone, CreditCard, Lock, Bee } from 'lucide-react';
+import { X, Plus, Minus, Trash2, Smartphone, CreditCard, Lock } from 'lucide-react';
+import BeeIcon from './BeeIcon';
 import { CartItem } from '../types';
 
 interface CartDrawerGlassmorphicProps {
@@ -104,7 +105,7 @@ const CartDrawerGlassmorphic: React.FC<CartDrawerGlassmorphicProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
           <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-            <Bee className="w-6 h-6 text-amber-500" />
+            <BeeIcon size={24} className="text-amber-500" />
             Shopping Cart ({cart.length})
           </h2>
           
@@ -126,7 +127,7 @@ const CartDrawerGlassmorphic: React.FC<CartDrawerGlassmorphicProps> = ({
             /* Empty State */
             <div className="flex flex-col items-center justify-center py-16 px-6">
               <div className="w-24 h-24 bg-amber-100 rounded-full flex items-center justify-center mb-6">
-                <Bee className="w-12 h-12 text-amber-500" />
+                <BeeIcon size={48} className="text-amber-500" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
                 Your hive is empty
@@ -177,7 +178,7 @@ const CartDrawerGlassmorphic: React.FC<CartDrawerGlassmorphicProps> = ({
                         />
                       ) : (
                         <div className="w-full h-full bg-gradient-to-br from-amber-100 to-amber-200 flex items-center justify-center">
-                          <Bee className="w-8 h-8 text-amber-500" />
+                          <BeeIcon size={32} className="text-amber-500" />
                         </div>
                       )}
                     </div>
@@ -286,7 +287,7 @@ const CartDrawerGlassmorphic: React.FC<CartDrawerGlassmorphicProps> = ({
                        hover:from-amber-500 hover:to-amber-600 active:scale-95
                        transition-all duration-200 shadow-lg hover:shadow-xl"
             >
-              <Bee className="w-5 h-5" />
+              <BeeIcon size={20} />
               Proceed to Checkout
             </button>
 

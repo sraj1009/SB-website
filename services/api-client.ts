@@ -331,7 +331,23 @@ class ApiClient {
     );
   }
 
-  // File upload method
+  // Upload payment proof (orderId + proof file) to /payments/upload-proof
+  async uploadPaymentProof(orderId: string, file: File, onProgress?: (progress: number) => void): Promise<ApiResponse<{ orderId: string; status: string }>> {
+    const formData = new FormData();
+    formData.append('orderId', orderId);
+    formData.append('proof', file);
+
+    const response = await this.axiosInstance.request({
+      method: 'POST',
+      url: '/payments/upload-proof',
+      data: formData,
+      timeout: 60000,
+      onUploadProgress: onProgress ? (e) => onProgress(Math.round((e.loaded * 100) / (e.total || 1))) : undefined,
+    });
+    return response.data;
+  }
+
+  // File upload method (generic)
   async uploadFile(
     url: string,
     file: File,
@@ -349,13 +365,13 @@ class ApiClient {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
-      onUploadProgress: onProgress ? (progressEvent) => {
+      onUploadProgress: onProgress ? (progressEvent: { loaded: number; total?: number }) => {
         const progress = Math.round(
-          (progressEvent.loaded * 100) / (progressEvent.total || 0)
+          (progressEvent.loaded * 100) / (progressEvent.total || 1)
         );
         onProgress(progress);
       } : undefined,
-    } as any);
+    } as RequestConfig & { url: string });
   }
 
   // Download method

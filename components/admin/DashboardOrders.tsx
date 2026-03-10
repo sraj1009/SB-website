@@ -1,13 +1,65 @@
 import React, { useState } from 'react';
+import api from '../../services/api';
 
 interface DashboardOrdersProps {
   orders: any[];
   isLoading: boolean;
 }
 
+interface OrderDetailModalProps {
+  order: any;
+  onClose: () => void;
+  onVerify: (id: string) => void;
+  isVerifying: boolean;
+}
+
+const OrderDetailModal: React.FC<OrderDetailModalProps> = ({ order, onClose, onVerify, isVerifying }) => (
+  <div className="fixed inset-0 z-[300] bg-black/60 flex items-center justify-center p-4" onClick={onClose}>
+    <div
+      className="bg-white rounded-[2rem] shadow-2xl border-4 border-brand-primary/20 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="p-6">
+        <div className="flex justify-between items-start mb-6">
+          <h3 className="text-xl font-black text-brand-black">Order #{order?.orderId || order?.id?.slice(-6)}</h3>
+          <button onClick={onClose} className="text-gray-500 hover:text-black text-2xl" aria-label="Close">×</button>
+        </div>
+        <div className="space-y-4 text-sm">
+          <p><span className="font-bold">Customer:</span> {order?.user?.fullName || order?.user?.name || order?.customerName || '—'}</p>
+          <p><span className="font-bold">Email:</span> {order?.user?.email || order?.email || '—'}</p>
+          <p><span className="font-bold">Status:</span> {order?.status}</p>
+          <p><span className="font-bold">Payment:</span> {order?.payment?.status || order?.paymentStatus}</p>
+          <p><span className="font-bold">Total:</span> ₹{order?.pricing?.total || order?.total || '0'}</p>
+          {order?.payment?.proofUrl && (
+            <div>
+              <span className="font-bold block mb-2">Payment Receipt:</span>
+              <a href={order.payment.proofUrl} target="_blank" rel="noopener noreferrer" className="text-brand-primary underline">
+                View receipt
+              </a>
+            </div>
+          )}
+        </div>
+        {order?.payment?.status !== 'success' && order?.status !== 'cancelled' && (
+          <button
+            onClick={() => onVerify(order?.id || order?._id)}
+            disabled={isVerifying}
+            className="mt-6 px-6 py-3 bg-green-600 text-white rounded-xl font-bold hover:scale-105 disabled:opacity-50"
+          >
+            {isVerifying ? 'Verifying…' : 'Verify Payment'}
+          </button>
+        )}
+      </div>
+    </div>
+  </div>
+);
+
 const DashboardOrders: React.FC<DashboardOrdersProps> = ({ orders, isLoading }) => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [paymentFilter, setPaymentFilter] = useState('all');
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [detailOrder, setDetailOrder] = useState<any>(null);
+  const [loadingDetail, setLoadingDetail] = useState(false);
+  const [verifying, setVerifying] = useState(false);
 
   if (isLoading) {
     return (
@@ -111,14 +163,46 @@ const DashboardOrders: React.FC<DashboardOrdersProps> = ({ orders, isLoading }) 
                     {order.paymentStatus || 'pending'}
                   </span>
                 </div>
-                <button className="px-4 py-2 bg-brand-primary text-brand-black rounded-xl font-bold hover:scale-105 transition-transform">
-                  View Details
+                <button
+                  onClick={async () => {
+                    setLoadingDetail(true);
+                    setSelectedOrder(order);
+                    try {
+                      const id = order.id || order._id;
+                      const fullOrder = await api.admin.getOrder(id);
+                      setDetailOrder(fullOrder);
+                    } catch {
+                      setDetailOrder(order);
+                    } finally {
+                      setLoadingDetail(false);
+                    }
+                  }}
+                  className="px-4 py-2 bg-brand-primary text-brand-black rounded-xl font-bold hover:scale-105 transition-transform"
+                >
+                  {loadingDetail && selectedOrder?.id === order?.id ? 'Loading…' : 'View Details'}
                 </button>
               </div>
             </div>
           ))
         )}
       </div>
+
+      {detailOrder && (
+        <OrderDetailModal
+          order={detailOrder}
+          onClose={() => { setDetailOrder(null); setSelectedOrder(null); }}
+          onVerify={async (id) => {
+            setVerifying(true);
+            try {
+              await api.admin.markPaymentComplete(id);
+              setDetailOrder({ ...detailOrder, payment: { ...detailOrder.payment, status: 'success' } });
+            } finally {
+              setVerifying(false);
+            }
+          }}
+          isVerifying={verifying}
+        />
+      )}
     </div>
   );
 };

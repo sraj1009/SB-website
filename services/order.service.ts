@@ -115,7 +115,7 @@ class OrderService {
     }
   }
 
-  // Upload payment receipt for COD orders
+  // Upload payment receipt for UPI manual / COD orders (uses /payments/upload-proof)
   async uploadPaymentReceipt(orderId: string, file: File): Promise<Order> {
     try {
       if (!orderId) {
@@ -126,19 +126,11 @@ class OrderService {
         throw new ValidationError('Receipt file is required');
       }
 
-      // Validate file
       this.validateReceiptFile(file);
 
-      const response = await apiClient.uploadFile(
-        `/orders/${orderId}/receipt`,
-        file,
-        undefined,
-        {
-          timeout: 60000 // 1 minute for file upload
-        }
-      );
-      
-      if (!response.success || !response.data) {
+      const response = await apiClient.uploadPaymentProof(orderId, file);
+
+      if (!response.success) {
         throw createError(
           response.error?.message || 'Failed to upload receipt',
           response.error?.code || 'RECEIPT_UPLOAD_FAILED',
@@ -146,7 +138,6 @@ class OrderService {
         );
       }
 
-      // Get updated order
       return this.getOrderById(orderId);
     } catch (error) {
       throw ErrorHandler.handleApiError(error, 'uploadPaymentReceipt');

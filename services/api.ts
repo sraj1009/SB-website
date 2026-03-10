@@ -597,6 +597,13 @@ export const AdminAPI = {
     return response.data;
   },
 
+  getOrder: async (id: string) => {
+    const response = await apiRequest<{ success: boolean; data: { order: any } }>(
+      `/admin/orders/${id}`
+    );
+    return response.data.order;
+  },
+
   updateOrderStatus: async (id: string, status: string) => {
     const response = await apiRequest<{ success: boolean; data: { order: any } }>(
       `/admin/orders/${id}/status`,

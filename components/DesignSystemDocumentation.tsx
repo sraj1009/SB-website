@@ -21,7 +21,6 @@ import {
   AlertCircle,
   Info,
   Loader2,
-  Bee,
   Heart,
   Star,
   ShoppingCart,
@@ -33,6 +32,7 @@ import {
   ToggleLeft,
   ToggleRight
 } from 'lucide-react';
+import BeeIcon from './BeeIcon';
 
 // TypeScript interface definitions for design system
 interface DesignToken {
@@ -263,7 +263,7 @@ const DesignSystemDocumentation: React.FC = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-amber-500 rounded-lg flex items-center justify-center">
-                <Bee className="w-6 h-6 text-white" />
+                <BeeIcon size={24} className="text-white" />
               </div>
               <h1 className="text-2xl font-bold">SINGGLEBEE Design System</h1>
             </div>

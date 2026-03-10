@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { ShoppingCart, Heart, Star, QuickView, Bee } from 'lucide-react';
+import { ShoppingCart, Heart, Star, Eye } from 'lucide-react';
+import BeeIcon from './BeeIcon';
 import { Product } from '../types';
 
 interface ProductCardGlassmorphicProps {
@@ -142,7 +143,7 @@ const ProductCardGlassmorphic: React.FC<ProductCardGlassmorphicProps> = ({
           {!isImageLoaded && (
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="w-16 h-16 bg-amber-200 rounded-full flex items-center justify-center">
-                <Bee className="w-8 h-8 text-amber-600" />
+                <BeeIcon size={32} className="text-amber-600" />
               </div>
             </div>
           )}
@@ -175,7 +176,7 @@ const ProductCardGlassmorphic: React.FC<ProductCardGlassmorphicProps> = ({
                 className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-gray-600 hover:bg-white/30 flex items-center justify-center transition-all duration-200"
                 aria-label="Quick view"
               >
-                <QuickView className="w-4 h-4" />
+                <Eye className="w-4 h-4" />
               </button>
             )}
           </div>

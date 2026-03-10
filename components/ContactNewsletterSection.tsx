@@ -2,7 +2,6 @@ import React, { useState, useCallback } from 'react';
 import { 
   Mail, 
   Send, 
-  Bee, 
   MessageSquare, 
   User, 
   Star,
@@ -13,6 +12,7 @@ import {
   AlertCircle,
   Clock
 } from 'lucide-react';
+import BeeIcon from './BeeIcon';
 
 interface ContactNewsletterSectionProps {
   className?: string;
@@ -328,7 +328,7 @@ const ContactNewsletterSection: React.FC<ContactNewsletterSectionProps> = ({ cla
                   </>
                 ) : (
                   <>
-                    <Bee className="w-5 h-5" />
+                    <BeeIcon size={20} />
                     Send to Hive
                   </>
                 )}
@@ -365,7 +365,7 @@ const ContactNewsletterSection: React.FC<ContactNewsletterSectionProps> = ({ cla
               {/* Newsletter Header */}
               <div className="text-center mb-8">
                 <div className="w-16 h-16 bg-gradient-to-br from-amber-400 to-amber-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Bee className="w-8 h-8 text-white" />
+                  <BeeIcon size={32} className="text-white" />
                 </div>
                 <h3 className="text-3xl font-bold text-gray-900 mb-2">Join the Hive</h3>
                 <p className="text-lg text-gray-600">Get sweetness in your inbox</p>
@@ -485,7 +485,7 @@ const ContactNewsletterSection: React.FC<ContactNewsletterSectionProps> = ({ cla
               <CheckCircle className="w-10 h-10 text-green-500" />
             </div>
             <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
-              <Bee className="w-8 h-8 text-amber-500" />
+              <BeeIcon size={32} className="text-amber-500" />
             </div>
             <h3 className="text-2xl font-bold text-gray-900 mb-4">Thank you!</h3>
             <p className="text-gray-600 mb-6">We'll buzz back soon</p>
@@ -508,7 +508,7 @@ const ContactNewsletterSection: React.FC<ContactNewsletterSectionProps> = ({ cla
               <CheckCircle className="w-10 h-10 text-green-500" />
             </div>
             <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
-              <Bee className="w-8 h-8 text-amber-500" />
+              <BeeIcon size={32} className="text-amber-500" />
             </div>
             <h3 className="text-2xl font-bold text-gray-900 mb-4">Welcome to the Hive!</h3>
             <p className="text-gray-600 mb-6">Check your email for a sweet surprise</p>
