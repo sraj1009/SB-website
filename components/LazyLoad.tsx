@@ -71,23 +71,25 @@ export const LazyLoad: React.FC<LazyLoadProps> = ({
 
 // Lazy loaded components
 export const LazyProductCard = React.lazy(() => 
-  import('./ProductCard').then(module => ({ default: module.ProductCard }))
+  import('./ProductCard').then(module => ({ default: module.default }))
 );
 
+// Note: ProductList, Checkout, UserProfile components don't exist yet
+// These are placeholders for future implementation
 export const LazyProductList = React.lazy(() => 
-  import('./ProductList').then(module => ({ default: module.ProductList }))
+  import('./ProductList').catch(() => ({ default: () => React.createElement('div', null, 'ProductList coming soon') }))
 );
 
 export const LazyCheckout = React.lazy(() => 
-  import('./Checkout').then(module => ({ default: module.Checkout }))
+  import('./Checkout').catch(() => ({ default: () => React.createElement('div', null, 'Checkout coming soon') }))
 );
 
 export const LazyUserProfile = React.lazy(() => 
-  import('./UserProfile').then(module => ({ default: module.UserProfile }))
+  import('./UserProfile').catch(() => ({ default: () => React.createElement('div', null, 'UserProfile coming soon') }))
 );
 
 export const LazyAdminDashboard = React.lazy(() => 
-  import('./AdminDashboard').then(module => ({ default: module.AdminDashboard }))
+  import('./AdminDashboard').then(module => ({ default: module.default }))
 );
 
 // Code splitting utility
@@ -106,8 +108,8 @@ export const preloadComponent = (importFunc: () => Promise<{ default: any }>) =>
 // Bundle analyzer for development
 export const analyzeBundle = () => {
   if (process.env.NODE_ENV === 'development') {
-    import('@bundle-analyzer/webpack-bundle-analyzer').then(({ default: BundleAnalyzerPlugin }) => {
-      console.log('Bundle analyzer available for development');
-    });
+    // Note: @bundle-analyzer/webpack-bundle-analyzer is not installed
+    // This is a placeholder for future bundle analysis
+    console.log('Bundle analyzer placeholder - install @bundle-analyzer/webpack-bundle-analyzer for actual analysis');
   }
 };

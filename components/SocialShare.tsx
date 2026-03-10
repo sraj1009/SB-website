@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Share2, Facebook, Twitter, Instagram, Whatsapp, Link2, Mail } from 'lucide-react';
+import { Share2, Facebook, Twitter, Instagram, MessageCircle, Link2, Mail } from 'lucide-react';
 
 interface SocialShareProps {
   url: string;
@@ -42,7 +42,7 @@ const SocialShare: React.FC<SocialShareProps> = ({
   };
 
   // Handle share action
-  const handleShare = async (platform: keyof typeof shareUrls) => {
+  const handleShare = async (platform: keyof typeof shareUrls | 'generic') => {
     try {
       if (platform === 'instagram') {
         // Instagram doesn't support direct sharing
@@ -51,7 +51,7 @@ const SocialShare: React.FC<SocialShareProps> = ({
         return;
       }
 
-      const shareUrl = shareUrls[platform];
+      const shareUrl = platform === 'generic' ? undefined : shareUrls[platform as keyof typeof shareUrls];
       
       // Check if Web Share API is available
       if (navigator.share && platform === 'generic') {
@@ -156,7 +156,7 @@ const SocialShare: React.FC<SocialShareProps> = ({
               onClick={() => handleShare('whatsapp')}
               className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg w-full text-left"
             >
-              <Whatsapp className="w-5 h-5 text-green-500" />
+              <MessageCircle className="w-5 h-5 text-green-500" />
               <span>WhatsApp</span>
             </button>
 

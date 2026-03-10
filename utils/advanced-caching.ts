@@ -1,4 +1,5 @@
 // 🚀 Advanced Caching Strategies for SINGGLEBEE
+import React, { useState, useEffect } from 'react';
 
 interface CacheConfig {
   name: string;

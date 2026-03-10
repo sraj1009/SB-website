@@ -49,7 +49,7 @@ interface PerformanceThresholds {
   fcp: { warning: 1800, critical: 3000 };
   ttfb: { warning: 800, critical: 1800 };
   apiResponseTime: { warning: 1000, critical: 2000 };
-  bundleSize: { warning: 1024 * 1024, critical: 2 * 1024 * 1024 }; // 1MB, 2MB
+  bundleSize: { warning: 1024 * 1024, critical: 2048 * 1024 }; // 1MB, 2MB
   memoryUsage: { warning: 50, critical: 80 }; // MB
 }
 
@@ -442,7 +442,7 @@ class PerformanceMonitor {
 
     Object.entries(weights).forEach(([metric, weight]) => {
       const value = this.metrics[metric as keyof PerformanceMetrics];
-      const threshold = this.thresholds[metric as keyof PerformanceThresholds];
+      const threshold = this.thresholds[metric as keyof PerformanceThresholds] as { warning: number; critical: number } | undefined;
       
       if (threshold && value > 0) {
         const normalizedScore = Math.max(0, 100 - ((value - threshold.warning) / (threshold.critical - threshold.warning)) * 100);
