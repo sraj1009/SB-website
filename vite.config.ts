@@ -51,6 +51,28 @@ export default defineConfig(({ mode }) => {
         },
       }),
     ],
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            vendor: ['react', 'react-dom'],
+            router: ['react-router-dom'],
+            ui: ['lucide-react', 'react-toastify'],
+            api: ['axios', '@tanstack/react-query'],
+            utils: ['./utils/seo-utils.ts']
+          }
+        }
+      },
+      chunkSizeWarningLimit: 1000,
+      sourcemap: mode === 'development',
+      minify: 'terser',
+      terserOptions: {
+        compress: {
+          drop_console: mode === 'production',
+          drop_debugger: mode === 'production',
+        },
+      },
+    },
     test: {
       globals: true,
       environment: 'jsdom',
