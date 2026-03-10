@@ -1,0 +1,140 @@
+{
+  "domain": "singglebee.com",
+  "subdomains": {
+    "api": "api.singglebee.com",
+    "cdn": "cdn.singglebee.com",
+    "mail": "mail.singglebee.com",
+    "blog": "blog.singglebee.com"
+  },
+  "dns": {
+    "A": {
+      "singglebee.com": {
+        "type": "A",
+        "value": "76.76.19.23",
+        "ttl": 3600,
+        "provider": "Cloudflare"
+      },
+      "www": {
+        "type": "CNAME",
+        "value": "singglebee.com",
+        "ttl": 3600,
+        "provider": "Cloudflare"
+      },
+      "api": {
+        "type": "A",
+        "value": "76.76.19.24",
+        "ttl": 300,
+        "provider": "Cloudflare"
+      }
+    },
+    "CNAME": {
+      "cdn": {
+        "type": "CNAME",
+        "value": "singglebee.netlify.com",
+        "ttl": 3600,
+        "provider": "Cloudflare"
+      },
+      "mail": {
+        "type": "MX",
+        "value": "mail.singglebee.com",
+        "priority": 10,
+        "ttl": 3600,
+        "provider": "Cloudflare"
+      }
+    },
+    "TXT": {
+      "verification": {
+        "type": "TXT",
+        "value": "google-site-verification=YOUR_VERIFICATION_CODE",
+        "ttl": 3600,
+        "provider": "Google"
+      },
+      "spf": {
+        "type": "TXT",
+        "value": "v=spf1 include:_spf.google.com ~all",
+        "ttl": 3600,
+        "provider": "Cloudflare"
+      },
+      "dmarc": {
+        "type": "TXT",
+        "value": "v=DMARC1; p=quarantine; rua=mailto:dmarc@singglebee.com",
+        "ttl": 3600,
+        "provider": "Cloudflare"
+      },
+      "dkim": {
+        "type": "TXT",
+        "value": "v=DKIM1; k=rsa; p=YOUR_PUBLIC_KEY; t=s; s=email; d=singglebee.com",
+        "ttl": 3600,
+        "provider": "Cloudflare"
+      }
+    }
+  },
+  "ssl": {
+    "provider": "Let's Encrypt",
+    "autoRenewal": true,
+    "certificatePath": "/etc/ssl/certs/singglebee.com.crt",
+    "keyPath": "/etc/ssl/private/singglebee.com.key",
+    "chainPath": "/etc/ssl/certs/chain.pem"
+  },
+  "cdn": {
+    "provider": "Cloudflare",
+    "cacheLevel": "standard",
+    "minify": {
+      "html": true,
+      "css": true,
+      "js": true
+    },
+    "imageOptimization": true,
+    "brotliCompression": true,
+    "http2": true,
+    "securityHeaders": {
+      "hsts": true,
+      "csp": true,
+      "xssProtection": true,
+      "contentTypeOptions": true,
+      "frameOptions": true
+    }
+  },
+  "email": {
+    "provider": "SendGrid",
+    "domains": ["singglebee.com", "mail.singglebee.com"],
+    "spf": "include:sendgrid.net ~all",
+    "dkim": {
+      "selector": "s1",
+      "domain": "singglebee.com",
+      "key": "YOUR_SENDGRID_DKIM_KEY"
+    },
+    "dmarc": {
+      "policy": "quarantine",
+      "rua": "mailto:dmarc@singglebee.com",
+      "fo": 1,
+      "rf": "afrf"
+    }
+  },
+  "monitoring": {
+    "uptime": {
+      "provider": "UptimeRobot",
+      "interval": 60,
+      "locations": ["US-East", "US-West", "Europe", "Asia"]
+    },
+    "performance": {
+      "provider": "Google PageSpeed Insights",
+      "threshold": 90
+    },
+    "security": {
+      "provider": "Sentry",
+      "errorTracking": true,
+      "performanceTracking": true
+    }
+  },
+  "backup": {
+    "dns": {
+      "provider": "Cloudflare",
+      "ttl": 300
+    },
+    "ssl": {
+      "provider": "Let's Encrypt",
+      "backupLocation": "/etc/ssl/backup/"
+    }
+  }
+}
