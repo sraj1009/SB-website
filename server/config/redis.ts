@@ -71,8 +71,10 @@ class RedisClient {
 
     this.client.on('reconnecting', (delay) => {
       this.reconnectAttempts++;
-      logger.info(`Redis client reconnecting (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts}) in ${delay}ms`);
-      
+      logger.info(
+        `Redis client reconnecting (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts}) in ${delay}ms`
+      );
+
       if (this.reconnectAttempts >= this.maxReconnectAttempts) {
         logger.error('Max Redis reconnection attempts reached. Giving up.');
       }
@@ -89,7 +91,7 @@ class RedisClient {
     }
 
     this.isConnecting = true;
-    
+
     try {
       await this.client.connect();
       logger.info('Redis connection established');
@@ -142,7 +144,7 @@ class RedisClient {
 
     for (const line of lines) {
       if (line.startsWith('#') || line === '') continue;
-      
+
       const [key, value] = line.split(':');
       if (key && value) {
         // Convert numeric values
@@ -179,7 +181,8 @@ class RedisClient {
       session: (sessionId: string) => `singglebee:session:${sessionId}`,
     },
     rateLimit: {
-      endpoint: (endpoint: string, identifier: string) => `singglebee:ratelimit:${endpoint}:${identifier}`,
+      endpoint: (endpoint: string, identifier: string) =>
+        `singglebee:ratelimit:${endpoint}:${identifier}`,
     },
     config: {
       site: () => `singglebee:config:site`,

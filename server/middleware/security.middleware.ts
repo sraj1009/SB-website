@@ -15,7 +15,7 @@ const SECURITY_CONFIG = {
     allowedIframeHostnames: [],
     selfClosing: ['br', 'img', 'hr'],
   },
-  
+
   // Rate limiting configurations
   rateLimit: {
     // General API rate limit
@@ -27,12 +27,12 @@ const SECURITY_CONFIG = {
         error: {
           code: 'RATE_LIMIT_EXCEEDED',
           message: 'Too many requests, please try again later.',
-        }
+        },
       },
       standardHeaders: true,
       legacyHeaders: false,
     },
-    
+
     // Authentication endpoints (stricter)
     auth: {
       windowMs: 15 * 60 * 1000, // 15 minutes
@@ -43,10 +43,10 @@ const SECURITY_CONFIG = {
         error: {
           code: 'AUTH_RATE_LIMIT_EXCEEDED',
           message: 'Too many authentication attempts, please try again later.',
-        }
+        },
       },
     },
-    
+
     // Upload endpoints
     upload: {
       windowMs: 60 * 60 * 1000, // 1 hour
@@ -56,21 +56,15 @@ const SECURITY_CONFIG = {
         error: {
           code: 'UPLOAD_RATE_LIMIT_EXCEEDED',
           message: 'Upload limit exceeded, please try again later.',
-        }
+        },
       },
     },
   },
-  
+
   // File upload security
   upload: {
     maxSize: 5 * 1024 * 1024, // 5MB
-    allowedMimeTypes: [
-      'image/jpeg',
-      'image/png',
-      'image/gif',
-      'image/webp',
-      'application/pdf',
-    ],
+    allowedMimeTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'],
     allowedExtensions: ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.pdf'],
   },
 };
@@ -83,11 +77,11 @@ export const securityHeaders = helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
-      imgSrc: ["'self'", "data:", "https:"],
+      styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+      scriptSrc: ["'self'", "'unsafe-inline'", 'https://cdn.jsdelivr.net'],
+      imgSrc: ["'self'", 'data:', 'https:'],
       connectSrc: ["'self'"],
-      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      fontSrc: ["'self'", 'https://fonts.gstatic.com'],
       objectSrc: ["'none'"],
       mediaSrc: ["'self'"],
       frameSrc: ["'none'"],
@@ -97,11 +91,11 @@ export const securityHeaders = helmet({
       upgradeInsecureRequests: [],
     },
   },
-  
+
   // Other security headers
   crossOriginEmbedderPolicy: true,
   crossOriginOpenerPolicy: true,
-  crossOriginResourcePolicy: { policy: "same-origin" },
+  crossOriginResourcePolicy: { policy: 'same-origin' },
   dnsPrefetchControl: true,
   frameguard: { action: 'deny' },
   hidePoweredBy: true,
@@ -114,7 +108,7 @@ export const securityHeaders = helmet({
   noSniff: true,
   originAgentCluster: true,
   permittedCrossDomainPolicies: false,
-  referrerPolicy: { policy: "strict-origin-when-cross-origin" },
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
   xssFilter: true,
 });
 
@@ -127,17 +121,17 @@ export const mongoSanitizeMiddleware = (req: Request, res: Response, next: NextF
     if (req.body) {
       req.body = mongoSanitize(req.body);
     }
-    
+
     // Sanitize query parameters
     if (req.query) {
       req.query = mongoSanitize(req.query);
     }
-    
+
     // Sanitize URL parameters
     if (req.params) {
       req.params = mongoSanitize(req.params);
     }
-    
+
     next();
   } catch (error) {
     logger.error('MongoDB sanitization error:', error);
@@ -154,12 +148,12 @@ export const xssProtection = (req: Request, res: Response, next: NextFunction) =
     if (req.body && typeof req.body === 'object') {
       req.body = sanitizeObject(req.body);
     }
-    
+
     // Sanitize query parameters
     if (req.query && typeof req.query === 'object') {
       req.query = sanitizeObject(req.query);
     }
-    
+
     next();
   } catch (error) {
     logger.error('XSS sanitization error:', error);
@@ -174,13 +168,13 @@ function sanitizeObject(obj: any): any {
   if (typeof obj !== 'object' || obj === null) {
     return obj;
   }
-  
+
   if (Array.isArray(obj)) {
     return obj.map(sanitizeObject);
   }
-  
+
   const sanitized: any = {};
-  
+
   for (const [key, value] of Object.entries(obj)) {
     if (typeof value === 'string') {
       sanitized[key] = sanitizeHtml(value, SECURITY_CONFIG.xss);
@@ -190,7 +184,7 @@ function sanitizeObject(obj: any): any {
       sanitized[key] = value;
     }
   }
-  
+
   return sanitized;
 }
 
@@ -202,30 +196,30 @@ export const validateInput = (schema: any, source: 'body' | 'query' | 'params' =
     try {
       const data = req[source];
       const result = schema.safeParse(data);
-      
+
       if (!result.success) {
-        const errors = result.error.issues.map(issue => ({
+        const errors = result.error.issues.map((issue) => ({
           field: issue.path.join('.'),
           message: issue.message,
           code: issue.code,
         }));
-        
+
         logger.warn('Input validation failed:', {
           ip: req.ip,
           path: req.path,
           errors,
         });
-        
+
         return res.status(400).json({
           success: false,
           error: {
             code: 'VALIDATION_ERROR',
             message: 'Invalid input data',
             details: errors,
-          }
+          },
         });
       }
-      
+
       // Replace with validated data
       req[source] = result.data;
       next();
@@ -242,11 +236,11 @@ export const validateInput = (schema: any, source: 'body' | 'query' | 'params' =
 export const fileUploadSecurity = (req: Request, res: Response, next: NextFunction) => {
   try {
     const file = req.file;
-    
+
     if (!file) {
       return next();
     }
-    
+
     // Check file size
     if (file.size > SECURITY_CONFIG.upload.maxSize) {
       return res.status(400).json({
@@ -254,10 +248,10 @@ export const fileUploadSecurity = (req: Request, res: Response, next: NextFuncti
         error: {
           code: 'FILE_TOO_LARGE',
           message: `File size exceeds maximum allowed size of ${SECURITY_CONFIG.upload.maxSize / 1024 / 1024}MB`,
-        }
+        },
       });
     }
-    
+
     // Check MIME type
     if (!SECURITY_CONFIG.upload.allowedMimeTypes.includes(file.mimetype)) {
       return res.status(400).json({
@@ -265,10 +259,10 @@ export const fileUploadSecurity = (req: Request, res: Response, next: NextFuncti
         error: {
           code: 'INVALID_FILE_TYPE',
           message: 'File type not allowed',
-        }
+        },
       });
     }
-    
+
     // Check file extension
     const ext = file.originalname.toLowerCase().substring(file.originalname.lastIndexOf('.'));
     if (!SECURITY_CONFIG.upload.allowedExtensions.includes(ext)) {
@@ -277,13 +271,13 @@ export const fileUploadSecurity = (req: Request, res: Response, next: NextFuncti
         error: {
           code: 'INVALID_FILE_EXTENSION',
           message: 'File extension not allowed',
-        }
+        },
       });
     }
-    
+
     // Additional security: Check file signature (magic numbers)
     // This would require additional implementation
-    
+
     next();
   } catch (error) {
     logger.error('File upload security error:', error);
@@ -296,7 +290,7 @@ export const fileUploadSecurity = (req: Request, res: Response, next: NextFuncti
  */
 export const createRateLimit = (type: keyof typeof SECURITY_CONFIG.rateLimit) => {
   const config = SECURITY_CONFIG.rateLimit[type];
-  
+
   return rateLimit({
     windowMs: config.windowMs,
     max: config.max,
@@ -314,7 +308,7 @@ export const createRateLimit = (type: keyof typeof SECURITY_CONFIG.rateLimit) =>
         path: req.path,
         userAgent: req.get('User-Agent'),
       });
-      
+
       res.status(429).json(config.message);
     },
   });
@@ -325,48 +319,49 @@ export const createRateLimit = (type: keyof typeof SECURITY_CONFIG.rateLimit) =>
  */
 export const ipBlocker = (req: Request, res: Response, next: NextFunction) => {
   const clientIp = req.ip || req.connection.remoteAddress;
-  
+
   // List of blocked IPs (in production, this would come from Redis/database)
   const blockedIps = new Set([
     // Add known malicious IPs here
   ]);
-  
+
   if (blockedIps.has(clientIp)) {
     logger.warn('Blocked IP attempted access:', {
       ip: clientIp,
       path: req.path,
       userAgent: req.get('User-Agent'),
     });
-    
+
     return res.status(403).json({
       success: false,
       error: {
         code: 'IP_BLOCKED',
         message: 'Access denied',
-      }
+      },
     });
   }
-  
+
   next();
 };
 
 /**
  * Request size limiter
  */
-export const requestSizeLimiter = (maxSize: number = 1024 * 1024) => { // 1MB default
+export const requestSizeLimiter = (maxSize: number = 1024 * 1024) => {
+  // 1MB default
   return (req: Request, res: Response, next: NextFunction) => {
     const contentLength = parseInt(req.get('Content-Length') || '0');
-    
+
     if (contentLength > maxSize) {
       return res.status(413).json({
         success: false,
         error: {
           code: 'REQUEST_TOO_LARGE',
           message: `Request size exceeds maximum allowed size of ${maxSize / 1024}KB`,
-        }
+        },
       });
     }
-    
+
     next();
   };
 };
@@ -376,7 +371,7 @@ export const requestSizeLimiter = (maxSize: number = 1024 * 1024) => { // 1MB de
  */
 export const securityAudit = (req: Request, res: Response, next: NextFunction) => {
   const startTime = Date.now();
-  
+
   // Log request start
   logger.info('Security audit - Request started:', {
     ip: req.ip,
@@ -386,12 +381,12 @@ export const securityAudit = (req: Request, res: Response, next: NextFunction) =
     contentType: req.get('Content-Type'),
     contentLength: req.get('Content-Length'),
   });
-  
+
   // Override res.end to log response
   const originalEnd = res.end;
-  res.end = function(...args) {
+  res.end = function (...args) {
     const duration = Date.now() - startTime;
-    
+
     logger.info('Security audit - Request completed:', {
       ip: req.ip,
       method: req.method,
@@ -399,7 +394,7 @@ export const securityAudit = (req: Request, res: Response, next: NextFunction) =
       statusCode: res.statusCode,
       duration: `${duration}ms`,
     });
-    
+
     // Log suspicious activities
     if (res.statusCode >= 400) {
       logger.warn('Security audit - Suspicious activity detected:', {
@@ -411,10 +406,10 @@ export const securityAudit = (req: Request, res: Response, next: NextFunction) =
         body: req.method !== 'GET' ? req.body : undefined,
       });
     }
-    
+
     originalEnd.apply(this, args);
   };
-  
+
   next();
 };
 

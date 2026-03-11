@@ -64,11 +64,7 @@ export class ProductCacheService {
       const products = await this.fetchProductsFromDB(filters);
 
       // Cache the result
-      await this.redis.setex(
-        cacheKey,
-        RedisClient.TTL.products.listing,
-        JSON.stringify(products)
-      );
+      await this.redis.setex(cacheKey, RedisClient.TTL.products.listing, JSON.stringify(products));
 
       return products;
     } catch (error) {
@@ -98,11 +94,7 @@ export class ProductCacheService {
 
       if (product) {
         // Cache the result
-        await this.redis.setex(
-          cacheKey,
-          RedisClient.TTL.products.byId,
-          JSON.stringify(product)
-        );
+        await this.redis.setex(cacheKey, RedisClient.TTL.products.byId, JSON.stringify(product));
       }
 
       return product;
@@ -129,13 +121,13 @@ export class ProductCacheService {
 
       // Cache miss - fetch from database
       logger.debug(`Category products cache miss: ${cacheKey}`);
-      const products = await Product.find({ 
-        category, 
+      const products = await Product.find({
+        category,
         isDeleted: { $ne: true },
-        status: 'active' 
+        status: 'active',
       })
-      .limit(limit)
-      .sort({ createdAt: -1 });
+        .limit(limit)
+        .sort({ createdAt: -1 });
 
       // Cache the result
       await this.redis.setex(
@@ -148,13 +140,13 @@ export class ProductCacheService {
     } catch (error) {
       logger.error('Product cache service error:', error);
       // Fallback to database
-      return Product.find({ 
-        category, 
+      return Product.find({
+        category,
         isDeleted: { $ne: true },
-        status: 'active' 
+        status: 'active',
       })
-      .limit(limit)
-      .sort({ createdAt: -1 });
+        .limit(limit)
+        .sort({ createdAt: -1 });
     }
   }
 
@@ -184,20 +176,16 @@ export class ProductCacheService {
               { name: { $regex: query, $options: 'i' } },
               { author: { $regex: query, $options: 'i' } },
               { description: { $regex: query, $options: 'i' } },
-              { sku: { $regex: query, $options: 'i' } }
-            ]
-          }
-        ]
+              { sku: { $regex: query, $options: 'i' } },
+            ],
+          },
+        ],
       })
-      .limit(limit)
-      .sort({ rating: -1, createdAt: -1 });
+        .limit(limit)
+        .sort({ rating: -1, createdAt: -1 });
 
       // Cache the result
-      await this.redis.setex(
-        cacheKey,
-        RedisClient.TTL.products.search,
-        JSON.stringify(products)
-      );
+      await this.redis.setex(cacheKey, RedisClient.TTL.products.search, JSON.stringify(products));
 
       return products;
     } catch (error) {
@@ -213,13 +201,13 @@ export class ProductCacheService {
               { name: { $regex: query, $options: 'i' } },
               { author: { $regex: query, $options: 'i' } },
               { description: { $regex: query, $options: 'i' } },
-              { sku: { $regex: query, $options: 'i' } }
-            ]
-          }
-        ]
+              { sku: { $regex: query, $options: 'i' } },
+            ],
+          },
+        ],
       })
-      .limit(limit)
-      .sort({ rating: -1, createdAt: -1 });
+        .limit(limit)
+        .sort({ rating: -1, createdAt: -1 });
     }
   }
 
@@ -300,7 +288,7 @@ export class ProductCacheService {
    */
   async clearAllCache(): Promise<number> {
     const pattern = 'singglebee:products:*';
-    
+
     try {
       const keys = await this.redis.keys(pattern);
       if (keys.length > 0) {
@@ -329,7 +317,7 @@ export class ProductCacheService {
       bestseller,
       sortBy = 'createdAt',
       sortOrder = 'desc',
-      includeDeleted = false
+      includeDeleted = false,
     } = filters;
 
     const pageNum = parseInt(page.toString());
@@ -337,8 +325,8 @@ export class ProductCacheService {
     const skip = (pageNum - 1) * limitNum;
 
     // Build filter
-    let filter: any = {};
-    
+    const filter: any = {};
+
     if (!includeDeleted) {
       filter.isDeleted = { $ne: true };
     }
@@ -349,7 +337,7 @@ export class ProductCacheService {
         { name: { $regex: search, $options: 'i' } },
         { author: { $regex: search, $options: 'i' } },
         { sku: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } }
+        { description: { $regex: search, $options: 'i' } },
       ];
     }
 
@@ -375,12 +363,8 @@ export class ProductCacheService {
 
     // Execute query
     const [products, totalCount] = await Promise.all([
-      Product.find(filter)
-        .sort(sort)
-        .skip(skip)
-        .limit(limitNum)
-        .lean(),
-      Product.countDocuments(filter)
+      Product.find(filter).sort(sort).skip(skip).limit(limitNum).lean(),
+      Product.countDocuments(filter),
     ]);
 
     const totalPages = Math.ceil(totalCount / limitNum);
@@ -393,8 +377,8 @@ export class ProductCacheService {
         total: totalCount,
         totalPages,
         hasNext: pageNum < totalPages,
-        hasPrev: pageNum > 1
-      }
+        hasPrev: pageNum > 1,
+      },
     };
   }
 
@@ -407,7 +391,7 @@ export class ProductCacheService {
 
     for (const line of lines) {
       if (line.startsWith('#') || line === '') continue;
-      
+
       const [key, value] = line.split(':');
       if (key && value) {
         // Convert numeric values

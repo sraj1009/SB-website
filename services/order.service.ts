@@ -1,23 +1,18 @@
 // Order Service for SINGGLEBEE Frontend
 
 import apiClient from './api-client';
-import { 
-  ApiResponse, 
-  PaginatedResponse, 
-  Order, 
-  CreateOrderRequest, 
-  OrderFilters, 
+import {
+  ApiResponse,
+  PaginatedResponse,
+  Order,
+  CreateOrderRequest,
+  OrderFilters,
   OrderStatusUpdate,
   PaymentSession,
   OrderStatus,
-  PaymentMethod
+  PaymentMethod,
 } from '../types/api';
-import { 
-  NotFoundError, 
-  ValidationError, 
-  ErrorHandler,
-  createError
-} from '../utils/error-handler';
+import { NotFoundError, ValidationError, ErrorHandler, createError } from '../utils/error-handler';
 
 class OrderService {
   private static instance: OrderService;
@@ -35,7 +30,7 @@ class OrderService {
       this.validateCreateOrderRequest(orderData);
 
       const response = await apiClient.post<Order>('/orders', orderData);
-      
+
       if (!response.success || !response.data) {
         throw createError(
           response.error?.message || 'Failed to create order',
@@ -54,9 +49,9 @@ class OrderService {
   async getOrders(filters: OrderFilters = {}): Promise<PaginatedResponse<Order>> {
     try {
       const response = await apiClient.get<PaginatedResponse<Order>>('/orders', {
-        params: this.buildOrderQueryParams(filters)
+        params: this.buildOrderQueryParams(filters),
       });
-      
+
       if (!response.success || !response.data) {
         throw createError(
           response.error?.message || 'Failed to fetch orders',
@@ -79,7 +74,7 @@ class OrderService {
       }
 
       const response = await apiClient.get<Order>(`/orders/${id}`);
-      
+
       if (!response.success || !response.data) {
         throw new NotFoundError('Order', id);
       }
@@ -98,9 +93,9 @@ class OrderService {
       }
 
       const response = await apiClient.post<Order>(`/orders/${id}/cancel`, {
-        reason: reason || 'Customer requested cancellation'
+        reason: reason || 'Customer requested cancellation',
       });
-      
+
       if (!response.success || !response.data) {
         throw createError(
           response.error?.message || 'Failed to cancel order',
@@ -162,7 +157,7 @@ class OrderService {
       }
 
       const response = await apiClient.get(`/orders/${id}/track`);
-      
+
       if (!response.success || !response.data) {
         throw createError(
           response.error?.message || 'Failed to track order',
@@ -187,7 +182,7 @@ class OrderService {
       this.validateOrderStatusUpdate(statusUpdate);
 
       const response = await apiClient.patch<Order>(`/orders/${orderId}`, statusUpdate);
-      
+
       if (!response.success || !response.data) {
         throw createError(
           response.error?.message || 'Failed to update order status',
@@ -210,7 +205,7 @@ class OrderService {
       }
 
       const response = await apiClient.post<Order>(`/orders/${orderId}/verify`);
-      
+
       if (!response.success || !response.data) {
         throw createError(
           response.error?.message || 'Failed to verify order',
@@ -238,9 +233,9 @@ class OrderService {
 
       const response = await apiClient.post<Order>(`/orders/${orderId}/refund`, {
         amount,
-        reason
+        reason,
       });
-      
+
       if (!response.success || !response.data) {
         throw createError(
           response.error?.message || 'Failed to process refund',
@@ -263,7 +258,7 @@ class OrderService {
       }
 
       const response = await apiClient.get<PaymentSession>(`/orders/${orderId}/payment-session`);
-      
+
       if (!response.success || !response.data) {
         throw createError(
           response.error?.message || 'Failed to get payment session',
@@ -286,7 +281,7 @@ class OrderService {
       }
 
       const response = await apiClient.post<PaymentSession>(`/orders/${orderId}/payment-session`);
-      
+
       if (!response.success || !response.data) {
         throw createError(
           response.error?.message || 'Failed to create payment session',
@@ -302,11 +297,13 @@ class OrderService {
   }
 
   // Get order statistics
-  async getOrderStats(filters: {
-    startDate?: string;
-    endDate?: string;
-    status?: OrderStatus;
-  } = {}): Promise<{
+  async getOrderStats(
+    filters: {
+      startDate?: string;
+      endDate?: string;
+      status?: OrderStatus;
+    } = {}
+  ): Promise<{
     totalOrders: number;
     totalRevenue: number;
     averageOrderValue: number;
@@ -320,9 +317,9 @@ class OrderService {
   }> {
     try {
       const response = await apiClient.get('/orders/stats', {
-        params: filters
+        params: filters,
       });
-      
+
       if (!response.success || !response.data) {
         throw createError(
           response.error?.message || 'Failed to fetch order statistics',
@@ -364,7 +361,7 @@ class OrderService {
   }> {
     try {
       const response = await apiClient.get('/orders/analytics');
-      
+
       if (!response.success || !response.data) {
         throw createError(
           response.error?.message || 'Failed to fetch order analytics',
@@ -380,16 +377,18 @@ class OrderService {
   }
 
   // Export orders
-  async exportOrders(filters: OrderFilters & {
-    format: 'csv' | 'excel' | 'pdf';
-  }): Promise<{
+  async exportOrders(
+    filters: OrderFilters & {
+      format: 'csv' | 'excel' | 'pdf';
+    }
+  ): Promise<{
     downloadUrl: string;
     filename: string;
     expiresAt: string;
   }> {
     try {
       const response = await apiClient.post('/orders/export', filters);
-      
+
       if (!response.success || !response.data) {
         throw createError(
           response.error?.message || 'Failed to export orders',
@@ -405,20 +404,22 @@ class OrderService {
   }
 
   // Get order invoices
-  async getOrderInvoices(orderId: string): Promise<Array<{
-    id: string;
-    type: 'invoice' | 'receipt';
-    url: string;
-    filename: string;
-    createdAt: string;
-  }>> {
+  async getOrderInvoices(orderId: string): Promise<
+    Array<{
+      id: string;
+      type: 'invoice' | 'receipt';
+      url: string;
+      filename: string;
+      createdAt: string;
+    }>
+  > {
     try {
       if (!orderId) {
         throw new ValidationError('Order ID is required');
       }
 
       const response = await apiClient.get(`/orders/${orderId}/invoices`);
-      
+
       if (!response.success || !response.data) {
         throw createError(
           response.error?.message || 'Failed to fetch order invoices',
@@ -458,7 +459,7 @@ class OrderService {
       if (!item.productId) {
         errors.push(`Item ${index + 1}: Product ID is required`);
       }
-      
+
       if (!item.quantity || item.quantity < 1) {
         errors.push(`Item ${index + 1}: Quantity must be at least 1`);
       }
@@ -503,7 +504,15 @@ class OrderService {
       errors.push('Status is required');
     }
 
-    const validStatuses: OrderStatus[] = ['pending', 'verified', 'processing', 'shipped', 'delivered', 'cancelled', 'returned'];
+    const validStatuses: OrderStatus[] = [
+      'pending',
+      'verified',
+      'processing',
+      'shipped',
+      'delivered',
+      'cancelled',
+      'returned',
+    ];
     if (statusUpdate.status && !validStatuses.includes(statusUpdate.status)) {
       errors.push('Invalid order status');
     }
@@ -564,30 +573,30 @@ class OrderService {
   // Check if order can be returned
   canReturnOrder(order: Order): boolean {
     if (order.status !== 'delivered') return false;
-    
+
     const deliveredDate = order.actualDelivery ? new Date(order.actualDelivery) : null;
     if (!deliveredDate) return false;
-    
+
     // Return window: 7 days after delivery
     const returnWindow = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
     const now = new Date();
     const timeSinceDelivery = now.getTime() - deliveredDate.getTime();
-    
+
     return timeSinceDelivery <= returnWindow;
   }
 
   // Get order status color
   getStatusColor(status: OrderStatus): string {
     const colors: Record<OrderStatus, string> = {
-      pending: '#F59E0B',      // amber
-      verified: '#10B981',    // green
-      processing: '#3B82F6',  // blue
-      shipped: '#8B5CF6',     // purple
-      delivered: '#059669',   // green
-      cancelled: '#EF4444',   // red
-      returned: '#F97316'     // orange
+      pending: '#F59E0B', // amber
+      verified: '#10B981', // green
+      processing: '#3B82F6', // blue
+      shipped: '#8B5CF6', // purple
+      delivered: '#059669', // green
+      cancelled: '#EF4444', // red
+      returned: '#F97316', // orange
     };
-    
+
     return colors[status] || '#6B7280';
   }
 
@@ -598,9 +607,9 @@ class OrderService {
       GPay: 'Google Pay',
       PhonePe: 'PhonePe',
       COD: 'Cash on Delivery',
-      Cashfree: 'Cashfree Payment Gateway'
+      Cashfree: 'Cashfree Payment Gateway',
     };
-    
+
     return names[method] || method;
   }
 
@@ -616,10 +625,10 @@ class OrderService {
         weekday: 'long',
         month: 'long',
         day: 'numeric',
-        year: 'numeric'
+        year: 'numeric',
       });
     }
-    
+
     // Default estimation based on status
     if (order.status === 'pending') {
       const date = new Date();
@@ -627,10 +636,10 @@ class OrderService {
       return date.toLocaleDateString('en-US', {
         weekday: 'long',
         month: 'long',
-        day: 'numeric'
+        day: 'numeric',
       });
     }
-    
+
     return null;
   }
 }

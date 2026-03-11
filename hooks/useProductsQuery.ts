@@ -37,8 +37,7 @@ export function useProducts(filters: ProductFilters = {}) {
 export function useInfiniteProducts(filters: ProductFilters = {}) {
   return useInfiniteQuery({
     queryKey: productKeys.list(filters),
-    queryFn: ({ pageParam = 1 }) => 
-      productService.getProducts({ ...filters, page: pageParam }),
+    queryFn: ({ pageParam = 1 }) => productService.getProducts({ ...filters, page: pageParam }),
     getNextPageParam: (lastPage, allPages) => {
       if (lastPage.page < lastPage.totalPages) {
         return lastPage.page + 1;
@@ -233,11 +232,11 @@ export function useProductStats() {
 export function useProductSearch() {
   const [searchQuery, setSearchQuery] = React.useState('');
   const [filters, setFilters] = React.useState<ProductFilters>({});
-  
+
   const debouncedQuery = useDebounce(searchQuery, 300);
-  
+
   const searchResults = useSearchProducts(debouncedQuery, filters);
-  
+
   return {
     searchQuery,
     setSearchQuery,
@@ -253,19 +252,19 @@ export function useProductSearch() {
 // Custom hook for product filters
 export function useProductFilters(initialFilters: ProductFilters = {}) {
   const [filters, setFilters] = React.useState<ProductFilters>(initialFilters);
-  
+
   const updateFilter = React.useCallback((key: keyof ProductFilters, value: any) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
+    setFilters((prev) => ({ ...prev, [key]: value }));
   }, []);
-  
+
   const clearFilters = React.useCallback(() => {
     setFilters({});
   }, []);
-  
+
   const resetFilters = React.useCallback(() => {
     setFilters(initialFilters);
   }, [initialFilters]);
-  
+
   return {
     filters,
     setFilters,
@@ -278,9 +277,9 @@ export function useProductFilters(initialFilters: ProductFilters = {}) {
 // Custom hook for product comparison
 export function useProductComparison() {
   const [compareList, setCompareList] = React.useState<string[]>([]);
-  
+
   const addToCompare = React.useCallback((productId: string) => {
-    setCompareList(prev => {
+    setCompareList((prev) => {
       if (prev.includes(productId)) return prev;
       if (prev.length >= 4) {
         toast.warning('You can compare up to 4 products at a time');
@@ -289,17 +288,17 @@ export function useProductComparison() {
       return [...prev, productId];
     });
   }, []);
-  
+
   const removeFromCompare = React.useCallback((productId: string) => {
-    setCompareList(prev => prev.filter(id => id !== productId));
+    setCompareList((prev) => prev.filter((id) => id !== productId));
   }, []);
-  
+
   const clearCompare = React.useCallback(() => {
     setCompareList([]);
   }, []);
-  
+
   const compareMutation = useCompareProducts();
-  
+
   return {
     compareList,
     addToCompare,
@@ -314,7 +313,7 @@ export function useProductComparison() {
 // Custom hook for product wishlist
 export function useProductWishlist() {
   const queryClient = useQueryClient();
-  
+
   const addToWishlist = useMutation({
     mutationFn: async (productId: string) => {
       // This would call a wishlist service
@@ -326,7 +325,7 @@ export function useProductWishlist() {
       queryClient.invalidateQueries({ queryKey: productKeys.all });
     },
   });
-  
+
   const removeFromWishlist = useMutation({
     mutationFn: async (productId: string) => {
       // This would call a wishlist service
@@ -337,7 +336,7 @@ export function useProductWishlist() {
       queryClient.invalidateQueries({ queryKey: productKeys.all });
     },
   });
-  
+
   return {
     addToWishlist: addToWishlist.mutate,
     removeFromWishlist: removeFromWishlist.mutate,
@@ -349,24 +348,24 @@ export function useProductWishlist() {
 // Utility hook for debouncing
 function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = React.useState<T>(value);
-  
+
   React.useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedValue(value);
     }, delay);
-    
+
     return () => {
       clearTimeout(handler);
     };
   }, [value, delay]);
-  
+
   return debouncedValue;
 }
 
 // Custom hook for product availability
 export function useProductAvailability(productId: string) {
   const availability = useCheckAvailability([productId]);
-  
+
   return {
     isAvailable: availability.data?.[productId]?.inStock || false,
     stock: availability.data?.[productId]?.stock || 0,
@@ -391,7 +390,7 @@ export function usePersonalizedRecommendations() {
 export function useProductInsights(productId: string) {
   const analytics = useProductAnalytics(productId);
   const priceHistory = usePriceHistory(productId);
-  
+
   return {
     analytics: analytics.data,
     priceHistory: priceHistory.data,

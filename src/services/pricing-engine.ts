@@ -16,7 +16,15 @@ export interface PricingRule {
 }
 
 export interface PricingCondition {
-  type: 'demand' | 'inventory' | 'user_segment' | 'time' | 'category' | 'competitor_price' | 'quantity' | 'season';
+  type:
+    | 'demand'
+    | 'inventory'
+    | 'user_segment'
+    | 'time'
+    | 'category'
+    | 'competitor_price'
+    | 'quantity'
+    | 'season';
   operator: 'gt' | 'lt' | 'eq' | 'gte' | 'lte' | 'in' | 'not_in';
   value: any;
   weight?: number;
@@ -82,15 +90,13 @@ class PricingEngine {
         description: 'Increase price by 5% when demand is high and stock is low',
         conditions: [
           { type: 'demand', operator: 'gt', value: 80 },
-          { type: 'inventory', operator: 'lt', value: 20 }
+          { type: 'inventory', operator: 'lt', value: 20 },
         ],
-        actions: [
-          { type: 'adjust_price', value: 1.05, operator: 'multiply' }
-        ],
+        actions: [{ type: 'adjust_price', value: 1.05, operator: 'multiply' }],
         priority: 1,
         isActive: true,
         minMargin: 15,
-        maxDiscount: 0
+        maxDiscount: 0,
       },
       {
         id: 'low_demand_high_stock',
@@ -98,79 +104,63 @@ class PricingEngine {
         description: 'Apply 10% discount when demand is low and stock is high',
         conditions: [
           { type: 'demand', operator: 'lt', value: 30 },
-          { type: 'inventory', operator: 'gt', value: 80 }
+          { type: 'inventory', operator: 'gt', value: 80 },
         ],
-        actions: [
-          { type: 'apply_discount', value: 10, operator: 'percentage' }
-        ],
+        actions: [{ type: 'apply_discount', value: 10, operator: 'percentage' }],
         priority: 2,
         isActive: true,
         minMargin: 10,
-        maxDiscount: 15
+        maxDiscount: 15,
       },
       {
         id: 'vip_pricing',
         name: 'VIP Customer Exclusive Pricing',
         description: 'Apply 5% discount for VIP customers',
-        conditions: [
-          { type: 'user_segment', operator: 'eq', value: 'vip' }
-        ],
-        actions: [
-          { type: 'apply_discount', value: 5, operator: 'percentage' }
-        ],
+        conditions: [{ type: 'user_segment', operator: 'eq', value: 'vip' }],
+        actions: [{ type: 'apply_discount', value: 5, operator: 'percentage' }],
         priority: 3,
         isActive: true,
         minMargin: 5,
-        maxDiscount: 10
+        maxDiscount: 10,
       },
       {
         id: 'weekend_premium',
         name: ' Weekend Premium Pricing',
         description: 'Increase price by 3% on weekends',
         conditions: [
-          { type: 'time', operator: 'in', value: [6, 0] } // Saturday, Sunday
+          { type: 'time', operator: 'in', value: [6, 0] }, // Saturday, Sunday
         ],
-        actions: [
-          { type: 'adjust_price', value: 1.03, operator: 'multiply' }
-        ],
+        actions: [{ type: 'adjust_price', value: 1.03, operator: 'multiply' }],
         priority: 4,
         isActive: true,
         minMargin: 12,
-        maxDiscount: 0
+        maxDiscount: 0,
       },
       {
         id: 'bulk_discount',
         name: 'Bulk Purchase Discount',
         description: 'Apply tiered discounts for bulk purchases',
-        conditions: [
-          { type: 'quantity', operator: 'gte', value: 5 }
-        ],
-        actions: [
-          { type: 'apply_discount', value: 10, operator: 'percentage' }
-        ],
+        conditions: [{ type: 'quantity', operator: 'gte', value: 5 }],
+        actions: [{ type: 'apply_discount', value: 10, operator: 'percentage' }],
         priority: 5,
         isActive: true,
         minMargin: 8,
-        maxDiscount: 20
+        maxDiscount: 20,
       },
       {
         id: 'seasonal_adjustment',
         name: 'Seasonal Price Adjustment',
         description: 'Adjust prices based on seasonality',
-        conditions: [
-          { type: 'season', operator: 'in', value: ['summer', 'winter'] }
-        ],
-        actions: [
-          { type: 'adjust_price', value: 1.02, operator: 'multiply' }
-        ],
+        conditions: [{ type: 'season', operator: 'in', value: ['summer', 'winter'] }],
+        actions: [{ type: 'adjust_price', value: 1.02, operator: 'multiply' }],
         priority: 6,
         isActive: true,
         minMargin: 10,
-        maxDiscount: 0
-      }
+        maxDiscount: 0,
+      },
     ];
 
-    defaultRules.forEach(rule => {
+    defaultRules.forEach((rule) => {
       this.rules.set(rule.id, rule);
     });
   }
@@ -195,7 +185,7 @@ class PricingEngine {
       const data = {
         productPricing: Array.from(this.productPricing.entries()),
         metrics: Array.from(this.metrics.entries()),
-        demandTracker: Array.from(this.demandTracker.entries())
+        demandTracker: Array.from(this.demandTracker.entries()),
       };
       localStorage.setItem('pricing_engine_data', JSON.stringify(data));
     } catch (error) {
@@ -205,16 +195,19 @@ class PricingEngine {
 
   private startDemandTracking(): void {
     // Track demand patterns every hour
-    setInterval(() => {
-      this.updateDemandMetrics();
-    }, 60 * 60 * 1000);
+    setInterval(
+      () => {
+        this.updateDemandMetrics();
+      },
+      60 * 60 * 1000
+    );
   }
 
   private updateDemandMetrics(): void {
     this.demandTracker.forEach((demandData, productId) => {
       // Keep only last 24 hours of data
-      const cutoff = Date.now() - (24 * 60 * 60 * 1000);
-      const recentData = demandData.filter(timestamp => timestamp > cutoff);
+      const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+      const recentData = demandData.filter((timestamp) => timestamp > cutoff);
       this.demandTracker.set(productId, recentData);
     });
   }
@@ -235,7 +228,7 @@ class PricingEngine {
         margin: 30, // Default margin
         demand: this.calculateDemand(productId),
         inventory: this.getInventoryLevel(productId),
-        lastUpdated: new Date().toISOString()
+        lastUpdated: new Date().toISOString(),
       };
       this.productPricing.set(productId, productPricing);
     }
@@ -255,7 +248,7 @@ class PricingEngine {
     for (const rule of applicableRules) {
       const priceBefore = adjustedPrice;
       adjustedPrice = this.applyRule(adjustedPrice, rule, context);
-      
+
       if (adjustedPrice !== priceBefore) {
         appliedRules.push(rule.id);
         this.trackRuleApplication(rule.id, productId, userId);
@@ -264,7 +257,7 @@ class PricingEngine {
 
     // Ensure minimum margin is maintained
     const cost = productPricing.basePrice * (1 - productPricing.margin / 100);
-    const minPrice = cost * (1 + (productPricing.margin / 100));
+    const minPrice = cost * (1 + productPricing.margin / 100);
     adjustedPrice = Math.max(adjustedPrice, minPrice);
 
     // Update product pricing
@@ -281,7 +274,7 @@ class PricingEngine {
       current_price: adjustedPrice,
       applied_rules: appliedRules,
       user_id: userId,
-      context
+      context,
     });
 
     return productPricing;
@@ -294,7 +287,7 @@ class PricingEngine {
       'book-002': 399,
       'book-003': 299,
       'stationery-001': 199,
-      'stationery-002': 149
+      'stationery-002': 149,
     };
     return basePrices[productId] || 299;
   }
@@ -302,7 +295,7 @@ class PricingEngine {
   private calculateDemand(productId: string): number {
     const demandData = this.demandTracker.get(productId) || [];
     const recentViews = demandData.length;
-    
+
     // Calculate demand score (0-100)
     const maxExpectedViews = 100;
     return Math.min((recentViews / maxExpectedViews) * 100, 100);
@@ -315,15 +308,18 @@ class PricingEngine {
       'book-002': 85,
       'book-003': 45,
       'stationery-001': 120,
-      'stationery-002': 8
+      'stationery-002': 8,
     };
     return inventoryLevels[productId] || 50;
   }
 
-  private getApplicableRules(context: PricingContext, productPricing: ProductPricing): PricingRule[] {
+  private getApplicableRules(
+    context: PricingContext,
+    productPricing: ProductPricing
+  ): PricingRule[] {
     const applicable: PricingRule[] = [];
 
-    this.rules.forEach(rule => {
+    this.rules.forEach((rule) => {
       if (!rule.isActive) return;
 
       // Check date range
@@ -331,7 +327,7 @@ class PricingEngine {
       if (rule.endDate && new Date() > new Date(rule.endDate)) return;
 
       // Check all conditions
-      const conditionsMet = rule.conditions.every(condition => 
+      const conditionsMet = rule.conditions.every((condition) =>
         this.evaluateCondition(condition, context, productPricing)
       );
 
@@ -381,21 +377,29 @@ class PricingEngine {
 
   private compareValues(actual: any, operator: string, expected: any): boolean {
     switch (operator) {
-      case 'gt': return actual > expected;
-      case 'gte': return actual >= expected;
-      case 'lt': return actual < expected;
-      case 'lte': return actual <= expected;
-      case 'eq': return actual === expected;
-      case 'in': return Array.isArray(expected) && expected.includes(actual);
-      case 'not_in': return Array.isArray(expected) && !expected.includes(actual);
-      default: return false;
+      case 'gt':
+        return actual > expected;
+      case 'gte':
+        return actual >= expected;
+      case 'lt':
+        return actual < expected;
+      case 'lte':
+        return actual <= expected;
+      case 'eq':
+        return actual === expected;
+      case 'in':
+        return Array.isArray(expected) && expected.includes(actual);
+      case 'not_in':
+        return Array.isArray(expected) && !expected.includes(actual);
+      default:
+        return false;
     }
   }
 
   private applyRule(currentPrice: number, rule: PricingRule, context: PricingContext): number {
     let newPrice = currentPrice;
 
-    rule.actions.forEach(action => {
+    rule.actions.forEach((action) => {
       switch (action.type) {
         case 'adjust_price':
           if (action.operator === 'multiply') {
@@ -409,7 +413,7 @@ class PricingEngine {
 
         case 'apply_discount':
           if (action.operator === 'percentage') {
-            newPrice *= (1 - action.value / 100);
+            newPrice *= 1 - action.value / 100;
           } else {
             newPrice -= action.value;
           }
@@ -439,7 +443,7 @@ class PricingEngine {
         revenueImpact: 0,
         conversionImpact: 0,
         marginImpact: 0,
-        lastApplied: new Date().toISOString()
+        lastApplied: new Date().toISOString(),
       };
       this.metrics.set(ruleId, metrics);
     }
@@ -455,13 +459,13 @@ class PricingEngine {
     if (!this.demandTracker.has(productId)) {
       this.demandTracker.set(productId, []);
     }
-    
+
     const demandData = this.demandTracker.get(productId)!;
     demandData.push(Date.now());
-    
+
     // Keep only last 24 hours
-    const cutoff = Date.now() - (24 * 60 * 60 * 1000);
-    const recentData = demandData.filter(timestamp => timestamp > cutoff);
+    const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+    const recentData = demandData.filter((timestamp) => timestamp > cutoff);
     this.demandTracker.set(productId, recentData);
   }
 
@@ -469,11 +473,11 @@ class PricingEngine {
   addRule(rule: PricingRule): void {
     this.rules.set(rule.id, rule);
     this.savePricingData();
-    
+
     analytics.track('pricing_rule_added', {
       rule_id: rule.id,
       rule_name: rule.name,
-      priority: rule.priority
+      priority: rule.priority,
     });
   }
 
@@ -483,10 +487,10 @@ class PricingEngine {
     if (rule) {
       Object.assign(rule, updates);
       this.savePricingData();
-      
+
       analytics.track('pricing_rule_updated', {
         rule_id: ruleId,
-        updates: Object.keys(updates)
+        updates: Object.keys(updates),
       });
     }
   }
@@ -496,7 +500,7 @@ class PricingEngine {
     this.rules.delete(ruleId);
     this.metrics.delete(ruleId);
     this.savePricingData();
-    
+
     analytics.track('pricing_rule_deleted', { rule_id: ruleId });
   }
 
@@ -521,8 +525,8 @@ class PricingEngine {
       if (!rule) return;
 
       // Simplified ROI calculation
-      const roi = metrics.revenueImpact > 0 ? 
-        (metrics.revenueImpact / metrics.applications) * 100 : 0;
+      const roi =
+        metrics.revenueImpact > 0 ? (metrics.revenueImpact / metrics.applications) * 100 : 0;
 
       let recommendation = 'Keep running';
       if (roi < 0) {
@@ -539,7 +543,7 @@ class PricingEngine {
         applications: metrics.applications,
         revenueImpact: metrics.revenueImpact,
         roi,
-        recommendation
+        recommendation,
       });
     });
 
@@ -555,7 +559,7 @@ class PricingEngine {
     return {
       rules: Array.from(this.rules.values()),
       productPricing: Array.from(this.productPricing.values()),
-      metrics: Array.from(this.metrics.values())
+      metrics: Array.from(this.metrics.values()),
     };
   }
 }
@@ -577,21 +581,24 @@ export const getProductPrice = (
     userSegment,
     timeOfDay: new Date().getHours(),
     dayOfWeek: new Date().getDay(),
-    season: getCurrentSeason()
+    season: getCurrentSeason(),
   };
 
   return pricingEngine.calculatePrice(context);
 };
 
-export const trackProductInteraction = (productId: string, action: 'view' | 'add_to_cart' | 'purchase') => {
+export const trackProductInteraction = (
+  productId: string,
+  action: 'view' | 'add_to_cart' | 'purchase'
+) => {
   if (action === 'view') {
     pricingEngine.trackProductView(productId);
   }
-  
+
   analytics.track('product_interaction', {
     product_id: productId,
     action,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 };
 

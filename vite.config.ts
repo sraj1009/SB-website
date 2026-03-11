@@ -1,13 +1,12 @@
 /// <reference types="vitest" />
 import path from 'path';
-import { defineConfig, loadEnv } from 'vite';
+import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
-import { resolve } from 'path';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, '.', '');
+  const isProduction = mode === 'production';
   
   return {
     plugins: [
@@ -22,6 +21,8 @@ export default defineConfig(({ mode }) => {
           theme_color: '#FFC107',
           background_color: '#FFFDF7',
           display: 'standalone',
+          orientation: 'portrait',
+          start_url: '/',
           icons: [
             {
               src: 'pwa-192x192.png',
@@ -51,9 +52,9 @@ export default defineConfig(({ mode }) => {
                 cacheName: 'api-cache',
                 expiration: {
                   maxEntries: 100,
-                  maxAgeSeconds: 60 * 5 // 5 minutes
-                }
-              }
+                  maxAgeSeconds: 60 * 5, // 5 minutes
+                },
+              },
             },
             {
               urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/,
@@ -62,9 +63,9 @@ export default defineConfig(({ mode }) => {
                 cacheName: 'images-cache',
                 expiration: {
                   maxEntries: 200,
-                  maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
-                }
-              }
+                  maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+                },
+              },
             },
             {
               urlPattern: /\.(?:js|css)$/,
@@ -73,22 +74,30 @@ export default defineConfig(({ mode }) => {
                 cacheName: 'static-resources',
                 expiration: {
                   maxEntries: 100,
-                  maxAgeSeconds: 60 * 60 * 24 * 7 // 7 days
-                }
-              }
-            }
-          ]
+                  maxAgeSeconds: 60 * 60 * 24 * 7, // 7 days
+                },
+              },
+            },
+          ],
         },
         strategies: 'generateSW',
         devOptions: {
-          enabled: true, // Enable PWA in development
-          type: 'module'
-        }
-      })
+          enabled: false, // Disable PWA in development for faster builds
+          type: 'module',
+        },
+      }),
     ],
     server: {
       port: 5173,
       host: true,
+      headers: {
+        'Content-Security-Policy': isProduction 
+          ? "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:;"
+          : undefined,
+        'X-Frame-Options': 'DENY',
+        'X-Content-Type-Options': 'nosniff',
+        'Referrer-Policy': 'strict-origin-when-cross-origin',
+      },
       proxy: {
         '/api': {
           target: 'http://localhost:5000',
@@ -99,24 +108,57 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       outDir: 'dist',
+      sourcemap: isProduction ? 'hidden' : true,
+      minify: 'terser',
+      target: 'esnext',
       rollupOptions: {
         output: {
           manualChunks: {
-            vendor: ['react', 'react-dom'],
-            router: ['react-router-dom'],
-            ui: ['lucide-react', 'react-toastify'],
-            api: ['axios', '@tanstack/react-query'],
-            utils: ['./utils/seo-utils.ts']
-          }
-        }
+            // Core React ecosystem
+            'react-vendor': ['react', 'react-dom'],
+            // Router
+            'router': ['react-router-dom'],
+            // UI components and icons
+            'ui': ['lucide-react'],
+            // Data fetching and state
+            'query': ['@tanstack/react-query', 'axios'],
+            // Forms and validation
+            'forms': ['react-hook-form', 'zod', '@hookform/resolvers'],
+            // State management
+            'state': ['zustand'],
+            // Development tools (excluded from production)
+            ...(isProduction ? {} : { 'dev-tools': ['@tanstack/react-query-devtools'] }),
+          },
+          chunkFileNames: (chunkInfo) => {
+            const facadeModuleId = chunkInfo.facadeModuleId ? chunkInfo.facadeModuleId.split('/').pop() : 'chunk';
+            return `js/${facadeModuleId}-[hash].js`;
+          },
+          assetFileNames: (assetInfo) => {
+            const info = assetInfo.name?.split('.') || [];
+            const ext = info[info.length - 1] || '';
+            if (!assetInfo.name) return 'assets/[name]-[hash][extname]';
+            if (/\.(mp4|webm|ogg|mp3|wav|flac|aac)$/.test(assetInfo.name)) {
+              return `media/[name]-[hash][extname]`;
+            }
+            if (/\.(png|jpe?g|gif|svg|ico|webp)$/.test(assetInfo.name)) {
+              return `images/[name]-[hash][extname]`;
+            }
+            if (/\.(woff2?|eot|ttf|otf)$/.test(assetInfo.name)) {
+              return `fonts/[name]-[hash][extname]`;
+            }
+            return `${ext}/[name]-[hash][extname]`;
+          },
+        },
       },
-      chunkSizeWarningLimit: 1000,
-      sourcemap: mode === 'development',
-      minify: 'terser',
+      chunkSizeWarningLimit: 500,
       terserOptions: {
         compress: {
-          drop_console: mode === 'production',
-          drop_debugger: mode === 'production',
+          drop_console: isProduction,
+          drop_debugger: isProduction,
+          pure_funcs: isProduction ? ['console.log', 'console.info', 'console.debug'] : [],
+        },
+        mangle: {
+          safari10: true,
         },
       },
     },
@@ -125,18 +167,13 @@ export default defineConfig(({ mode }) => {
       environment: 'jsdom',
       setupFiles: ['./test/setup.ts'],
       css: true,
-      exclude: [
-        'node_modules/**',
-        'server/**',
-        'dist/**',
-        'coverage/**',
-        '**/*.config.*',
-      ],
+      exclude: ['node_modules/**', 'server/**', 'dist/**', 'coverage/**', '**/*.config.*'],
       include: [
         'test/**/*.{test,spec}.{js,ts,tsx}',
         'components/**/*.{test,spec}.{js,ts,tsx}',
         'hooks/**/*.{test,spec}.{js,ts,tsx}',
         'services/**/*.{test,spec}.{js,ts,tsx}',
+        'utils/**/*.{test,spec}.{js,ts,tsx}',
       ],
       coverage: {
         provider: 'v8',
@@ -149,11 +186,23 @@ export default defineConfig(({ mode }) => {
           '**/*.config.*',
           'dist/',
           'coverage/',
+          '**/stories/**',
         ],
+        thresholds: {
+          global: {
+            branches: 80,
+            functions: 80,
+            lines: 80,
+            statements: 80,
+          },
+        },
       },
     },
     define: {
-      // Remove GEMINI_API_KEY from client side for security
+      // Remove sensitive data from client side
+      ...(isProduction && {
+        'process.env.NODE_ENV': '"production"',
+      }),
     },
     resolve: {
       alias: {
@@ -161,13 +210,19 @@ export default defineConfig(({ mode }) => {
         '@components': path.resolve(__dirname, './components'),
         '@services': path.resolve(__dirname, './services'),
         '@hooks': path.resolve(__dirname, './hooks'),
-        '@types': path.resolve(__dirname, './types'),
         '@utils': path.resolve(__dirname, './utils'),
-        '@assets': path.resolve(__dirname, './assets')
+        '@types': path.resolve(__dirname, './types'),
+        '@assets': path.resolve(__dirname, './assets'),
+        '@test': path.resolve(__dirname, './test'),
       },
     },
     optimizeDeps: {
-      include: ['react', 'react-dom', 'react-router-dom']
-    }
+      include: ['react', 'react-dom', 'react-router-dom'],
+      exclude: ['@tanstack/react-query-devtools'],
+    },
+    preview: {
+      port: 3000,
+      host: true,
+    },
   };
 });

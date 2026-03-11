@@ -1,5 +1,5 @@
 import express from 'express';
-import { setup2FA, verify2FA, disable2FA, verify2FALogin } from '../../controllers/twoFactorController.js';
+import { setup2FA, verify2FA, disable2FA, verify2FALogin } from '../../../controllers/twoFactorController.js';
 import { authenticate } from '../../../middleware/auth.js';
 import { validateRequest } from '../../../middleware/zodValidate.js';
 import { twoFactorSetupSchema, twoFactorVerifySchema, twoFactorDisableSchema, twoFactorLoginSchema } from '../../../schemas/authSchemas.js';

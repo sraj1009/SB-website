@@ -1,6 +1,6 @@
-// 📊 Performance Monitoring for SINGGLEBEE
+// � Performance Monitoring for SINGGLEBEE
 
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface PerformanceMetrics {
   // Core Web Vitals
@@ -9,23 +9,23 @@ interface PerformanceMetrics {
   cls: number; // Cumulative Layout Shift
   fcp: number; // First Contentful Paint
   ttfb: number; // Time to First Byte
-  
+
   // Network metrics
   dns: number; // DNS lookup time
   tcp: number; // TCP connection time
   ssl: number; // SSL handshake time
   ttl: number; // Time to last byte
-  
+
   // Resource metrics
   resourceCount: number;
   totalSize: number;
   cachedResources: number;
-  
+
   // User experience metrics
   renderTime: number;
   hydrationTime: number;
   interactionTime: number;
-  
+
   // Custom metrics
   apiResponseTime: number;
   bundleSize: number;
@@ -43,14 +43,14 @@ interface PerformanceAlert {
 }
 
 interface PerformanceThresholds {
-  lcp: { warning: 2500, critical: 4000 };
-  fid: { warning: 100, critical: 300 };
-  cls: { warning: 0.1, critical: 0.25 };
-  fcp: { warning: 1800, critical: 3000 };
-  ttfb: { warning: 800, critical: 1800 };
-  apiResponseTime: { warning: 1000, critical: 2000 };
-  bundleSize: { warning: 1024 * 1024, critical: 2048 * 1024 }; // 1MB, 2MB
-  memoryUsage: { warning: 50, critical: 80 }; // MB
+  lcp: { warning: 2500; critical: 4000 };
+  fid: { warning: 100; critical: 300 };
+  cls: { warning: 0.1; critical: 0.25 };
+  fcp: { warning: 1800; critical: 3000 };
+  ttfb: { warning: 800; critical: 1800 };
+  apiResponseTime: { warning: 1000; critical: 2000 };
+  bundleSize: { warning: 1048576; critical: 2097152 }; // 1MB, 2MB
+  memoryUsage: { warning: 50; critical: 80 }; // MB
 }
 
 class PerformanceMonitor {
@@ -72,7 +72,7 @@ class PerformanceMonitor {
     interactionTime: 0,
     apiResponseTime: 0,
     bundleSize: 0,
-    memoryUsage: 0
+    memoryUsage: 0,
   };
 
   private thresholds: PerformanceThresholds = {
@@ -82,8 +82,8 @@ class PerformanceMonitor {
     fcp: { warning: 1800, critical: 3000 },
     ttfb: { warning: 800, critical: 1800 },
     apiResponseTime: { warning: 1000, critical: 2000 },
-    bundleSize: { warning: 1024 * 1024, critical: 2 * 1024 * 1024 },
-    memoryUsage: { warning: 50, critical: 80 }
+    bundleSize: { warning: 1048576, critical: 2097152 },
+    memoryUsage: { warning: 50, critical: 80 },
   };
 
   private alerts: PerformanceAlert[] = [];
@@ -104,16 +104,16 @@ class PerformanceMonitor {
 
     // Core Web Vitals
     this.observeWebVitals();
-    
+
     // Resource timing
     this.observeResources();
-    
+
     // Navigation timing
     this.observeNavigation();
-    
+
     // Memory usage
     this.observeMemory();
-    
+
     // Custom metrics
     this.observeCustomMetrics();
   }
@@ -198,24 +198,24 @@ class PerformanceMonitor {
       const resourceObserver = new PerformanceObserver((list) => {
         const entries = list.getEntries();
         this.metrics.resourceCount = entries.length;
-        
+
         let totalSize = 0;
         let cachedCount = 0;
-        
+
         entries.forEach((entry) => {
           const resource = entry as PerformanceResourceTiming;
-          
+
           // Calculate resource size
           if (resource.transferSize) {
             totalSize += resource.transferSize;
           }
-          
+
           // Check if cached
           if (resource.transferSize === 0 && resource.decodedBodySize > 0) {
             cachedCount++;
           }
         });
-        
+
         this.metrics.totalSize = totalSize;
         this.metrics.cachedResources = cachedCount;
       });
@@ -236,15 +236,16 @@ class PerformanceMonitor {
         entries.forEach((entry) => {
           if (entry.entryType === 'navigation') {
             const navEntry = entry as PerformanceNavigationTiming;
-            
+
             this.metrics.ttfb = navEntry.responseStart - navEntry.requestStart;
             this.metrics.dns = navEntry.domainLookupEnd - navEntry.domainLookupStart;
             this.metrics.tcp = navEntry.connectEnd - navEntry.connectStart;
-            this.metrics.ssl = navEntry.secureConnectionStart > 0 
-              ? navEntry.connectEnd - navEntry.secureConnectionStart 
-              : 0;
+            this.metrics.ssl =
+              navEntry.secureConnectionStart > 0
+                ? navEntry.connectEnd - navEntry.secureConnectionStart
+                : 0;
             this.metrics.ttl = navEntry.responseEnd - navEntry.requestStart;
-            
+
             this.checkThreshold('ttfb', this.metrics.ttfb);
           }
         });
@@ -316,7 +317,7 @@ class PerformanceMonitor {
       value,
       threshold: thresholdValue,
       message: this.generateAlertMessage(metric, value, thresholdValue, alertType),
-      timestamp: new Date()
+      timestamp: new Date(),
     };
 
     this.alerts.push(alert);
@@ -348,7 +349,7 @@ class PerformanceMonitor {
       interactionTime: 'Interaction Time',
       apiResponseTime: 'API Response Time',
       bundleSize: 'Bundle Size',
-      memoryUsage: 'Memory Usage'
+      memoryUsage: 'Memory Usage',
     };
 
     const units: Partial<Record<keyof PerformanceMetrics, string>> = {
@@ -365,7 +366,7 @@ class PerformanceMonitor {
       renderTime: 'ms',
       apiResponseTime: 'ms',
       bundleSize: 'bytes',
-      memoryUsage: 'MB'
+      memoryUsage: 'MB',
     };
 
     const metricName = metricNames[metric];
@@ -377,7 +378,7 @@ class PerformanceMonitor {
   // Handle alert
   private handleAlert(alert: PerformanceAlert): void {
     console.warn(`Performance Alert [${alert.type.toUpperCase()}]: ${alert.message}`);
-    
+
     // In production, send to monitoring service
     if (alert.type === 'critical') {
       // Send immediate notification
@@ -394,9 +395,9 @@ class PerformanceMonitor {
         alert,
         url: window.location.href,
         userAgent: navigator.userAgent,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
-      
+
       navigator.sendBeacon('/api/v1/performance/alerts', data);
     }
   }
@@ -434,7 +435,7 @@ class PerformanceMonitor {
       fid: 0.25,
       cls: 0.25,
       fcp: 0.15,
-      ttfb: 0.1
+      ttfb: 0.1,
     };
 
     let score = 0;
@@ -442,10 +443,15 @@ class PerformanceMonitor {
 
     Object.entries(weights).forEach(([metric, weight]) => {
       const value = this.metrics[metric as keyof PerformanceMetrics];
-      const threshold = this.thresholds[metric as keyof PerformanceThresholds] as { warning: number; critical: number } | undefined;
-      
+      const threshold = this.thresholds[metric as keyof PerformanceThresholds] as
+        | { warning: number; critical: number }
+        | undefined;
+
       if (threshold && value > 0) {
-        const normalizedScore = Math.max(0, 100 - ((value - threshold.warning) / (threshold.critical - threshold.warning)) * 100);
+        const normalizedScore = Math.max(
+          0,
+          100 - ((value - threshold.warning) / (threshold.critical - threshold.warning)) * 100
+        );
         score += normalizedScore * weight;
         totalWeight += weight;
       }
@@ -470,25 +476,29 @@ class PerformanceMonitor {
       metrics,
       score,
       alerts,
-      recommendations
+      recommendations,
     };
   }
 
   // Generate recommendations
   private generateRecommendations(alerts: PerformanceAlert[]): string[] {
     const recommendations: string[] = [];
-    const alertMetrics = new Set(alerts.map(a => a.metric));
+    const alertMetrics = new Set(alerts.map((a) => a.metric));
 
     if (alertMetrics.has('lcp')) {
       recommendations.push('Optimize images and reduce server response time to improve LCP');
     }
 
     if (alertMetrics.has('fid')) {
-      recommendations.push('Reduce JavaScript execution time and break up long tasks to improve FID');
+      recommendations.push(
+        'Reduce JavaScript execution time and break up long tasks to improve FID'
+      );
     }
 
     if (alertMetrics.has('cls')) {
-      recommendations.push('Ensure images have dimensions and avoid inserting content above existing content to reduce CLS');
+      recommendations.push(
+        'Ensure images have dimensions and avoid inserting content above existing content to reduce CLS'
+      );
     }
 
     if (alertMetrics.has('ttfb')) {
@@ -512,7 +522,7 @@ class PerformanceMonitor {
 
   // Stop monitoring
   stopMonitoring(): void {
-    this.observers.forEach(observer => observer.disconnect());
+    this.observers.forEach((observer) => observer.disconnect());
     this.observers = [];
     this.isMonitoring = false;
   }
@@ -570,7 +580,7 @@ export const usePerformanceMonitor = () => {
     trackApiResponse,
     trackInteraction,
     generateReport,
-    clearAlerts
+    clearAlerts,
   };
 };
 

@@ -234,12 +234,12 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
       data.append(
         'message',
         `🐝 NEW HIVE ORDER 🐝\n\n` +
-        `Customer: ${formData.name}\n` +
-        `Total: ₹${total.toLocaleString('en-IN')}\n\n` +
-        `--- ORDER ITEMS ---\n${orderSummary}\n\n` +
-        `--- DELIVERY ---\n${fullAddress}\n\n` +
-        `--- CONTACT ---\nPhone: ${formData.phone}\nEmail: ${formData.email}\n\n` +
-        `--- PAYMENT PROOF ---\nVerified: Yes (User uploaded screenshot)`
+          `Customer: ${formData.name}\n` +
+          `Total: ₹${total.toLocaleString('en-IN')}\n\n` +
+          `--- ORDER ITEMS ---\n${orderSummary}\n\n` +
+          `--- DELIVERY ---\n${fullAddress}\n\n` +
+          `--- CONTACT ---\nPhone: ${formData.phone}\nEmail: ${formData.email}\n\n` +
+          `--- PAYMENT PROOF ---\nVerified: Yes (User uploaded screenshot)`
       );
 
       data.append('_subject', `🍯 New Hive Order from ${formData.name}`);
@@ -467,7 +467,9 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                     <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
                       Delivery Fee
                     </span>
-                    <span className={`text-base font-black ${shippingFee === 0 ? 'text-brand-meadow' : 'text-brand-black'}`}>
+                    <span
+                      className={`text-base font-black ${shippingFee === 0 ? 'text-brand-meadow' : 'text-brand-black'}`}
+                    >
                       {shippingFee === 0 ? 'FREE' : `₹${shippingFee.toLocaleString('en-IN')}`}
                     </span>
                   </div>

@@ -1,23 +1,18 @@
 // Product Service for SINGGLEBEE Frontend
 
 import apiClient from './api-client';
-import { 
-  ApiResponse, 
-  PaginatedResponse, 
-  ProductFilters, 
+import {
+  ApiResponse,
+  PaginatedResponse,
+  ProductFilters,
   ProductResponse,
   SearchRequest,
   SearchResponse,
   ChartDataPoint,
   RevenueChartData,
-  CategoryChartData
+  CategoryChartData,
 } from '../types/api';
-import { 
-  NotFoundError, 
-  ValidationError, 
-  ErrorHandler,
-  createError
-} from '../utils/error-handler';
+import { NotFoundError, ValidationError, ErrorHandler, createError } from '../utils/error-handler';
 
 class ProductService {
   private static instance: ProductService;
@@ -33,9 +28,9 @@ class ProductService {
   async getProducts(filters: ProductFilters = {}): Promise<PaginatedResponse<ProductResponse>> {
     try {
       const response = await apiClient.get<PaginatedResponse<ProductResponse>>('/products', {
-        params: this.buildQueryParams(filters)
+        params: this.buildQueryParams(filters),
       });
-      
+
       if (!response.success || !response.data) {
         throw createError(
           response.error?.message || 'Failed to fetch products',
@@ -58,7 +53,7 @@ class ProductService {
       }
 
       const response = await apiClient.get<ProductResponse>(`/products/${id}`);
-      
+
       if (!response.success || !response.data) {
         throw new NotFoundError('Product', id);
       }
@@ -80,12 +75,12 @@ class ProductService {
         query: query.trim(),
         filters: {
           ...filters,
-          limit: filters.limit || 20
-        }
+          limit: filters.limit || 20,
+        },
       };
 
       const response = await apiClient.post<SearchResponse>('/products/search', searchRequest);
-      
+
       if (!response.success || !response.data) {
         throw createError(
           response.error?.message || 'Search failed',
@@ -104,7 +99,7 @@ class ProductService {
   async getCategories(): Promise<string[]> {
     try {
       const response = await apiClient.get<string[]>('/products/categories');
-      
+
       if (!response.success || !response.data) {
         throw createError(
           response.error?.message || 'Failed to fetch categories',
@@ -123,9 +118,9 @@ class ProductService {
   async getBestsellers(limit: number = 10): Promise<ProductResponse[]> {
     try {
       const response = await apiClient.get<ProductResponse[]>('/products/bestsellers', {
-        params: { limit }
+        params: { limit },
       });
-      
+
       if (!response.success || !response.data) {
         throw createError(
           response.error?.message || 'Failed to fetch bestsellers',
@@ -148,9 +143,9 @@ class ProductService {
       }
 
       const response = await apiClient.get<ProductResponse[]>(`/products/${id}/related`, {
-        params: { limit }
+        params: { limit },
       });
-      
+
       if (!response.success || !response.data) {
         throw createError(
           response.error?.message || 'Failed to fetch related products',
@@ -169,9 +164,9 @@ class ProductService {
   async getNewArrivals(limit: number = 10): Promise<ProductResponse[]> {
     try {
       const response = await apiClient.get<ProductResponse[]>('/products/new-arrivals', {
-        params: { limit }
+        params: { limit },
       });
-      
+
       if (!response.success || !response.data) {
         throw createError(
           response.error?.message || 'Failed to fetch new arrivals',
@@ -190,9 +185,9 @@ class ProductService {
   async getFeaturedProducts(limit: number = 10): Promise<ProductResponse[]> {
     try {
       const response = await apiClient.get<ProductResponse[]>('/products/featured', {
-        params: { limit }
+        params: { limit },
       });
-      
+
       if (!response.success || !response.data) {
         throw createError(
           response.error?.message || 'Failed to fetch featured products',
@@ -208,16 +203,22 @@ class ProductService {
   }
 
   // Get products by category
-  async getProductsByCategory(category: string, filters: ProductFilters = {}): Promise<PaginatedResponse<ProductResponse>> {
+  async getProductsByCategory(
+    category: string,
+    filters: ProductFilters = {}
+  ): Promise<PaginatedResponse<ProductResponse>> {
     try {
       if (!category) {
         throw new ValidationError('Category is required');
       }
 
-      const response = await apiClient.get<PaginatedResponse<ProductResponse>>(`/products/category/${category}`, {
-        params: this.buildQueryParams(filters)
-      });
-      
+      const response = await apiClient.get<PaginatedResponse<ProductResponse>>(
+        `/products/category/${category}`,
+        {
+          params: this.buildQueryParams(filters),
+        }
+      );
+
       if (!response.success || !response.data) {
         throw createError(
           response.error?.message || `Failed to fetch products in category: ${category}`,
@@ -233,16 +234,22 @@ class ProductService {
   }
 
   // Get products by author
-  async getProductsByAuthor(author: string, filters: ProductFilters = {}): Promise<PaginatedResponse<ProductResponse>> {
+  async getProductsByAuthor(
+    author: string,
+    filters: ProductFilters = {}
+  ): Promise<PaginatedResponse<ProductResponse>> {
     try {
       if (!author) {
         throw new ValidationError('Author name is required');
       }
 
-      const response = await apiClient.get<PaginatedResponse<ProductResponse>>(`/products/author/${encodeURIComponent(author)}`, {
-        params: this.buildQueryParams(filters)
-      });
-      
+      const response = await apiClient.get<PaginatedResponse<ProductResponse>>(
+        `/products/author/${encodeURIComponent(author)}`,
+        {
+          params: this.buildQueryParams(filters),
+        }
+      );
+
       if (!response.success || !response.data) {
         throw createError(
           response.error?.message || `Failed to fetch products by author: ${author}`,
@@ -261,9 +268,9 @@ class ProductService {
   async getRecommendations(limit: number = 6): Promise<ProductResponse[]> {
     try {
       const response = await apiClient.get<ProductResponse[]>('/products/recommendations', {
-        params: { limit }
+        params: { limit },
       });
-      
+
       if (!response.success || !response.data) {
         throw createError(
           response.error?.message || 'Failed to fetch recommendations',
@@ -293,7 +300,7 @@ class ProductService {
       }
 
       const response = await apiClient.get(`/products/${productId}/analytics`);
-      
+
       if (!response.success || !response.data) {
         throw createError(
           response.error?.message || 'Failed to fetch product analytics',
@@ -312,9 +319,9 @@ class ProductService {
   async getPopularSearches(limit: number = 10): Promise<string[]> {
     try {
       const response = await apiClient.get<string[]>('/products/popular-searches', {
-        params: { limit }
+        params: { limit },
       });
-      
+
       if (!response.success || !response.data) {
         throw createError(
           response.error?.message || 'Failed to fetch popular searches',
@@ -336,10 +343,13 @@ class ProductService {
         throw new ValidationError('Product ID is required');
       }
 
-      const response = await apiClient.get<ChartDataPoint[]>(`/products/${productId}/price-history`, {
-        params: { days }
-      });
-      
+      const response = await apiClient.get<ChartDataPoint[]>(
+        `/products/${productId}/price-history`,
+        {
+          params: { days },
+        }
+      );
+
       if (!response.success || !response.data) {
         throw createError(
           response.error?.message || 'Failed to fetch price history',
@@ -355,20 +365,25 @@ class ProductService {
   }
 
   // Check product availability
-  async checkAvailability(productIds: string[]): Promise<Record<string, {
-    inStock: boolean;
-    stock: number;
-    estimatedDelivery?: string;
-  }>> {
+  async checkAvailability(productIds: string[]): Promise<
+    Record<
+      string,
+      {
+        inStock: boolean;
+        stock: number;
+        estimatedDelivery?: string;
+      }
+    >
+  > {
     try {
       if (!productIds || productIds.length === 0) {
         throw new ValidationError('Product IDs are required');
       }
 
       const response = await apiClient.post('/products/check-availability', {
-        productIds
+        productIds,
       });
-      
+
       if (!response.success || !response.data) {
         throw createError(
           response.error?.message || 'Failed to check availability',
@@ -425,7 +440,10 @@ class ProductService {
       errors.push('Limit must be between 1 and 50');
     }
 
-    if (filters.sortBy && !['price', 'rating', 'createdAt', 'title', 'bestseller'].includes(filters.sortBy)) {
+    if (
+      filters.sortBy &&
+      !['price', 'rating', 'createdAt', 'title', 'bestseller'].includes(filters.sortBy)
+    ) {
       errors.push('Invalid sort field');
     }
 
@@ -446,9 +464,9 @@ class ProductService {
       }
 
       const response = await apiClient.post<ProductResponse[]>('/products/compare', {
-        productIds
+        productIds,
       });
-      
+
       if (!response.success || !response.data) {
         throw createError(
           response.error?.message || 'Failed to compare products',
@@ -467,9 +485,9 @@ class ProductService {
   async getTrendingProducts(limit: number = 10): Promise<ProductResponse[]> {
     try {
       const response = await apiClient.get<ProductResponse[]>('/products/trending', {
-        params: { limit }
+        params: { limit },
       });
-      
+
       if (!response.success || !response.data) {
         throw createError(
           response.error?.message || 'Failed to fetch trending products',
@@ -495,7 +513,7 @@ class ProductService {
   }> {
     try {
       const response = await apiClient.get('/products/stats');
-      
+
       if (!response.success || !response.data) {
         throw createError(
           response.error?.message || 'Failed to fetch product statistics',

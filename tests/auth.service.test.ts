@@ -67,8 +67,14 @@ describe('AuthService', () => {
       const result = await authService.register(userData);
 
       expect(apiClient.post).toHaveBeenCalledWith('/auth/signup', userData);
-      expect(apiClient.setAuthTokens).toHaveBeenCalledWith('mock-access-token', 'mock-refresh-token');
-      expect(localStorageMock.setItem).toHaveBeenCalledWith('singglebee_user', JSON.stringify(mockResponse.data.user));
+      expect(apiClient.setAuthTokens).toHaveBeenCalledWith(
+        'mock-access-token',
+        'mock-refresh-token'
+      );
+      expect(localStorageMock.setItem).toHaveBeenCalledWith(
+        'singglebee_user',
+        JSON.stringify(mockResponse.data.user)
+      );
       expect(result).toEqual(mockResponse.data);
     });
 
@@ -122,8 +128,14 @@ describe('AuthService', () => {
       const result = await authService.login(credentials);
 
       expect(apiClient.post).toHaveBeenCalledWith('/auth/signin', credentials);
-      expect(apiClient.setAuthTokens).toHaveBeenCalledWith('mock-access-token', 'mock-refresh-token');
-      expect(localStorageMock.setItem).toHaveBeenCalledWith('singglebee_user', JSON.stringify(mockResponse.data.user));
+      expect(apiClient.setAuthTokens).toHaveBeenCalledWith(
+        'mock-access-token',
+        'mock-refresh-token'
+      );
+      expect(localStorageMock.setItem).toHaveBeenCalledWith(
+        'singglebee_user',
+        JSON.stringify(mockResponse.data.user)
+      );
       expect(result).toEqual(mockResponse.data);
     });
 
@@ -188,7 +200,10 @@ describe('AuthService', () => {
       const result = await authService.getCurrentUser();
 
       expect(apiClient.get).toHaveBeenCalledWith('/auth/me');
-      expect(localStorageMock.setItem).toHaveBeenCalledWith('singglebee_user', JSON.stringify(mockResponse.data));
+      expect(localStorageMock.setItem).toHaveBeenCalledWith(
+        'singglebee_user',
+        JSON.stringify(mockResponse.data)
+      );
       expect(result).toEqual(mockResponse.data);
     });
 
@@ -223,7 +238,10 @@ describe('AuthService', () => {
       const result = await authService.updateProfile(updateData);
 
       expect(apiClient.put).toHaveBeenCalledWith('/auth/me', updateData);
-      expect(localStorageMock.setItem).toHaveBeenCalledWith('singglebee_user', JSON.stringify(mockResponse.data));
+      expect(localStorageMock.setItem).toHaveBeenCalledWith(
+        'singglebee_user',
+        JSON.stringify(mockResponse.data)
+      );
       expect(result).toEqual(mockResponse.data);
     });
 
@@ -260,7 +278,9 @@ describe('AuthService', () => {
       const mockError = new Error('Current password is incorrect');
       vi.mocked(apiClient.post).mockRejectedValue(mockError);
 
-      await expect(authService.changePassword(passwordData)).rejects.toThrow('Current password is incorrect');
+      await expect(authService.changePassword(passwordData)).rejects.toThrow(
+        'Current password is incorrect'
+      );
     });
 
     it('should validate password change data', async () => {
@@ -269,7 +289,9 @@ describe('AuthService', () => {
         newPassword: '123', // Invalid
       };
 
-      await expect(authService.changePassword(invalidPasswordData)).rejects.toThrow(ValidationError);
+      await expect(authService.changePassword(invalidPasswordData)).rejects.toThrow(
+        ValidationError
+      );
     });
   });
 

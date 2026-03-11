@@ -65,10 +65,13 @@ export class RealtimeService {
   /**
    * Subscribe to order updates
    */
-  async subscribeToOrderUpdates(orderId: string, callback: (event: OrderUpdateEvent) => void): Promise<void> {
+  async subscribeToOrderUpdates(
+    orderId: string,
+    callback: (event: OrderUpdateEvent) => void
+  ): Promise<void> {
     try {
       const channel = RedisClient.getKeys.realtime.orderUpdates(orderId);
-      
+
       // Store callback for cleanup
       if (!this.subscribers.has(channel)) {
         this.subscribers.set(channel, new Set());
@@ -119,7 +122,7 @@ export class RealtimeService {
   async subscribeToStockAlerts(callback: (event: StockAlertEvent) => void): Promise<void> {
     try {
       const channel = RedisClient.getKeys.realtime.stockAlerts();
-      
+
       // Store callback for cleanup
       if (!this.subscribers.has(channel)) {
         this.subscribers.set(channel, new Set());
@@ -167,10 +170,12 @@ export class RealtimeService {
   /**
    * Subscribe to admin notifications
    */
-  async subscribeToAdminNotifications(callback: (event: AdminNotificationEvent) => void): Promise<void> {
+  async subscribeToAdminNotifications(
+    callback: (event: AdminNotificationEvent) => void
+  ): Promise<void> {
     try {
       const channel = RedisClient.getKeys.realtime.adminNotifications();
-      
+
       // Store callback for cleanup
       if (!this.subscribers.has(channel)) {
         this.subscribers.set(channel, new Set());
@@ -198,7 +203,9 @@ export class RealtimeService {
   /**
    * Check and publish stock alerts for low stock products
    */
-  async checkLowStockProducts(products: Array<{ _id: string; title: string; stockQuantity: number }>): Promise<void> {
+  async checkLowStockProducts(
+    products: Array<{ _id: string; title: string; stockQuantity: number }>
+  ): Promise<void> {
     const THRESHOLDS = {
       critical: 0,
       high: 5,
@@ -263,7 +270,7 @@ export class RealtimeService {
         await subscriber.unsubscribe(channel);
         callbacks.clear();
       }
-      
+
       this.subscribers.clear();
       logger.info('Unsubscribed from all real-time channels');
     } catch (error) {
@@ -300,7 +307,7 @@ export class RealtimeService {
 
     for (const line of lines) {
       if (line.startsWith('#') || line === '') continue;
-      
+
       const [key, value] = line.split(':');
       if (key && value) {
         // Convert numeric values

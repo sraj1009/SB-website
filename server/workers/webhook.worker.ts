@@ -4,18 +4,14 @@ import { processWebhookJob } from '../queues/webhook.queue.js';
 import logger from '../utils/logger.js';
 
 // Create webhook worker
-const webhookWorker = new Worker(
-  'webhook-queue',
-  processWebhookJob,
-  {
-    connection: redisClient,
-    concurrency: 3, // Process 3 webhooks concurrently
-    limiter: {
-      max: 30, // Max 30 webhooks per minute
-      duration: 60000, // 1 minute
-    },
-  }
-);
+const webhookWorker = new Worker('webhook-queue', processWebhookJob, {
+  connection: redisClient,
+  concurrency: 3, // Process 3 webhooks concurrently
+  limiter: {
+    max: 30, // Max 30 webhooks per minute
+    duration: 60000, // 1 minute
+  },
+});
 
 // Worker event handlers
 webhookWorker.on('completed', (job) => {

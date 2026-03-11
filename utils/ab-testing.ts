@@ -94,9 +94,9 @@ class ABTestingManager {
               config: {
                 buttonColor: '#FFC107',
                 buttonText: 'Shop Now',
-                buttonSize: 'large'
+                buttonSize: 'large',
               },
-              isControl: true
+              isControl: true,
             },
             {
               id: 'variant-1',
@@ -106,33 +106,33 @@ class ABTestingManager {
               config: {
                 buttonColor: '#007bff',
                 buttonText: 'Explore Books',
-                buttonSize: 'large'
+                buttonSize: 'large',
               },
-              isControl: false
-            }
+              isControl: false,
+            },
           ],
           trafficAllocation: 1.0,
           status: 'running',
           startDate: new Date(),
           targetAudience: {
             newUsersOnly: false,
-            returningUsersOnly: false
+            returningUsersOnly: false,
           },
           goals: [
             {
               id: 'click-cta',
               name: 'CTA Click Rate',
               type: 'click',
-              selector: '.hero-cta-button'
+              selector: '.hero-cta-button',
             },
             {
               id: 'conversion',
               name: 'Conversion Rate',
-              type: 'conversion'
-            }
+              type: 'conversion',
+            },
           ],
           createdAt: new Date(),
-          updatedAt: new Date()
+          updatedAt: new Date(),
         },
         {
           id: 'product-card-layout',
@@ -149,9 +149,9 @@ class ABTestingManager {
                 showRating: true,
                 showPrice: true,
                 showDescription: true,
-                imageSize: 'medium'
+                imageSize: 'medium',
               },
-              isControl: true
+              isControl: true,
             },
             {
               id: 'variant-1',
@@ -163,9 +163,9 @@ class ABTestingManager {
                 showRating: true,
                 showPrice: true,
                 showDescription: false,
-                imageSize: 'small'
+                imageSize: 'small',
               },
-              isControl: false
+              isControl: false,
             },
             {
               id: 'variant-2',
@@ -177,38 +177,38 @@ class ABTestingManager {
                 showRating: false,
                 showPrice: true,
                 showDescription: false,
-                imageSize: 'large'
+                imageSize: 'large',
               },
-              isControl: false
-            }
+              isControl: false,
+            },
           ],
           trafficAllocation: 0.5,
           status: 'running',
           startDate: new Date(),
           targetAudience: {
             categories: ['books', 'poems'],
-            newUsersOnly: false
+            newUsersOnly: false,
           },
           goals: [
             {
               id: 'click-product',
               name: 'Product Click Rate',
               type: 'click',
-              selector: '.product-card'
+              selector: '.product-card',
             },
             {
               id: 'add-to-cart',
               name: 'Add to Cart Rate',
               type: 'conversion',
-              event: 'add_to_cart'
-            }
+              event: 'add_to_cart',
+            },
           ],
           createdAt: new Date(),
-          updatedAt: new Date()
-        }
+          updatedAt: new Date(),
+        },
       ];
 
-      defaultExperiments.forEach(exp => {
+      defaultExperiments.forEach((exp) => {
         this.experiments.set(exp.id, exp);
       });
     } catch (error) {
@@ -238,7 +238,7 @@ class ABTestingManager {
   private saveUserAssignments(): void {
     try {
       const allAssignments: UserAssignment[] = [];
-      this.userAssignments.forEach(assignments => {
+      this.userAssignments.forEach((assignments) => {
         allAssignments.push(...assignments);
       });
       localStorage.setItem('ab-test-assignments', JSON.stringify(allAssignments));
@@ -265,7 +265,7 @@ class ABTestingManager {
     }
 
     const targetUserId = userId || this.getUserId();
-    
+
     // Check if user is already assigned
     const existingAssignment = this.getUserAssignment(targetUserId, experimentId);
     if (existingAssignment) {
@@ -279,13 +279,13 @@ class ABTestingManager {
 
     // Select variant based on traffic allocation
     const variantId = this.selectVariant(experiment);
-    
+
     // Save assignment
     const assignment: UserAssignment = {
       userId: targetUserId,
       experimentId,
       variantId,
-      assignedAt: new Date()
+      assignedAt: new Date(),
     };
 
     if (!this.userAssignments.has(targetUserId)) {
@@ -301,14 +301,14 @@ class ABTestingManager {
   private selectVariant(experiment: Experiment): string {
     const random = Math.random() * 100;
     let cumulative = 0;
-    
+
     for (const variant of experiment.variants) {
       cumulative += variant.weight;
       if (random <= cumulative) {
         return variant.id;
       }
     }
-    
+
     return experiment.variants[0].id; // Fallback
   }
 
@@ -322,8 +322,8 @@ class ABTestingManager {
   getUserAssignment(userId: string, experimentId: string): UserAssignment | null {
     const assignments = this.userAssignments.get(userId);
     if (!assignments) return null;
-    
-    return assignments.find(a => a.experimentId === experimentId) || null;
+
+    return assignments.find((a) => a.experimentId === experimentId) || null;
   }
 
   // Get variant config for user
@@ -334,7 +334,7 @@ class ABTestingManager {
     const experiment = this.experiments.get(experimentId);
     if (!experiment) return null;
 
-    const variant = experiment.variants.find(v => v.id === variantId);
+    const variant = experiment.variants.find((v) => v.id === variantId);
     return variant?.config || null;
   }
 
@@ -342,7 +342,7 @@ class ABTestingManager {
   trackConversion(experimentId: string, goalId: string, value?: number): void {
     const userId = this.getUserId();
     const assignment = this.getUserAssignment(userId, experimentId);
-    
+
     if (!assignment) return;
 
     // In production, send to analytics service
@@ -352,7 +352,7 @@ class ABTestingManager {
       goalId,
       value,
       userId,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
   }
 
@@ -360,7 +360,7 @@ class ABTestingManager {
   trackEvent(experimentId: string, eventType: string, data?: any): void {
     const userId = this.getUserId();
     const assignment = this.getUserAssignment(userId, experimentId);
-    
+
     if (!assignment) return;
 
     // In production, send to analytics service
@@ -370,7 +370,7 @@ class ABTestingManager {
       eventType,
       data,
       userId,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
   }
 
@@ -381,7 +381,7 @@ class ABTestingManager {
 
     // In production, calculate from analytics data
     const mockResults: ExperimentResults = {
-      variantResults: experiment.variants.map(variant => ({
+      variantResults: experiment.variants.map((variant) => ({
         variantId: variant.id,
         conversions: Math.floor(Math.random() * 100),
         visitors: Math.floor(Math.random() * 1000) + 100,
@@ -389,12 +389,12 @@ class ABTestingManager {
         revenue: Math.random() * 10000,
         averageOrderValue: Math.random() * 500,
         bounceRate: Math.random() * 50,
-        timeOnPage: Math.random() * 300
+        timeOnPage: Math.random() * 300,
       })),
       significance: Math.random() * 0.1,
       confidence: Math.random() * 0.2 + 0.8,
       sampleSize: 1000,
-      duration: 7
+      duration: 7,
     };
 
     return mockResults;
@@ -407,7 +407,7 @@ class ABTestingManager {
       ...experiment,
       id,
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
     };
 
     this.experiments.set(id, newExperiment);
@@ -428,14 +428,14 @@ class ABTestingManager {
   startExperiment(experimentId: string): boolean {
     return this.updateExperiment(experimentId, {
       status: 'running',
-      startDate: new Date()
+      startDate: new Date(),
     });
   }
 
   // Pause experiment
   pauseExperiment(experimentId: string): boolean {
     return this.updateExperiment(experimentId, {
-      status: 'paused'
+      status: 'paused',
     });
   }
 
@@ -444,7 +444,7 @@ class ABTestingManager {
     return this.updateExperiment(experimentId, {
       status: 'completed',
       endDate: new Date(),
-      results: this.getExperimentResults(experimentId) || undefined
+      results: this.getExperimentResults(experimentId) || undefined,
     });
   }
 
@@ -455,8 +455,7 @@ class ABTestingManager {
 
   // Get running experiments
   getRunningExperiments(): Experiment[] {
-    return Array.from(this.experiments.values())
-      .filter(exp => exp.status === 'running');
+    return Array.from(this.experiments.values()).filter((exp) => exp.status === 'running');
   }
 
   // React Hook for A/B testing
@@ -468,8 +467,8 @@ class ABTestingManager {
       // Assign user to all running experiments
       const runningExperiments = this.getRunningExperiments();
       const variants: Record<string, string> = {};
-      
-      runningExperiments.forEach(experiment => {
+
+      runningExperiments.forEach((experiment) => {
         const variantId = this.assignUserToVariant(experiment.id);
         if (variantId) {
           variants[experiment.id] = variantId;
@@ -491,7 +490,7 @@ class ABTestingManager {
       const experiment = this.experiments.get(experimentId);
       if (!experiment) return null;
 
-      const variant = experiment.variants.find(v => v.id === variantId);
+      const variant = experiment.variants.find((v) => v.id === variantId);
       return variant?.config || null;
     };
 
@@ -509,7 +508,7 @@ class ABTestingManager {
       getVariantConfig,
       trackConversion,
       trackEvent,
-      runningExperiments: this.getRunningExperiments()
+      runningExperiments: this.getRunningExperiments(),
     };
   };
 }

@@ -46,8 +46,8 @@ class AnalyticsManager {
       custom_map: {
         custom_parameter_1: 'product_category',
         custom_parameter_2: 'user_engagement_level',
-        custom_parameter_3: 'content_language'
-      }
+        custom_parameter_3: 'content_language',
+      },
     });
 
     this.isInitialized = true;
@@ -59,7 +59,7 @@ class AnalyticsManager {
 
     window.gtag('config', this.measurementId, {
       page_path: pagePath || window.location.pathname,
-      page_title: pageTitle || document.title
+      page_title: pageTitle || document.title,
     });
   }
 
@@ -71,7 +71,7 @@ class AnalyticsManager {
       event_category: parameters.category || 'engagement',
       event_label: parameters.label || '',
       value: parameters.value || 0,
-      ...parameters
+      ...parameters,
     });
   }
 
@@ -80,13 +80,15 @@ class AnalyticsManager {
     this.trackEvent('view_item', {
       currency: 'INR',
       value: item.price || 0,
-      items: [{
-        item_id: item.id,
-        item_name: item.title,
-        category: item.category,
-        price: item.price || 0,
-        quantity: 1
-      }]
+      items: [
+        {
+          item_id: item.id,
+          item_name: item.title,
+          category: item.category,
+          price: item.price || 0,
+          quantity: 1,
+        },
+      ],
     });
   }
 
@@ -94,13 +96,15 @@ class AnalyticsManager {
     this.trackEvent('add_to_cart', {
       currency: 'INR',
       value: (item.price || 0) * quantity,
-      items: [{
-        item_id: item.id,
-        item_name: item.title,
-        category: item.category,
-        price: item.price || 0,
-        quantity
-      }]
+      items: [
+        {
+          item_id: item.id,
+          item_name: item.title,
+          category: item.category,
+          price: item.price || 0,
+          quantity,
+        },
+      ],
     });
   }
 
@@ -108,13 +112,13 @@ class AnalyticsManager {
     this.trackEvent('begin_checkout', {
       currency: 'INR',
       value,
-      items: items.map(item => ({
+      items: items.map((item) => ({
         item_id: item.id,
         item_name: item.title,
         category: item.category,
         price: item.price || 0,
-        quantity: item.quantity || 1
-      }))
+        quantity: item.quantity || 1,
+      })),
     });
   }
 
@@ -123,13 +127,13 @@ class AnalyticsManager {
       transaction_id: transactionId,
       currency: 'INR',
       value,
-      items: items.map(item => ({
+      items: items.map((item) => ({
         item_id: item.id,
         item_name: item.title,
         category: item.category,
         price: item.price || 0,
-        quantity: item.quantity || 1
-      }))
+        quantity: item.quantity || 1,
+      })),
     });
   }
 
@@ -137,7 +141,7 @@ class AnalyticsManager {
   trackSearch(searchTerm: string, resultsCount: number) {
     this.trackEvent('search', {
       search_term: searchTerm,
-      results_count: resultsCount
+      results_count: resultsCount,
     });
   }
 
@@ -145,19 +149,19 @@ class AnalyticsManager {
     this.trackEvent('share', {
       content_type: contentType,
       content_id: contentId,
-      method: method
+      method: method,
     });
   }
 
   trackSignUp(method: string) {
     this.trackEvent('sign_up', {
-      method
+      method,
     });
   }
 
   trackLogin(method: string) {
     this.trackEvent('login', {
-      method
+      method,
     });
   }
 
@@ -166,21 +170,21 @@ class AnalyticsManager {
     this.trackEvent('content_view', {
       content_id: contentId,
       content_type: contentType,
-      content_title: title
+      content_title: title,
     });
   }
 
   trackVideoPlay(videoName: string, videoUrl: string) {
     this.trackEvent('video_play', {
       video_name: videoName,
-      video_url: videoUrl
+      video_url: videoUrl,
     });
   }
 
   trackVideoComplete(videoName: string, videoUrl: string) {
     this.trackEvent('video_complete', {
       video_name: videoName,
-      video_url: videoUrl
+      video_url: videoUrl,
     });
   }
 
@@ -189,7 +193,7 @@ class AnalyticsManager {
     this.trackEvent('error', {
       error_message: error.message,
       error_stack: error.stack,
-      context: context || 'unknown'
+      context: context || 'unknown',
     });
   }
 
@@ -204,15 +208,15 @@ class AnalyticsManager {
         age_group: properties.age_group,
         interests: properties.interests,
         location: properties.location,
-        device_category: properties.device_category
-      }
+        device_category: properties.device_category,
+      },
     });
   }
 
   // Track user engagement time
   trackEngagementTime(duration: number) {
     this.trackEvent('user_engagement', {
-      engagement_time_msec: duration
+      engagement_time_msec: duration,
     });
   }
 
@@ -220,7 +224,7 @@ class AnalyticsManager {
   trackFormSubmit(formName: string, success: boolean) {
     this.trackEvent('form_submit', {
       form_name: formName,
-      success: success
+      success: success,
     });
   }
 
@@ -228,7 +232,7 @@ class AnalyticsManager {
   trackDownload(fileName: string, fileType: string) {
     this.trackEvent('download', {
       file_name: fileName,
-      file_type: fileType
+      file_type: fileType,
     });
   }
 
@@ -236,7 +240,7 @@ class AnalyticsManager {
   trackOutboundLink(url: string, linkText: string) {
     this.trackEvent('outbound_link', {
       link_url: url,
-      link_text: linkText
+      link_text: linkText,
     });
   }
 
@@ -244,14 +248,16 @@ class AnalyticsManager {
   trackProductClick(item: any, listName: string, listPosition: number) {
     this.trackEvent('select_item', {
       item_list_name: listName,
-      items: [{
-        item_id: item.id,
-        item_name: item.title,
-        category: item.category,
-        price: item.price || 0,
-        list_position: listPosition,
-        quantity: 1
-      }]
+      items: [
+        {
+          item_id: item.id,
+          item_name: item.title,
+          category: item.category,
+          price: item.price || 0,
+          list_position: listPosition,
+          quantity: 1,
+        },
+      ],
     });
   }
 
@@ -264,30 +270,34 @@ class AnalyticsManager {
         category: item.category,
         price: item.price || 0,
         list_position: index + 1,
-        quantity: 1
-      }))
+        quantity: 1,
+      })),
     });
   }
 
   // Custom SINGGLEBEE events
-  trackEducationalContent(contentType: 'book' | 'poem' | 'story', contentId: string, language: string) {
+  trackEducationalContent(
+    contentType: 'book' | 'poem' | 'story',
+    contentId: string,
+    language: string
+  ) {
     this.trackEvent('educational_content', {
       content_type: contentType,
       content_id: contentId,
-      language: language
+      language: language,
     });
   }
 
   trackLanguageChange(fromLanguage: string, toLanguage: string) {
     this.trackEvent('language_change', {
       from_language: fromLanguage,
-      to_language: toLanguage
+      to_language: toLanguage,
     });
   }
 
   trackAgeGroupSelection(ageGroup: string) {
     this.trackEvent('age_group_selection', {
-      age_group: ageGroup
+      age_group: ageGroup,
     });
   }
 
@@ -295,14 +305,14 @@ class AnalyticsManager {
     this.trackEvent('bookmark_action', {
       action: action,
       item_type: itemType,
-      item_id: itemId
+      item_id: itemId,
     });
   }
 
   // Performance tracking
   trackPageLoadTime(loadTime: number) {
     this.trackEvent('page_load_time', {
-      load_time_ms: loadTime
+      load_time_ms: loadTime,
     });
   }
 
@@ -314,7 +324,7 @@ class AnalyticsManager {
     this.trackEvent('core_web_vitals', {
       lcp: metrics.lcp,
       fid: metrics.fid,
-      cls: metrics.cls
+      cls: metrics.cls,
     });
   }
 }

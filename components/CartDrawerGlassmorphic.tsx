@@ -25,7 +25,7 @@ const CartDrawerGlassmorphic: React.FC<CartDrawerGlassmorphicProps> = ({
   // React useState hooks annotation for Figma
   const [isAnimating, setIsAnimating] = useState(false); // Controls drawer animation state
   const [isRendered, setIsRendered] = useState(false); // Controls content rendering
-  const [quantities, setQuantities] = useState<{[key: number]: number}>({}); // Local quantity state
+  const [quantities, setQuantities] = useState<{ [key: number]: number }>({}); // Local quantity state
 
   // Calculate order summary
   const subtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
@@ -35,8 +35,8 @@ const CartDrawerGlassmorphic: React.FC<CartDrawerGlassmorphicProps> = ({
 
   // Initialize quantities from cart
   useEffect(() => {
-    const newQuantities: {[key: number]: number} = {};
-    cart.forEach(item => {
+    const newQuantities: { [key: number]: number } = {};
+    cart.forEach((item) => {
       newQuantities[item.id] = item.quantity;
     });
     setQuantities(newQuantities);
@@ -59,14 +59,14 @@ const CartDrawerGlassmorphic: React.FC<CartDrawerGlassmorphicProps> = ({
   const handleQuantityChange = (id: number, delta: number) => {
     const currentQty = quantities[id] || 1;
     const newQty = Math.max(1, Math.min(10, currentQty + delta));
-    setQuantities(prev => ({ ...prev, [id]: newQty }));
+    setQuantities((prev) => ({ ...prev, [id]: newQty }));
     onUpdateQuantity(id, delta);
   };
 
   // Handle item removal
   const handleRemove = (id: number) => {
     onRemove(id);
-    setQuantities(prev => {
+    setQuantities((prev) => {
       const newQuantities = { ...prev };
       delete newQuantities[id];
       return newQuantities;
@@ -108,7 +108,7 @@ const CartDrawerGlassmorphic: React.FC<CartDrawerGlassmorphicProps> = ({
             <BeeIcon size={24} className="text-amber-500" />
             Shopping Cart ({cart.length})
           </h2>
-          
+
           {/* Close Button - iOS compliant 44px touch target */}
           <button
             onClick={onClose}
@@ -129,9 +129,7 @@ const CartDrawerGlassmorphic: React.FC<CartDrawerGlassmorphicProps> = ({
               <div className="w-24 h-24 bg-amber-100 rounded-full flex items-center justify-center mb-6">
                 <BeeIcon size={48} className="text-amber-500" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                Your hive is empty
-              </h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Your hive is empty</h3>
               <p className="text-gray-600 text-center mb-6">
                 Start adding some delicious books and honey products to your cart!
               </p>
@@ -185,12 +183,8 @@ const CartDrawerGlassmorphic: React.FC<CartDrawerGlassmorphicProps> = ({
 
                     {/* Product Info */}
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-semibold text-gray-900 truncate mb-1">
-                        {item.title}
-                      </h4>
-                      <p className="text-sm text-gray-600 mb-3">
-                        ₹{item.price} each
-                      </p>
+                      <h4 className="font-semibold text-gray-900 truncate mb-1">{item.title}</h4>
+                      <p className="text-sm text-gray-600 mb-3">₹{item.price} each</p>
 
                       {/* Quantity Stepper */}
                       <div className="flex items-center justify-between">

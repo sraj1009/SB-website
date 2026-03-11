@@ -57,7 +57,7 @@ export const processEmailJob = async (job: { data: EmailJobData; id: string }) =
       type: data.type,
       attempt: job.attemptsMade,
     });
-    
+
     throw error;
   }
 };
@@ -65,7 +65,7 @@ export const processEmailJob = async (job: { data: EmailJobData; id: string }) =
 // Mock email sending function (replace with actual implementation)
 async function sendEmail(data: EmailJobData): Promise<void> {
   // Simulate email sending delay
-  await new Promise(resolve => setTimeout(resolve, 100 + Math.random() * 200));
+  await new Promise((resolve) => setTimeout(resolve, 100 + Math.random() * 200));
 
   // Here you would integrate with your email service (SendGrid, Nodemailer, etc.)
   logger.info(`Email sent to ${data.to} with subject: ${data.subject}`, {
@@ -86,15 +86,11 @@ export class EmailQueueService {
    */
   static async addEmailJob(data: EmailJobData): Promise<string> {
     try {
-      const job = await emailQueue.add(
-        `email-${data.type}`,
-        data,
-        {
-          priority: data.priority || 0,
-          delay: data.delay || 0,
-          attempts: data.attempts || 3,
-        }
-      );
+      const job = await emailQueue.add(`email-${data.type}`, data, {
+        priority: data.priority || 0,
+        delay: data.delay || 0,
+        attempts: data.attempts || 3,
+      });
 
       logger.info(`Email job added to queue: ${job.id}`, {
         type: data.type,

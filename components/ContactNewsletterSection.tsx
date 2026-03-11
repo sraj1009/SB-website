@@ -1,16 +1,16 @@
 import React, { useState, useCallback } from 'react';
-import { 
-  Mail, 
-  Send, 
-  MessageSquare, 
-  User, 
+import {
+  Mail,
+  Send,
+  MessageSquare,
+  User,
   Star,
   ChevronLeft,
   ChevronRight,
   X,
   CheckCircle,
   AlertCircle,
-  Clock
+  Clock,
 } from 'lucide-react';
 import BeeIcon from './BeeIcon';
 
@@ -34,36 +34,39 @@ interface NewsletterFormData {
 const testimonials = [
   {
     id: 1,
-    name: "Priya Sharma",
-    role: "Parent",
-    content: "The educational books from SINGGLEBEE have transformed my child's learning experience. Quality is exceptional!",
-    rating: 5
+    name: 'Priya Sharma',
+    role: 'Parent',
+    content:
+      "The educational books from SINGGLEBEE have transformed my child's learning experience. Quality is exceptional!",
+    rating: 5,
   },
   {
     id: 2,
-    name: "Raj Kumar",
-    role: "Teacher",
-    content: "As an educator, I'm impressed by the curated collection. The honey products are pure and the service is outstanding.",
-    rating: 5
+    name: 'Raj Kumar',
+    role: 'Teacher',
+    content:
+      "As an educator, I'm impressed by the curated collection. The honey products are pure and the service is outstanding.",
+    rating: 5,
   },
   {
     id: 3,
-    name: "Anita Patel",
-    role: "Customer",
-    content: "Love the bee-themed approach to learning! My kids are more engaged and the products arrive beautifully packaged.",
-    rating: 5
-  }
+    name: 'Anita Patel',
+    role: 'Customer',
+    content:
+      'Love the bee-themed approach to learning! My kids are more engaged and the products arrive beautifully packaged.',
+    rating: 5,
+  },
 ];
 
-const ContactNewsletterSection: React.FC<ContactNewsletterSectionProps> = ({ className = "" }) => {
+const ContactNewsletterSection: React.FC<ContactNewsletterSectionProps> = ({ className = '' }) => {
   // React Hook Form state management
   const [contactForm, setContactForm] = useState<ContactFormData>({
     name: '',
     email: '',
     subject: '',
-    message: ''
+    message: '',
   });
-  
+
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [contactErrors, setContactErrors] = useState<Partial<ContactFormData>>({});
   const [newsletterError, setNewsletterError] = useState('');
@@ -118,63 +121,72 @@ const ContactNewsletterSection: React.FC<ContactNewsletterSectionProps> = ({ cla
   }, [newsletterEmail]);
 
   // Handle contact form submission
-  const handleContactSubmit = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!validateContactForm()) return;
+  const handleContactSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
 
-    setIsSubmittingContact(true);
-    
-    // Simulate Formspree webhook integration
-    try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Success state
-      setShowContactSuccess(true);
-      setContactForm({ name: '', email: '', subject: '', message: '' });
-      
-      // Hide success modal after 5 seconds
-      setTimeout(() => setShowContactSuccess(false), 5000);
-    } catch (error) {
-      console.error('Contact form submission error:', error);
-    } finally {
-      setIsSubmittingContact(false);
-    }
-  }, [contactForm, validateContactForm]);
+      if (!validateContactForm()) return;
+
+      setIsSubmittingContact(true);
+
+      // Simulate Formspree webhook integration
+      try {
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+
+        // Success state
+        setShowContactSuccess(true);
+        setContactForm({ name: '', email: '', subject: '', message: '' });
+
+        // Hide success modal after 5 seconds
+        setTimeout(() => setShowContactSuccess(false), 5000);
+      } catch (error) {
+        console.error('Contact form submission error:', error);
+      } finally {
+        setIsSubmittingContact(false);
+      }
+    },
+    [contactForm, validateContactForm]
+  );
 
   // Handle newsletter subscription
-  const handleNewsletterSubmit = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!validateNewsletterEmail()) return;
+  const handleNewsletterSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
 
-    setIsSubscribing(true);
-    
-    // Simulate newsletter subscription
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Success state
-      setShowNewsletterSuccess(true);
-      setNewsletterEmail('');
-      
-      // Hide success modal after 4 seconds
-      setTimeout(() => setShowNewsletterSuccess(false), 4000);
-    } catch (error) {
-      console.error('Newsletter subscription error:', error);
-    } finally {
-      setIsSubscribing(false);
-    }
-  }, [newsletterEmail, validateNewsletterEmail]);
+      if (!validateNewsletterEmail()) return;
+
+      setIsSubscribing(true);
+
+      // Simulate newsletter subscription
+      try {
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+
+        // Success state
+        setShowNewsletterSuccess(true);
+        setNewsletterEmail('');
+
+        // Hide success modal after 4 seconds
+        setTimeout(() => setShowNewsletterSuccess(false), 4000);
+      } catch (error) {
+        console.error('Newsletter subscription error:', error);
+      } finally {
+        setIsSubscribing(false);
+      }
+    },
+    [newsletterEmail, validateNewsletterEmail]
+  );
 
   // Handle input changes
-  const handleContactInputChange = useCallback((field: keyof ContactFormData, value: string) => {
-    setContactForm(prev => ({ ...prev, [field]: value }));
-    // Clear error for this field when user starts typing
-    if (contactErrors[field]) {
-      setContactErrors(prev => ({ ...prev, [field]: '' }));
-    }
-  }, [contactErrors]);
+  const handleContactInputChange = useCallback(
+    (field: keyof ContactFormData, value: string) => {
+      setContactForm((prev) => ({ ...prev, [field]: value }));
+      // Clear error for this field when user starts typing
+      if (contactErrors[field]) {
+        setContactErrors((prev) => ({ ...prev, [field]: '' }));
+      }
+    },
+    [contactErrors]
+  );
 
   // Testimonial navigation
   const nextTestimonial = useCallback(() => {
@@ -186,9 +198,11 @@ const ContactNewsletterSection: React.FC<ContactNewsletterSectionProps> = ({ cla
   }, []);
 
   return (
-    <section className={`relative py-20 px-6 bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 overflow-hidden ${className}`}>
+    <section
+      className={`relative py-20 px-6 bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 overflow-hidden ${className}`}
+    >
       {/* Background Honeycomb Pattern */}
-      <div 
+      <div
         className="absolute inset-0 opacity-15"
         style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='52' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0 L52 15 L52 37 L30 52 L8 37 L8 15 Z' fill='none' stroke='%23FFA500' stroke-width='0.5'/%3E%3C/svg%3E")`,
@@ -200,18 +214,24 @@ const ContactNewsletterSection: React.FC<ContactNewsletterSectionProps> = ({ cla
         {/* Section Header */}
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-            Get in <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-orange-600">Touch</span>
+            Get in{' '}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-orange-600">
+              Touch
+            </span>
           </h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Have questions? We'd love to hear from you. Send us a message and join our hive community!
+            Have questions? We'd love to hear from you. Send us a message and join our hive
+            community!
           </p>
         </div>
 
         {/* Two-Column Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
           {/* Left Column - Contact Form */}
-          <div className="bg-white/85 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 p-8"
-               style={{ backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
+          <div
+            className="bg-white/85 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 p-8"
+            style={{ backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}
+          >
             <div className="mb-8">
               <h3 className="text-2xl font-bold text-gray-900 mb-2 flex items-center gap-3">
                 <MessageSquare className="w-6 h-6 text-amber-500" />
@@ -223,9 +243,7 @@ const ContactNewsletterSection: React.FC<ContactNewsletterSectionProps> = ({ cla
             <form onSubmit={handleContactSubmit} className="space-y-6">
               {/* Name Field */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Name
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                   <input
@@ -248,9 +266,7 @@ const ContactNewsletterSection: React.FC<ContactNewsletterSectionProps> = ({ cla
 
               {/* Email Field */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Email
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                   <input
@@ -273,9 +289,7 @@ const ContactNewsletterSection: React.FC<ContactNewsletterSectionProps> = ({ cla
 
               {/* Subject Field */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Subject
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Subject</label>
                 <input
                   type="text"
                   value={contactForm.subject}
@@ -295,9 +309,7 @@ const ContactNewsletterSection: React.FC<ContactNewsletterSectionProps> = ({ cla
 
               {/* Message Field */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Message
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Message</label>
                 <textarea
                   value={contactForm.message}
                   onChange={(e) => handleContactInputChange('message', e.target.value)}
@@ -351,7 +363,7 @@ const ContactNewsletterSection: React.FC<ContactNewsletterSectionProps> = ({ cla
           {/* Right Column - Newsletter Signup */}
           <div className="relative">
             {/* Honeycomb Background */}
-            <div 
+            <div
               className="absolute inset-0 rounded-3xl opacity-20"
               style={{
                 backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='35' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 0 L35 10 L35 25 L20 35 L5 25 L5 10 Z' fill='none' stroke='%232D5016' stroke-width='0.8'/%3E%3C/svg%3E")`,
@@ -360,8 +372,10 @@ const ContactNewsletterSection: React.FC<ContactNewsletterSectionProps> = ({ cla
               }}
             />
 
-            <div className="relative bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 p-8"
-                 style={{ backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
+            <div
+              className="relative bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 p-8"
+              style={{ backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}
+            >
               {/* Newsletter Header */}
               <div className="text-center mb-8">
                 <div className="w-16 h-16 bg-gradient-to-br from-amber-400 to-amber-500 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -369,7 +383,9 @@ const ContactNewsletterSection: React.FC<ContactNewsletterSectionProps> = ({ cla
                 </div>
                 <h3 className="text-3xl font-bold text-gray-900 mb-2">Join the Hive</h3>
                 <p className="text-lg text-gray-600">Get sweetness in your inbox</p>
-                <p className="text-sm text-gray-500 mt-2">Exclusive offers, new arrivals, and educational tips</p>
+                <p className="text-sm text-gray-500 mt-2">
+                  Exclusive offers, new arrivals, and educational tips
+                </p>
               </div>
 
               {/* Newsletter Form */}
@@ -425,10 +441,14 @@ const ContactNewsletterSection: React.FC<ContactNewsletterSectionProps> = ({ cla
         </div>
 
         {/* Testimonial Carousel */}
-        <div className="bg-white/85 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 p-8"
-             style={{ backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
-          <h3 className="text-2xl font-bold text-gray-900 mb-8 text-center">What Our Hive Members Say</h3>
-          
+        <div
+          className="bg-white/85 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 p-8"
+          style={{ backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}
+        >
+          <h3 className="text-2xl font-bold text-gray-900 mb-8 text-center">
+            What Our Hive Members Say
+          </h3>
+
           <div className="relative">
             {/* Testimonial Content */}
             <div className="text-center max-w-3xl mx-auto">
@@ -440,7 +460,9 @@ const ContactNewsletterSection: React.FC<ContactNewsletterSectionProps> = ({ cla
               <blockquote className="text-xl text-gray-700 italic mb-6">
                 "{testimonials[currentTestimonial].content}"
               </blockquote>
-              <div className="font-semibold text-gray-900">{testimonials[currentTestimonial].name}</div>
+              <div className="font-semibold text-gray-900">
+                {testimonials[currentTestimonial].name}
+              </div>
               <div className="text-gray-600">{testimonials[currentTestimonial].role}</div>
             </div>
 
@@ -489,7 +511,9 @@ const ContactNewsletterSection: React.FC<ContactNewsletterSectionProps> = ({ cla
             </div>
             <h3 className="text-2xl font-bold text-gray-900 mb-4">Thank you!</h3>
             <p className="text-gray-600 mb-6">We'll buzz back soon</p>
-            <p className="text-sm text-gray-500">Your message has been sent successfully. We'll respond within 24 hours.</p>
+            <p className="text-sm text-gray-500">
+              Your message has been sent successfully. We'll respond within 24 hours.
+            </p>
             <button
               onClick={() => setShowContactSuccess(false)}
               className="mt-6 px-6 py-3 bg-amber-500 text-white rounded-xl hover:bg-amber-600 transition-colors"
@@ -512,7 +536,10 @@ const ContactNewsletterSection: React.FC<ContactNewsletterSectionProps> = ({ cla
             </div>
             <h3 className="text-2xl font-bold text-gray-900 mb-4">Welcome to the Hive!</h3>
             <p className="text-gray-600 mb-6">Check your email for a sweet surprise</p>
-            <p className="text-sm text-gray-500">You've been added to our newsletter. Get ready for exclusive offers and educational content!</p>
+            <p className="text-sm text-gray-500">
+              You've been added to our newsletter. Get ready for exclusive offers and educational
+              content!
+            </p>
             <button
               onClick={() => setShowNewsletterSuccess(false)}
               className="mt-6 px-6 py-3 bg-green-500 text-white rounded-xl hover:bg-green-600 transition-colors"

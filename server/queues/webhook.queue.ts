@@ -59,7 +59,7 @@ export const processWebhookJob = async (job: { data: WebhookJobData; id: string 
       url: data.url,
       attempt: job.attemptsMade,
     });
-    
+
     throw error;
   }
 };
@@ -100,7 +100,7 @@ async function sendWebhook(data: WebhookJobData): Promise<any> {
     }
 
     const responseData = await response.json();
-    
+
     logger.info(`Webhook delivered successfully`, {
       url,
       type: data.type,
@@ -114,11 +114,11 @@ async function sendWebhook(data: WebhookJobData): Promise<any> {
     };
   } catch (error) {
     clearTimeout(timeoutId);
-    
+
     if (error.name === 'AbortError') {
       throw new Error(`Webhook timeout after ${timeout}ms`);
     }
-    
+
     throw error;
   }
 }
@@ -130,15 +130,11 @@ export class WebhookQueueService {
    */
   static async addWebhookJob(data: WebhookJobData): Promise<string> {
     try {
-      const job = await webhookQueue.add(
-        `webhook-${data.type}`,
-        data,
-        {
-          priority: data.priority || 0,
-          delay: data.delay || 0,
-          attempts: data.retries || 5,
-        }
-      );
+      const job = await webhookQueue.add(`webhook-${data.type}`, data, {
+        priority: data.priority || 0,
+        delay: data.delay || 0,
+        attempts: data.retries || 5,
+      });
 
       logger.info(`Webhook job added to queue: ${job.id}`, {
         type: data.type,
@@ -332,7 +328,7 @@ export class WebhookQueueService {
   static async getFailedJobs(limit: number = 50): Promise<any[]> {
     try {
       const failed = await webhookQueue.getFailed(0, limit - 1);
-      return failed.map(job => ({
+      return failed.map((job) => ({
         id: job.id,
         name: job.name,
         data: job.data,

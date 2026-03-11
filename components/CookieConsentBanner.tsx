@@ -13,10 +13,7 @@ interface CookiePreferences {
   functional: boolean;
 }
 
-const CookieConsentBanner: React.FC<CookieConsentProps> = ({ 
-  onAccept, 
-  className = '' 
-}) => {
+const CookieConsentBanner: React.FC<CookieConsentProps> = ({ onAccept, className = '' }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [preferences, setPreferences] = useState<CookiePreferences>({
@@ -44,15 +41,15 @@ const CookieConsentBanner: React.FC<CookieConsentProps> = ({
     if (!prefs.analytics) {
       // Disable GA
       window.gtag?.('config', 'GA_MEASUREMENT_ID', {
-        'anonymize_ip': true,
-        'send_page_view': false,
+        anonymize_ip: true,
+        send_page_view: false,
       });
     }
 
     // Block/allow marketing cookies
     if (!prefs.marketing) {
       // Disable marketing pixels and tracking
-      document.querySelectorAll('[data-category="marketing"]').forEach(el => {
+      document.querySelectorAll('[data-category="marketing"]').forEach((el) => {
         el.setAttribute('data-consent', 'denied');
       });
     }
@@ -60,7 +57,7 @@ const CookieConsentBanner: React.FC<CookieConsentProps> = ({
     // Block/allow functional cookies
     if (!prefs.functional) {
       // Disable functional scripts
-      document.querySelectorAll('[data-category="functional"]').forEach(el => {
+      document.querySelectorAll('[data-category="functional"]').forEach((el) => {
         el.setAttribute('data-consent', 'denied');
       });
     }
@@ -76,7 +73,7 @@ const CookieConsentBanner: React.FC<CookieConsentProps> = ({
       marketing: true,
       functional: true,
     };
-    
+
     setPreferences(allPrefs);
     localStorage.setItem('cookie-consent', JSON.stringify(allPrefs));
     applyCookiePreferences(allPrefs);
@@ -90,7 +87,7 @@ const CookieConsentBanner: React.FC<CookieConsentProps> = ({
       marketing: false,
       functional: false,
     };
-    
+
     setPreferences(necessaryPrefs);
     localStorage.setItem('cookie-consent', JSON.stringify(necessaryPrefs));
     applyCookiePreferences(necessaryPrefs);
@@ -104,16 +101,18 @@ const CookieConsentBanner: React.FC<CookieConsentProps> = ({
   };
 
   const handlePreferenceChange = (category: keyof Omit<CookiePreferences, 'necessary'>) => {
-    setPreferences(prev => ({
+    setPreferences((prev) => ({
       ...prev,
-      [category]: !prev[category]
+      [category]: !prev[category],
     }));
   };
 
   if (!isVisible) return null;
 
   return (
-    <div className={`fixed bottom-0 left-0 right-0 bg-gray-900 text-white shadow-2xl z-50 ${className}`}>
+    <div
+      className={`fixed bottom-0 left-0 right-0 bg-gray-900 text-white shadow-2xl z-50 ${className}`}
+    >
       <div className="max-w-7xl mx-auto p-6">
         <div className="flex flex-col lg:flex-row items-start gap-6">
           {/* Main Content */}
@@ -122,11 +121,11 @@ const CookieConsentBanner: React.FC<CookieConsentProps> = ({
               <Cookie className="w-6 h-6 text-yellow-400" />
               <h3 className="text-lg font-semibold">Cookie Consent</h3>
             </div>
-            
+
             <p className="text-gray-300 mb-4 text-sm leading-relaxed">
-              We use cookies to enhance your browsing experience, serve personalized content, 
-              and analyze our traffic. By clicking "Accept All", you consent to our use of cookies.
-              Read our{' '}
+              We use cookies to enhance your browsing experience, serve personalized content, and
+              analyze our traffic. By clicking "Accept All", you consent to our use of cookies. Read
+              our{' '}
               <a href="/privacy-policy" className="text-blue-400 hover:text-blue-300 underline">
                 Privacy Policy
               </a>{' '}
@@ -163,7 +162,7 @@ const CookieConsentBanner: React.FC<CookieConsentProps> = ({
                   <Shield className="w-4 h-4" />
                   Cookie Preferences
                 </h4>
-                
+
                 <div className="space-y-3">
                   {/* Necessary Cookies */}
                   <div className="flex items-center justify-between p-3 bg-gray-700 rounded">

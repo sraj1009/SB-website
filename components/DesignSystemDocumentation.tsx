@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
-import { 
-  Palette, 
-  Type, 
-  MousePointer, 
-  Square, 
-  Circle, 
-  Check, 
-  X, 
-  Eye, 
-  EyeOff, 
-  Moon, 
+import {
+  Palette,
+  Type,
+  MousePointer,
+  Square,
+  Circle,
+  Check,
+  X,
+  Eye,
+  EyeOff,
+  Moon,
   Sun,
   Copy,
   Download,
@@ -30,7 +30,7 @@ import {
   MapPin,
   ArrowRight,
   ToggleLeft,
-  ToggleRight
+  ToggleRight,
 } from 'lucide-react';
 import BeeIcon from './BeeIcon';
 
@@ -70,24 +70,49 @@ const DesignSystemDocumentation: React.FC = () => {
   // Design tokens
   const designTokens: DesignToken[] = [
     // Colors
-    { name: 'primary-500', value: '#FFA500', description: 'Honey Gold - Primary brand color', category: 'color' },
+    {
+      name: 'primary-500',
+      value: '#FFA500',
+      description: 'Honey Gold - Primary brand color',
+      category: 'color',
+    },
     { name: 'primary-600', value: '#F59E0B', description: 'Darker honey gold', category: 'color' },
     { name: 'primary-400', value: '#FCD34D', description: 'Lighter honey gold', category: 'color' },
     { name: 'cream', value: '#FFF8E7', description: 'Cream background', category: 'color' },
-    { name: 'green-600', value: '#2D5016', description: 'Forest Green - Secondary accent', category: 'color' },
+    {
+      name: 'green-600',
+      value: '#2D5016',
+      description: 'Forest Green - Secondary accent',
+      category: 'color',
+    },
     { name: 'gray-900', value: '#1F2937', description: 'Charcoal - Text color', category: 'color' },
     { name: 'white', value: '#FFFFFF', description: 'Pure white', category: 'color' },
-    
+
     // Typography
-    { name: 'text-4xl', value: '48px', description: 'H1 - Display headings', category: 'typography' },
+    {
+      name: 'text-4xl',
+      value: '48px',
+      description: 'H1 - Display headings',
+      category: 'typography',
+    },
     { name: 'text-3xl', value: '36px', description: 'H2 - Large headings', category: 'typography' },
-    { name: 'text-2xl', value: '24px', description: 'H3 - Medium headings', category: 'typography' },
+    {
+      name: 'text-2xl',
+      value: '24px',
+      description: 'H3 - Medium headings',
+      category: 'typography',
+    },
     { name: 'text-base', value: '16px', description: 'Body text', category: 'typography' },
     { name: 'text-sm', value: '14px', description: 'Small text', category: 'typography' },
     { name: 'font-black', value: '900', description: 'Black font weight', category: 'typography' },
     { name: 'font-bold', value: '700', description: 'Bold font weight', category: 'typography' },
-    { name: 'font-medium', value: '500', description: 'Medium font weight', category: 'typography' },
-    
+    {
+      name: 'font-medium',
+      value: '500',
+      description: 'Medium font weight',
+      category: 'typography',
+    },
+
     // Spacing (8pt grid system)
     { name: 'p-1', value: '4px', description: '0.5rem - Base unit', category: 'spacing' },
     { name: 'p-2', value: '8px', description: '1rem - Base unit', category: 'spacing' },
@@ -97,24 +122,74 @@ const DesignSystemDocumentation: React.FC = () => {
     { name: 'p-8', value: '32px', description: '4rem', category: 'spacing' },
     { name: 'p-12', value: '48px', description: '6rem', category: 'spacing' },
     { name: 'p-16', value: '64px', description: '8rem', category: 'spacing' },
-    
+
     // Border radius
     { name: 'rounded-sm', value: '4px', description: 'Small radius', category: 'border-radius' },
     { name: 'rounded', value: '8px', description: 'Medium radius', category: 'border-radius' },
     { name: 'rounded-lg', value: '12px', description: 'Large radius', category: 'border-radius' },
-    { name: 'rounded-xl', value: '16px', description: 'Extra large radius', category: 'border-radius' },
-    { name: 'rounded-2xl', value: '24px', description: '2x large radius', category: 'border-radius' },
-    { name: 'rounded-3xl', value: '32px', description: '3x large radius', category: 'border-radius' },
-    { name: 'rounded-full', value: '9999px', description: 'Full circle', category: 'border-radius' },
-    
+    {
+      name: 'rounded-xl',
+      value: '16px',
+      description: 'Extra large radius',
+      category: 'border-radius',
+    },
+    {
+      name: 'rounded-2xl',
+      value: '24px',
+      description: '2x large radius',
+      category: 'border-radius',
+    },
+    {
+      name: 'rounded-3xl',
+      value: '32px',
+      description: '3x large radius',
+      category: 'border-radius',
+    },
+    {
+      name: 'rounded-full',
+      value: '9999px',
+      description: 'Full circle',
+      category: 'border-radius',
+    },
+
     // Shadows
-    { name: 'shadow-sm', value: '0 1px 2px 0 rgba(0, 0, 0, 0.05)', description: 'Small shadow', category: 'shadow' },
-    { name: 'shadow', value: '0 1px 3px 0 rgba(0, 0, 0, 0.1)', description: 'Default shadow', category: 'shadow' },
-    { name: 'shadow-md', value: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', description: 'Medium shadow', category: 'shadow' },
-    { name: 'shadow-lg', value: '0 10px 15px -3px rgba(0, 0, 0, 0.1)', description: 'Large shadow', category: 'shadow' },
-    { name: 'shadow-xl', value: '0 20px 25px -5px rgba(0, 0, 0, 0.1)', description: 'Extra large shadow', category: 'shadow' },
-    { name: 'shadow-2xl', value: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', description: '2x large shadow', category: 'shadow' },
-    
+    {
+      name: 'shadow-sm',
+      value: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+      description: 'Small shadow',
+      category: 'shadow',
+    },
+    {
+      name: 'shadow',
+      value: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+      description: 'Default shadow',
+      category: 'shadow',
+    },
+    {
+      name: 'shadow-md',
+      value: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+      description: 'Medium shadow',
+      category: 'shadow',
+    },
+    {
+      name: 'shadow-lg',
+      value: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+      description: 'Large shadow',
+      category: 'shadow',
+    },
+    {
+      name: 'shadow-xl',
+      value: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
+      description: 'Extra large shadow',
+      category: 'shadow',
+    },
+    {
+      name: 'shadow-2xl',
+      value: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+      description: '2x large shadow',
+      category: 'shadow',
+    },
+
     // Breakpoints
     { name: 'sm', value: '640px', description: 'Small screens', category: 'breakpoint' },
     { name: 'md', value: '768px', description: 'Medium screens', category: 'breakpoint' },
@@ -130,97 +205,238 @@ const DesignSystemDocumentation: React.FC = () => {
       category: 'interactive',
       description: 'Interactive button with multiple variants and states',
       variants: [
-        { name: 'Primary', props: { children: 'Primary Button' }, className: 'bg-amber-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-amber-600 transition-colors', description: 'Main action button' },
-        { name: 'Secondary', props: { children: 'Secondary' }, className: 'bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors', description: 'Secondary action' },
-        { name: 'Tertiary', props: { children: 'Tertiary' }, className: 'bg-gray-200 text-gray-900 px-6 py-3 rounded-lg font-semibold hover:bg-gray-300 transition-colors', description: 'Tertiary action' },
-        { name: 'Ghost', props: { children: 'Ghost' }, className: 'border border-gray-300 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-50 transition-colors', description: 'Minimal button' },
+        {
+          name: 'Primary',
+          props: { children: 'Primary Button' },
+          className:
+            'bg-amber-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-amber-600 transition-colors',
+          description: 'Main action button',
+        },
+        {
+          name: 'Secondary',
+          props: { children: 'Secondary' },
+          className:
+            'bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors',
+          description: 'Secondary action',
+        },
+        {
+          name: 'Tertiary',
+          props: { children: 'Tertiary' },
+          className:
+            'bg-gray-200 text-gray-900 px-6 py-3 rounded-lg font-semibold hover:bg-gray-300 transition-colors',
+          description: 'Tertiary action',
+        },
+        {
+          name: 'Ghost',
+          props: { children: 'Ghost' },
+          className:
+            'border border-gray-300 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-50 transition-colors',
+          description: 'Minimal button',
+        },
       ],
       accessibility: {
         contrastRatio: '4.5:1',
         ariaLabels: ['button label'],
-        keyboardNavigation: true
+        keyboardNavigation: true,
       },
-      tailwindClasses: ['bg-amber-500', 'text-white', 'px-6', 'py-3', 'rounded-lg', 'font-semibold', 'hover:bg-amber-600', 'transition-colors']
+      tailwindClasses: [
+        'bg-amber-500',
+        'text-white',
+        'px-6',
+        'py-3',
+        'rounded-lg',
+        'font-semibold',
+        'hover:bg-amber-600',
+        'transition-colors',
+      ],
     },
     {
       name: 'Input',
       category: 'forms',
       description: 'Form input field with validation states',
       variants: [
-        { name: 'Default', props: { placeholder: 'Enter text...' }, className: 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent', description: 'Standard input' },
-        { name: 'Error', props: { placeholder: 'Error state' }, className: 'w-full px-4 py-2 border border-red-500 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent', description: 'Error state' },
-        { name: 'Success', props: { placeholder: 'Success state' }, className: 'w-full px-4 py-2 border border-green-500 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent', description: 'Success state' },
+        {
+          name: 'Default',
+          props: { placeholder: 'Enter text...' },
+          className:
+            'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent',
+          description: 'Standard input',
+        },
+        {
+          name: 'Error',
+          props: { placeholder: 'Error state' },
+          className:
+            'w-full px-4 py-2 border border-red-500 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent',
+          description: 'Error state',
+        },
+        {
+          name: 'Success',
+          props: { placeholder: 'Success state' },
+          className:
+            'w-full px-4 py-2 border border-green-500 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent',
+          description: 'Success state',
+        },
       ],
       accessibility: {
         contrastRatio: '4.5:1',
         ariaLabels: ['input label', 'error message'],
-        keyboardNavigation: true
+        keyboardNavigation: true,
       },
-      tailwindClasses: ['w-full', 'px-4', 'py-2', 'border', 'border-gray-300', 'rounded-lg', 'focus:ring-2', 'focus:ring-amber-500', 'focus:border-transparent']
+      tailwindClasses: [
+        'w-full',
+        'px-4',
+        'py-2',
+        'border',
+        'border-gray-300',
+        'rounded-lg',
+        'focus:ring-2',
+        'focus:ring-amber-500',
+        'focus:border-transparent',
+      ],
     },
     {
       name: 'Card',
       category: 'layout',
       description: 'Container component for content grouping',
       variants: [
-        { name: 'Product Card', props: { title: 'Product', price: '$29.99' }, className: 'bg-white rounded-xl shadow-lg p-6 border border-gray-200', description: 'Product display card' },
-        { name: 'Feature Card', props: { title: 'Feature', description: 'Description' }, className: 'bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-6 border border-amber-200', description: 'Feature highlight' },
-        { name: 'Testimonial Card', props: { quote: 'Great product!', author: 'Customer' }, className: 'bg-white rounded-xl shadow-md p-6 border border-gray-100', description: 'Customer testimonial' },
+        {
+          name: 'Product Card',
+          props: { title: 'Product', price: '$29.99' },
+          className: 'bg-white rounded-xl shadow-lg p-6 border border-gray-200',
+          description: 'Product display card',
+        },
+        {
+          name: 'Feature Card',
+          props: { title: 'Feature', description: 'Description' },
+          className:
+            'bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-6 border border-amber-200',
+          description: 'Feature highlight',
+        },
+        {
+          name: 'Testimonial Card',
+          props: { quote: 'Great product!', author: 'Customer' },
+          className: 'bg-white rounded-xl shadow-md p-6 border border-gray-100',
+          description: 'Customer testimonial',
+        },
       ],
       accessibility: {
         contrastRatio: '4.5:1',
         ariaLabels: ['card title', 'card content'],
-        keyboardNavigation: false
+        keyboardNavigation: false,
       },
-      tailwindClasses: ['bg-white', 'rounded-xl', 'shadow-lg', 'p-6', 'border', 'border-gray-200']
+      tailwindClasses: ['bg-white', 'rounded-xl', 'shadow-lg', 'p-6', 'border', 'border-gray-200'],
     },
     {
       name: 'Alert',
       category: 'feedback',
       description: 'Feedback messages for user actions',
       variants: [
-        { name: 'Success', props: { message: 'Operation successful!' }, className: 'bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg flex items-center gap-2', description: 'Success message' },
-        { name: 'Error', props: { message: 'Something went wrong!' }, className: 'bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center gap-2', description: 'Error message' },
-        { name: 'Warning', props: { message: 'Please review!' }, className: 'bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg flex items-center gap-2', description: 'Warning message' },
-        { name: 'Info', props: { message: 'Information!' }, className: 'bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-lg flex items-center gap-2', description: 'Information message' },
+        {
+          name: 'Success',
+          props: { message: 'Operation successful!' },
+          className:
+            'bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg flex items-center gap-2',
+          description: 'Success message',
+        },
+        {
+          name: 'Error',
+          props: { message: 'Something went wrong!' },
+          className:
+            'bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center gap-2',
+          description: 'Error message',
+        },
+        {
+          name: 'Warning',
+          props: { message: 'Please review!' },
+          className:
+            'bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg flex items-center gap-2',
+          description: 'Warning message',
+        },
+        {
+          name: 'Info',
+          props: { message: 'Information!' },
+          className:
+            'bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-lg flex items-center gap-2',
+          description: 'Information message',
+        },
       ],
       accessibility: {
         contrastRatio: '4.5:1',
         ariaLabels: ['alert message', 'alert type'],
-        keyboardNavigation: true
+        keyboardNavigation: true,
       },
-      tailwindClasses: ['bg-green-50', 'border', 'border-green-200', 'text-green-800', 'px-4', 'py-3', 'rounded-lg', 'flex', 'items-center', 'gap-2']
+      tailwindClasses: [
+        'bg-green-50',
+        'border',
+        'border-green-200',
+        'text-green-800',
+        'px-4',
+        'py-3',
+        'rounded-lg',
+        'flex',
+        'items-center',
+        'gap-2',
+      ],
     },
     {
       name: 'Modal',
       category: 'feedback',
       description: 'Overlay dialog for important interactions',
       variants: [
-        { name: 'Default', props: { title: 'Modal Title', children: 'Modal content' }, className: 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4', description: 'Standard modal overlay' },
-        { name: 'Content', props: { title: 'Title', children: 'Content' }, className: 'bg-white rounded-2xl shadow-2xl max-w-md w-full p-6', description: 'Modal content container' },
+        {
+          name: 'Default',
+          props: { title: 'Modal Title', children: 'Modal content' },
+          className: 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4',
+          description: 'Standard modal overlay',
+        },
+        {
+          name: 'Content',
+          props: { title: 'Title', children: 'Content' },
+          className: 'bg-white rounded-2xl shadow-2xl max-w-md w-full p-6',
+          description: 'Modal content container',
+        },
       ],
       accessibility: {
         contrastRatio: '4.5:1',
         ariaLabels: ['modal title', 'close button'],
-        keyboardNavigation: true
+        keyboardNavigation: true,
       },
-      tailwindClasses: ['fixed', 'inset-0', 'bg-black', 'bg-opacity-50', 'flex', 'items-center', 'justify-center', 'p-4']
+      tailwindClasses: [
+        'fixed',
+        'inset-0',
+        'bg-black',
+        'bg-opacity-50',
+        'flex',
+        'items-center',
+        'justify-center',
+        'p-4',
+      ],
     },
     {
       name: 'Loading',
       category: 'feedback',
       description: 'Loading indicators for async operations',
       variants: [
-        { name: 'Spinner', props: {}, className: 'animate-spin w-6 h-6 text-amber-500', description: 'Rotating spinner' },
+        {
+          name: 'Spinner',
+          props: {},
+          className: 'animate-spin w-6 h-6 text-amber-500',
+          description: 'Rotating spinner',
+        },
         { name: 'Dots', props: {}, className: 'flex gap-2', description: 'Animated dots' },
-        { name: 'Skeleton', props: {}, className: 'animate-pulse bg-gray-200 rounded h-4 w-full', description: 'Skeleton placeholder' },
+        {
+          name: 'Skeleton',
+          props: {},
+          className: 'animate-pulse bg-gray-200 rounded h-4 w-full',
+          description: 'Skeleton placeholder',
+        },
       ],
       accessibility: {
         ariaLabels: ['loading indicator'],
-        keyboardNavigation: false
+        keyboardNavigation: false,
       },
-      tailwindClasses: ['animate-spin', 'w-6', 'h-6', 'text-amber-500']
-    }
+      tailwindClasses: ['animate-spin', 'w-6', 'h-6', 'text-amber-500'],
+    },
   ];
 
   const copyToClipboard = (text: string) => {
@@ -236,17 +452,22 @@ const DesignSystemDocumentation: React.FC = () => {
     { id: 'tokens', name: 'Design Tokens', icon: Circle },
   ];
 
-  const filteredTokens = designTokens.filter(token => 
-    activeSection === 'colors' ? token.category === 'color' :
-    activeSection === 'typography' ? token.category === 'typography' :
-    activeSection === 'tokens' ? !['color', 'typography'].includes(token.category) :
-    []
+  const filteredTokens = designTokens.filter((token) =>
+    activeSection === 'colors'
+      ? token.category === 'color'
+      : activeSection === 'typography'
+        ? token.category === 'typography'
+        : activeSection === 'tokens'
+          ? !['color', 'typography'].includes(token.category)
+          : []
   );
 
   return (
-    <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'} relative overflow-hidden`}>
+    <div
+      className={`min-h-screen ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'} relative overflow-hidden`}
+    >
       {/* 8pt Grid Overlay */}
-      <div 
+      <div
         className="absolute inset-0 pointer-events-none opacity-10"
         style={{
           backgroundImage: `
@@ -267,7 +488,7 @@ const DesignSystemDocumentation: React.FC = () => {
               </div>
               <h1 className="text-2xl font-bold">SINGGLEBEE Design System</h1>
             </div>
-            
+
             <div className="flex items-center gap-4">
               {/* Dark Mode Toggle */}
               <button
@@ -277,7 +498,7 @@ const DesignSystemDocumentation: React.FC = () => {
               >
                 {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
               </button>
-              
+
               {/* Export Buttons */}
               <button
                 onClick={() => copyToClipboard(window.location.href)}
@@ -330,7 +551,8 @@ const DesignSystemDocumentation: React.FC = () => {
             <div className="text-center mb-12">
               <h2 className="text-4xl font-bold mb-4">Color Palette</h2>
               <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                Our brand colors are inspired by honey and nature, creating a warm and inviting experience
+                Our brand colors are inspired by honey and nature, creating a warm and inviting
+                experience
               </p>
             </div>
 
@@ -372,7 +594,10 @@ const DesignSystemDocumentation: React.FC = () => {
 
             <div className="space-y-8 max-w-4xl mx-auto">
               {filteredTokens.map((token) => (
-                <div key={token.name} className="flex items-center justify-between p-6 bg-white rounded-xl shadow-sm border border-gray-200">
+                <div
+                  key={token.name}
+                  className="flex items-center justify-between p-6 bg-white rounded-xl shadow-sm border border-gray-200"
+                >
                   <div>
                     <h3 className="font-semibold mb-2">{token.name}</h3>
                     <p className="text-sm text-gray-600">{token.value}</p>
@@ -402,7 +627,7 @@ const DesignSystemDocumentation: React.FC = () => {
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                   <h3 className="text-2xl font-bold mb-2">{component.name}</h3>
                   <p className="text-gray-600 mb-6">{component.description}</p>
-                  
+
                   {/* Component Variants */}
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
                     {component.variants.map((variant) => (
@@ -411,7 +636,9 @@ const DesignSystemDocumentation: React.FC = () => {
                         <div className="p-4 bg-gray-50 rounded-lg">
                           <div className={variant.className}>
                             {variant.name === 'Button' && variant.props.children}
-                            {variant.name === 'Input' && <input {...variant.props} className={variant.className} />}
+                            {variant.name === 'Input' && (
+                              <input {...variant.props} className={variant.className} />
+                            )}
                             {variant.name === 'Alert' && (
                               <div className={variant.className}>
                                 <AlertCircle className="w-5 h-5" />
@@ -421,19 +648,29 @@ const DesignSystemDocumentation: React.FC = () => {
                             {variant.name === 'Card' && (
                               <div className={variant.className}>
                                 <h4 className="font-semibold">{variant.props.title}</h4>
-                                {variant.props.price && <p className="text-amber-600">{variant.props.price}</p>}
-                                {variant.props.description && <p className="text-gray-600">{variant.props.description}</p>}
-                                {variant.props.quote && (
-                                  <blockquote className="italic text-gray-700">"{variant.props.quote}"</blockquote>
+                                {variant.props.price && (
+                                  <p className="text-amber-600">{variant.props.price}</p>
                                 )}
-                                {variant.props.author && <p className="text-sm text-gray-500">- {variant.props.author}</p>}
+                                {variant.props.description && (
+                                  <p className="text-gray-600">{variant.props.description}</p>
+                                )}
+                                {variant.props.quote && (
+                                  <blockquote className="italic text-gray-700">
+                                    "{variant.props.quote}"
+                                  </blockquote>
+                                )}
+                                {variant.props.author && (
+                                  <p className="text-sm text-gray-500">- {variant.props.author}</p>
+                                )}
                               </div>
                             )}
                             {variant.name === 'Modal' && (
                               <div className="relative">
                                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
                                   <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
-                                    <h4 className="text-lg font-semibold mb-2">{variant.props.title}</h4>
+                                    <h4 className="text-lg font-semibold mb-2">
+                                      {variant.props.title}
+                                    </h4>
                                     <p className="text-gray-600">{variant.props.children}</p>
                                   </div>
                                 </div>
@@ -463,7 +700,10 @@ const DesignSystemDocumentation: React.FC = () => {
                       <h4 className="font-semibold mb-2">Accessibility</h4>
                       <ul className="text-sm text-gray-600 space-y-1">
                         <li>• Contrast Ratio: {component.accessibility.contrastRatio}</li>
-                        <li>• Keyboard Navigation: {component.accessibility.keyboardNavigation ? 'Yes' : 'No'}</li>
+                        <li>
+                          • Keyboard Navigation:{' '}
+                          {component.accessibility.keyboardNavigation ? 'Yes' : 'No'}
+                        </li>
                         <li>• ARIA Labels: {component.accessibility.ariaLabels?.join(', ')}</li>
                       </ul>
                     </div>

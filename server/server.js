@@ -5,6 +5,7 @@ import logger from './utils/logger.js';
 import { startWorker } from './utils/worker.js';
 import seedAdmin from './utils/seedAdmin.js';
 import seedProducts from './utils/seedProducts.js';
+// import './otel/tracing.js'; // Commented out for now
 
 const PORT = config.port;
 
@@ -14,8 +15,9 @@ const startServer = async () => {
     // Connect to MongoDB
     await connectDB();
 
-    // Seed admin user on first run (Manual run recommended for production)
-    // await seedAdmin();
+    // Seed admin user on first run
+    await seedAdmin();
+    
     // Check if products exist before seeding to prevent duplicates
     const Product = (await import('./models/Product.js')).default;
     const productCount = await Product.countDocuments();

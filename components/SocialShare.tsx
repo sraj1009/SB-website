@@ -16,7 +16,7 @@ const SocialShare: React.FC<SocialShareProps> = ({
   description,
   image,
   hashtags = [],
-  onShare
+  onShare,
 }) => {
   const [copied, setCopied] = useState(false);
   const [showShareMenu, setShowShareMenu] = useState(false);
@@ -38,7 +38,7 @@ const SocialShare: React.FC<SocialShareProps> = ({
     linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}&title=${encodedTitle}&summary=${encodedDescription}`,
     pinterest: `https://pinterest.com/pin/create/button/?url=${encodedUrl}&description=${encodedDescription}&media=${encodedImage}`,
     telegram: `https://t.me/share/url?url=${encodedUrl}&text=${encodedTitle}`,
-    reddit: `https://reddit.com/submit?url=${encodedUrl}&title=${encodedTitle}`
+    reddit: `https://reddit.com/submit?url=${encodedUrl}&title=${encodedTitle}`,
   };
 
   // Handle share action
@@ -51,14 +51,15 @@ const SocialShare: React.FC<SocialShareProps> = ({
         return;
       }
 
-      const shareUrl = platform === 'generic' ? undefined : shareUrls[platform as keyof typeof shareUrls];
-      
+      const shareUrl =
+        platform === 'generic' ? undefined : shareUrls[platform as keyof typeof shareUrls];
+
       // Check if Web Share API is available
       if (navigator.share && platform === 'generic') {
         await navigator.share({
           title,
           text: description,
-          url
+          url,
         });
       } else {
         // Open in new window
@@ -89,7 +90,7 @@ const SocialShare: React.FC<SocialShareProps> = ({
         await navigator.share({
           title,
           text: description,
-          url
+          url,
         });
         onShare?.('native');
       } catch (error) {
@@ -194,10 +195,7 @@ const SocialShare: React.FC<SocialShareProps> = ({
 
       {/* Overlay to close menu */}
       {showShareMenu && (
-        <div
-          className="fixed inset-0 z-40"
-          onClick={() => setShowShareMenu(false)}
-        />
+        <div className="fixed inset-0 z-40" onClick={() => setShowShareMenu(false)} />
       )}
     </div>
   );

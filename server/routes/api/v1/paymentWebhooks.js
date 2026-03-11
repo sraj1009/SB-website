@@ -1,7 +1,7 @@
 import express from 'express';
-import { cashfreeWebhook, verifyManualPayment, getPaymentStatus } from '../../controllers/paymentWebhookController.js';
+import { cashfreeWebhook, verifyManualPayment, getPaymentStatus } from '../../../controllers/paymentWebhookController.js';
 import { authenticate } from '../../../middleware/auth.js';
-import { adminOnly } from '../../../middleware/admin.js';
+import isAdmin from '../../../middleware/admin.js';
 import { validateRequest } from '../../../middleware/zodValidate.js';
 import { z } from 'zod';
 
@@ -21,7 +21,8 @@ const manualPaymentSchema = z.object({
  *   post:
  *     summary: Cashfree payment webhook
  *     tags: [Payments]
- *     security: [] (Public endpoint)
+ *     security: []
+ *     description: Public endpoint for Cashfree payment webhooks
  *     requestBody:
  *       required: true
  *       content:
@@ -60,7 +61,7 @@ router.post('/webhook/cashfree', cashfreeWebhook);
  *       200:
  *         description: Payment verified
  */
-router.post('/verify-manual', authenticate, adminOnly, validateRequest(manualPaymentSchema), verifyManualPayment);
+router.post('/verify-manual', authenticate, isAdmin, validateRequest(manualPaymentSchema), verifyManualPayment);
 
 /**
  * @swagger

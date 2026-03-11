@@ -21,20 +21,20 @@ describe('Payment Service Tests', () => {
         id: 'product_1',
         title: 'Tamil Learning Book',
         price: 99900,
-        quantity: 1
-      }
+        quantity: 1,
+      },
     ],
     customer: {
       email: 'test@example.com',
-      phone: '+919876543210'
-    }
+      phone: '+919876543210',
+    },
   };
 
   const mockPaymentResponse = {
     payment_session_id: 'session_123',
     order_id: 'order_123',
     status: 'created',
-    payment_link: 'https://payments.cashfree.com/session_123'
+    payment_link: 'https://payments.cashfree.com/session_123',
   };
 
   beforeEach(() => {
@@ -66,12 +66,14 @@ describe('Payment Service Tests', () => {
       const invalidOrder = {
         items: [],
         amount: 0,
-        currency: 'INVALID'
+        currency: 'INVALID',
       };
 
       mockPaymentService.createOrder.mockRejectedValue(new Error('Invalid order data'));
 
-      await expect(mockPaymentService.createOrder(invalidOrder)).rejects.toThrow('Invalid order data');
+      await expect(mockPaymentService.createOrder(invalidOrder)).rejects.toThrow(
+        'Invalid order data'
+      );
     });
   });
 
@@ -82,7 +84,7 @@ describe('Payment Service Tests', () => {
         order_id: 'order_123',
         transaction_id: 'txn_123',
         amount: 99900,
-        paid_at: new Date().toISOString()
+        paid_at: new Date().toISOString(),
       };
 
       mockPaymentService.verifyPayment.mockResolvedValue(mockVerification);
@@ -104,7 +106,7 @@ describe('Payment Service Tests', () => {
       const mockVerification = {
         status: 'pending',
         order_id: 'order_123',
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
       };
 
       mockPaymentService.verifyPayment.mockResolvedValue(mockVerification);
@@ -122,20 +124,20 @@ describe('Payment Service Tests', () => {
         order_id: 'order_123',
         amount: 99900,
         status: 'processed',
-        processed_at: new Date().toISOString()
+        processed_at: new Date().toISOString(),
       };
 
       mockPaymentService.refundPayment.mockResolvedValue(mockRefund);
 
       const result = await mockPaymentService.refundPayment('order_123', {
         reason: 'Customer request',
-        amount: 99900
+        amount: 99900,
       });
 
       expect(result).toEqual(mockRefund);
       expect(mockPaymentService.refundPayment).toHaveBeenCalledWith('order_123', {
         reason: 'Customer request',
-        amount: 99900
+        amount: 99900,
       });
     });
 
@@ -145,14 +147,14 @@ describe('Payment Service Tests', () => {
         order_id: 'order_123',
         amount: 49950, // Partial refund
         status: 'processed',
-        processed_at: new Date().toISOString()
+        processed_at: new Date().toISOString(),
       };
 
       mockPaymentService.refundPayment.mockResolvedValue(mockRefund);
 
       const result = await mockPaymentService.refundPayment('order_123', {
         reason: 'Partial refund',
-        amount: 49950
+        amount: 49950,
       });
 
       expect(result.amount).toBe(49950);
@@ -163,19 +165,23 @@ describe('Payment Service Tests', () => {
       const errorMessage = 'Refund processing failed';
       mockPaymentService.refundPayment.mockRejectedValue(new Error(errorMessage));
 
-      await expect(mockPaymentService.refundPayment('order_123', {
-        reason: 'Test refund',
-        amount: 99900
-      })).rejects.toThrow(errorMessage);
+      await expect(
+        mockPaymentService.refundPayment('order_123', {
+          reason: 'Test refund',
+          amount: 99900,
+        })
+      ).rejects.toThrow(errorMessage);
     });
 
     it('should validate refund amount', async () => {
       mockPaymentService.refundPayment.mockRejectedValue(new Error('Invalid refund amount'));
 
-      await expect(mockPaymentService.refundPayment('order_123', {
-        reason: 'Invalid refund',
-        amount: 0
-      })).rejects.toThrow('Invalid refund amount');
+      await expect(
+        mockPaymentService.refundPayment('order_123', {
+          reason: 'Invalid refund',
+          amount: 0,
+        })
+      ).rejects.toThrow('Invalid refund amount');
     });
   });
 
@@ -184,7 +190,7 @@ describe('Payment Service Tests', () => {
       const mockStatuses = [
         { status: 'created', timestamp: new Date().toISOString() },
         { status: 'processing', timestamp: new Date().toISOString() },
-        { status: 'success', timestamp: new Date().toISOString() }
+        { status: 'success', timestamp: new Date().toISOString() },
       ];
 
       mockPaymentService.getPaymentStatus.mockResolvedValue(mockStatuses);
@@ -199,14 +205,14 @@ describe('Payment Service Tests', () => {
     it('should handle failed payment status', async () => {
       const mockStatuses = [
         { status: 'created', timestamp: new Date().toISOString() },
-        { status: 'failed', timestamp: new Date().toISOString(), error: 'Insufficient funds' }
+        { status: 'failed', timestamp: new Date().toISOString(), error: 'Insufficient funds' },
       ];
 
       mockPaymentService.getPaymentStatus.mockResolvedValue(mockStatuses);
 
       const statuses = await mockPaymentService.getPaymentStatus('order_123');
 
-      const failedStatus = statuses.find(s => s.status === 'failed');
+      const failedStatus = statuses.find((s) => s.status === 'failed');
       expect(failedStatus?.error).toBe('Insufficient funds');
     });
 
@@ -225,7 +231,7 @@ describe('Payment Service Tests', () => {
       const mockUploadResponse = {
         orderId: 'order_123',
         status: 'uploaded',
-        uploadUrl: 'https://cdn.example.com/proof.jpg'
+        uploadUrl: 'https://cdn.example.com/proof.jpg',
       };
 
       mockPaymentService.uploadPaymentProof.mockResolvedValue(mockUploadResponse);
@@ -240,14 +246,16 @@ describe('Payment Service Tests', () => {
       const mockFile = new File(['test'], 'proof.jpg', { type: 'image/jpeg' });
       const progressCallback = vi.fn();
 
-      mockPaymentService.uploadPaymentProof.mockImplementation(async (orderId, file, onProgress) => {
-        // Simulate progress updates
-        for (let i = 0; i <= 100; i += 25) {
-          onProgress?.(i);
-          await new Promise(resolve => setTimeout(resolve, 10));
+      mockPaymentService.uploadPaymentProof.mockImplementation(
+        async (orderId, file, onProgress) => {
+          // Simulate progress updates
+          for (let i = 0; i <= 100; i += 25) {
+            onProgress?.(i);
+            await new Promise((resolve) => setTimeout(resolve, 10));
+          }
+          return { orderId, status: 'uploaded' };
         }
-        return { orderId, status: 'uploaded' };
-      });
+      );
 
       await mockPaymentService.uploadPaymentProof('order_123', mockFile, progressCallback);
 
@@ -260,7 +268,9 @@ describe('Payment Service Tests', () => {
       const errorMessage = 'Upload failed';
       mockPaymentService.uploadPaymentProof.mockRejectedValue(new Error(errorMessage));
 
-      await expect(mockPaymentService.uploadPaymentProof('order_123', mockFile)).rejects.toThrow(errorMessage);
+      await expect(mockPaymentService.uploadPaymentProof('order_123', mockFile)).rejects.toThrow(
+        errorMessage
+      );
     });
   });
 
@@ -286,7 +296,9 @@ describe('Payment Service Tests', () => {
       authError.name = 'AuthenticationError';
       mockPaymentService.createOrder.mockRejectedValue(authError);
 
-      await expect(mockPaymentService.createOrder(mockOrder)).rejects.toThrow('Authentication failed');
+      await expect(mockPaymentService.createOrder(mockOrder)).rejects.toThrow(
+        'Authentication failed'
+      );
     });
   });
 
@@ -301,7 +313,7 @@ describe('Payment Service Tests', () => {
     it('should validate customer email', async () => {
       const invalidOrder = {
         ...mockOrder,
-        customer: { ...mockOrder.customer, email: 'invalid-email' }
+        customer: { ...mockOrder.customer, email: 'invalid-email' },
       };
       mockPaymentService.createOrder.mockRejectedValue(new Error('Invalid email'));
 
@@ -311,11 +323,13 @@ describe('Payment Service Tests', () => {
     it('should validate phone number format', async () => {
       const invalidOrder = {
         ...mockOrder,
-        customer: { ...mockOrder.customer, phone: '123' }
+        customer: { ...mockOrder.customer, phone: '123' },
       };
       mockPaymentService.createOrder.mockRejectedValue(new Error('Invalid phone number'));
 
-      await expect(mockPaymentService.createOrder(invalidOrder)).rejects.toThrow('Invalid phone number');
+      await expect(mockPaymentService.createOrder(invalidOrder)).rejects.toThrow(
+        'Invalid phone number'
+      );
     });
   });
 
@@ -329,7 +343,7 @@ describe('Payment Service Tests', () => {
       // Step 2: Check payment status
       const mockStatuses = [
         { status: 'created', timestamp: new Date().toISOString() },
-        { status: 'success', timestamp: new Date().toISOString() }
+        { status: 'success', timestamp: new Date().toISOString() },
       ];
       mockPaymentService.getPaymentStatus.mockResolvedValue(mockStatuses);
       const statuses = await mockPaymentService.getPaymentStatus(order.order_id);
@@ -339,7 +353,7 @@ describe('Payment Service Tests', () => {
       const mockVerification = {
         status: 'success',
         order_id: order.order_id,
-        transaction_id: 'txn_123'
+        transaction_id: 'txn_123',
       };
       mockPaymentService.verifyPayment.mockResolvedValue(mockVerification);
       const verification = await mockPaymentService.verifyPayment(order.order_id);
@@ -356,12 +370,12 @@ describe('Payment Service Tests', () => {
         refund_id: 'refund_123',
         order_id: order.order_id,
         amount: mockOrder.amount,
-        status: 'processed'
+        status: 'processed',
       };
       mockPaymentService.refundPayment.mockResolvedValue(mockRefund);
       const refund = await mockPaymentService.refundPayment(order.order_id, {
         reason: 'Customer request',
-        amount: mockOrder.amount
+        amount: mockOrder.amount,
       });
 
       expect(refund.status).toBe('processed');
@@ -378,7 +392,7 @@ describe('Payment Service Performance', () => {
     };
 
     mockPaymentService.createOrder.mockImplementation(async () => {
-      await new Promise(resolve => setTimeout(resolve, 100)); // Simulate 100ms delay
+      await new Promise((resolve) => setTimeout(resolve, 100)); // Simulate 100ms delay
       return { payment_session_id: 'session_123' };
     });
 
@@ -388,7 +402,7 @@ describe('Payment Service Performance', () => {
       amount: 99900,
       currency: 'INR',
       items: [],
-      customer: { email: 'test@example.com', phone: '+919876543210' }
+      customer: { email: 'test@example.com', phone: '+919876543210' },
     });
     const endTime = Date.now();
 
@@ -408,14 +422,14 @@ describe('Payment Service Performance', () => {
         amount: 99900,
         currency: 'INR',
         items: [],
-        customer: { email: 'test@example.com', phone: '+919876543210' }
+        customer: { email: 'test@example.com', phone: '+919876543210' },
       })
     );
 
     const results = await Promise.all(promises);
 
     expect(results).toHaveLength(10);
-    results.forEach(result => {
+    results.forEach((result) => {
       expect(result.payment_session_id).toBeDefined();
     });
   });

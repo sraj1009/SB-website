@@ -1,18 +1,8 @@
 // Review Service for SINGGLEBEE Frontend
 
 import apiClient from './api-client';
-import { 
-  ApiResponse, 
-  Review, 
-  CreateReviewRequest, 
-  UpdateReviewRequest
-} from '../types/api';
-import { 
-  NotFoundError, 
-  ValidationError, 
-  ErrorHandler,
-  createError
-} from '../utils/error-handler';
+import { ApiResponse, Review, CreateReviewRequest, UpdateReviewRequest } from '../types/api';
+import { NotFoundError, ValidationError, ErrorHandler, createError } from '../utils/error-handler';
 
 class ReviewService {
   private static instance: ReviewService;
@@ -25,13 +15,16 @@ class ReviewService {
   }
 
   // Get reviews for a product
-  async getReviews(productId: string, filters: {
-    page?: number;
-    limit?: number;
-    sortBy?: 'newest' | 'oldest' | 'rating-high' | 'rating-low' | 'helpful';
-    rating?: number;
-    verifiedOnly?: boolean;
-  } = {}): Promise<{
+  async getReviews(
+    productId: string,
+    filters: {
+      page?: number;
+      limit?: number;
+      sortBy?: 'newest' | 'oldest' | 'rating-high' | 'rating-low' | 'helpful';
+      rating?: number;
+      verifiedOnly?: boolean;
+    } = {}
+  ): Promise<{
     reviews: Review[];
     pagination: {
       page: number;
@@ -52,9 +45,9 @@ class ReviewService {
       }
 
       const response = await apiClient.get(`/products/${productId}/reviews`, {
-        params: this.buildReviewQueryParams(filters)
+        params: this.buildReviewQueryParams(filters),
       });
-      
+
       if (!response.success || !response.data) {
         throw createError(
           response.error?.message || 'Failed to fetch reviews',
@@ -79,7 +72,7 @@ class ReviewService {
       this.validateCreateReviewRequest(reviewData);
 
       const response = await apiClient.post<Review>(`/products/${productId}/reviews`, reviewData);
-      
+
       if (!response.success || !response.data) {
         throw createError(
           response.error?.message || 'Failed to create review',
@@ -104,7 +97,7 @@ class ReviewService {
       this.validateUpdateReviewRequest(reviewData);
 
       const response = await apiClient.patch<Review>(`/reviews/${reviewId}`, reviewData);
-      
+
       if (!response.success || !response.data) {
         throw createError(
           response.error?.message || 'Failed to update review',
@@ -127,7 +120,7 @@ class ReviewService {
       }
 
       const response = await apiClient.delete(`/reviews/${reviewId}`);
-      
+
       if (!response.success) {
         throw createError(
           response.error?.message || 'Failed to delete review',
@@ -148,7 +141,7 @@ class ReviewService {
       }
 
       const response = await apiClient.post<Review>(`/reviews/${reviewId}/helpful`);
-      
+
       if (!response.success || !response.data) {
         throw createError(
           response.error?.message || 'Failed to mark review as helpful',
@@ -171,7 +164,7 @@ class ReviewService {
       }
 
       const response = await apiClient.delete<Review>(`/reviews/${reviewId}/helpful`);
-      
+
       if (!response.success || !response.data) {
         throw createError(
           response.error?.message || 'Failed to remove helpful vote',
@@ -198,9 +191,9 @@ class ReviewService {
       }
 
       const response = await apiClient.post(`/reviews/${reviewId}/report`, {
-        reason: reason.trim()
+        reason: reason.trim(),
       });
-      
+
       if (!response.success) {
         throw createError(
           response.error?.message || 'Failed to report review',
@@ -214,12 +207,14 @@ class ReviewService {
   }
 
   // Get user's reviews
-  async getUserReviews(filters: {
-    page?: number;
-    limit?: number;
-    productId?: string;
-    rating?: number;
-  } = {}): Promise<{
+  async getUserReviews(
+    filters: {
+      page?: number;
+      limit?: number;
+      productId?: string;
+      rating?: number;
+    } = {}
+  ): Promise<{
     reviews: Review[];
     pagination: {
       page: number;
@@ -230,9 +225,9 @@ class ReviewService {
   }> {
     try {
       const response = await apiClient.get('/user/reviews', {
-        params: this.buildUserReviewQueryParams(filters)
+        params: this.buildUserReviewQueryParams(filters),
       });
-      
+
       if (!response.success || !response.data) {
         throw createError(
           response.error?.message || 'Failed to fetch user reviews',
@@ -255,7 +250,7 @@ class ReviewService {
       }
 
       const response = await apiClient.get<Review>(`/reviews/${reviewId}`);
-      
+
       if (!response.success || !response.data) {
         throw new NotFoundError('Review', reviewId);
       }
@@ -267,11 +262,13 @@ class ReviewService {
   }
 
   // Get review statistics for admin
-  async getReviewStats(filters: {
-    startDate?: string;
-    endDate?: string;
-    productId?: string;
-  } = {}): Promise<{
+  async getReviewStats(
+    filters: {
+      startDate?: string;
+      endDate?: string;
+      productId?: string;
+    } = {}
+  ): Promise<{
     totalReviews: number;
     averageRating: number;
     ratingDistribution: Record<number, number>;
@@ -290,9 +287,9 @@ class ReviewService {
   }> {
     try {
       const response = await apiClient.get('/admin/reviews/stats', {
-        params: filters
+        params: filters,
       });
-      
+
       if (!response.success || !response.data) {
         throw createError(
           response.error?.message || 'Failed to fetch review statistics',
@@ -315,7 +312,7 @@ class ReviewService {
       }
 
       const response = await apiClient.post<Review>(`/admin/reviews/${reviewId}/approve`);
-      
+
       if (!response.success || !response.data) {
         throw createError(
           response.error?.message || 'Failed to approve review',
@@ -342,9 +339,9 @@ class ReviewService {
       }
 
       const response = await apiClient.post<Review>(`/admin/reviews/${reviewId}/reject`, {
-        reason: reason.trim()
+        reason: reason.trim(),
       });
-      
+
       if (!response.success || !response.data) {
         throw createError(
           response.error?.message || 'Failed to reject review',
@@ -375,9 +372,9 @@ class ReviewService {
       }
 
       const apiResponse = await apiClient.post<Review>(`/admin/reviews/${reviewId}/respond`, {
-        response: response.trim()
+        response: response.trim(),
       });
-      
+
       if (!apiResponse.success || !apiResponse.data) {
         throw createError(
           apiResponse.error?.message || 'Failed to respond to review',
@@ -393,10 +390,12 @@ class ReviewService {
   }
 
   // Get pending reviews (admin only)
-  async getPendingReviews(filters: {
-    page?: number;
-    limit?: number;
-  } = {}): Promise<{
+  async getPendingReviews(
+    filters: {
+      page?: number;
+      limit?: number;
+    } = {}
+  ): Promise<{
     reviews: Review[];
     pagination: {
       page: number;
@@ -409,10 +408,10 @@ class ReviewService {
       const response = await apiClient.get('/admin/reviews/pending', {
         params: {
           page: filters.page || 1,
-          limit: filters.limit || 20
-        }
+          limit: filters.limit || 20,
+        },
       });
-      
+
       if (!response.success || !response.data) {
         throw createError(
           response.error?.message || 'Failed to fetch pending reviews',
@@ -522,7 +521,7 @@ class ReviewService {
       }
 
       const response = await apiClient.get(`/products/${productId}/can-review`);
-      
+
       if (!response.success || !response.data) {
         throw createError(
           response.error?.message || 'Failed to check review eligibility',
@@ -551,7 +550,7 @@ class ReviewService {
       }
 
       const response = await apiClient.get(`/products/${productId}/review-summary`);
-      
+
       if (!response.success || !response.data) {
         throw createError(
           response.error?.message || 'Failed to fetch review summary',
@@ -581,7 +580,7 @@ class ReviewService {
     const hasHalf = rating % 1 >= 0.5;
     const half = hasHalf ? 1 : 0;
     const empty = 5 - full - half;
-    
+
     return { full, half, empty };
   }
 
@@ -617,7 +616,10 @@ class ReviewService {
   getHelpfulPercentage(review: Review): number {
     if (review.helpfulCount === 0) return 0;
     // This would need total votes count from API
-    return Math.min(100, Math.round((review.helpfulCount / Math.max(1, review.helpfulCount)) * 100));
+    return Math.min(
+      100,
+      Math.round((review.helpfulCount / Math.max(1, review.helpfulCount)) * 100)
+    );
   }
 }
 

@@ -139,7 +139,14 @@ export interface UpdateCartRequest {
 }
 
 // Order Types
-export type OrderStatus = 'pending' | 'verified' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'returned';
+export type OrderStatus =
+  | 'pending'
+  | 'verified'
+  | 'processing'
+  | 'shipped'
+  | 'delivered'
+  | 'cancelled'
+  | 'returned';
 
 export type PaymentMethod = 'UPI' | 'GPay' | 'PhonePe' | 'COD' | 'Cashfree';
 

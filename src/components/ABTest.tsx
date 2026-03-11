@@ -82,9 +82,9 @@ export const ABTestProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               changes: {
                 styles: {
                   backgroundColor: '#F59E0B',
-                  hoverColor: '#D97706'
-                }
-              }
+                  hoverColor: '#D97706',
+                },
+              },
             },
             {
               id: 'variant_green',
@@ -94,18 +94,18 @@ export const ABTestProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               changes: {
                 styles: {
                   backgroundColor: '#10B981',
-                  hoverColor: '#059669'
-                }
-              }
-            }
+                  hoverColor: '#059669',
+                },
+              },
+            },
           ],
           trafficAllocation: [50, 50],
           startDate: '2024-03-10',
           targetAudience: {
-            newUserOnly: false
+            newUserOnly: false,
           },
           successMetrics: ['checkout_conversion', 'revenue_per_user'],
-          status: 'running'
+          status: 'running',
         },
         {
           id: 'price_display',
@@ -119,9 +119,9 @@ export const ABTestProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               weight: 33,
               changes: {
                 content: {
-                  priceFormat: 'simple'
-                }
-              }
+                  priceFormat: 'simple',
+                },
+              },
             },
             {
               id: 'variant_decimal',
@@ -130,9 +130,9 @@ export const ABTestProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               weight: 33,
               changes: {
                 content: {
-                  priceFormat: 'decimal'
-                }
-              }
+                  priceFormat: 'decimal',
+                },
+              },
             },
             {
               id: 'variant_comma',
@@ -141,16 +141,16 @@ export const ABTestProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               weight: 34,
               changes: {
                 content: {
-                  priceFormat: 'comma'
-                }
-              }
-            }
+                  priceFormat: 'comma',
+                },
+              },
+            },
           ],
           trafficAllocation: [33, 33, 34],
           startDate: '2024-03-10',
           successMetrics: ['add_to_cart_rate', 'conversion_rate'],
-          status: 'running'
-        }
+          status: 'running',
+        },
       ];
 
       setActiveTests(tests);
@@ -193,7 +193,7 @@ export const ABTestProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     // Assign variant based on traffic allocation
     const random = Math.random() * 100;
     let cumulative = 0;
-    
+
     for (let i = 0; i < test.variants.length; i++) {
       cumulative += test.trafficAllocation[i];
       if (random <= cumulative) {
@@ -201,14 +201,14 @@ export const ABTestProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         const newVariants = { ...userVariants, [testId]: variantId };
         setUserVariants(newVariants);
         saveUserVariants(newVariants);
-        
+
         // Track test assignment
         analytics.track('ab_test_assigned', {
           test_id: testId,
           variant_id: variantId,
-          test_name: test.name
+          test_name: test.name,
         });
-        
+
         return variantId;
       }
     }
@@ -219,12 +219,12 @@ export const ABTestProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const isUserEligible = (test: ABTestConfig): boolean => {
     // Check test status
     if (test.status !== 'running') return false;
-    
+
     // Check date range
     const now = new Date();
     const start = new Date(test.startDate);
     if (now < start) return false;
-    
+
     if (test.endDate) {
       const end = new Date(test.endDate);
       if (now > end) return false;
@@ -240,7 +240,7 @@ export const ABTestProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const getVariant = (testId: string): string | null => {
-    const test = activeTests.find(t => t.id === testId);
+    const test = activeTests.find((t) => t.id === testId);
     if (!test) return null;
 
     return assignVariant(testId, test);
@@ -254,7 +254,7 @@ export const ABTestProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       test_id: testId,
       variant_id: variantId,
       conversion_value: value,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
 
     // In production, send to A/B testing API
@@ -262,7 +262,7 @@ export const ABTestProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const isTestRunning = (testId: string): boolean => {
-    const test = activeTests.find(t => t.id === testId);
+    const test = activeTests.find((t) => t.id === testId);
     return test?.status === 'running' || false;
   };
 
@@ -274,14 +274,10 @@ export const ABTestProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     getVariant,
     trackConversion,
     isTestRunning,
-    getUserTests
+    getUserTests,
   };
 
-  return (
-    <ABTestContext.Provider value={contextValue}>
-      {children}
-    </ABTestContext.Provider>
-  );
+  return <ABTestContext.Provider value={contextValue}>{children}</ABTestContext.Provider>;
 };
 
 // Hook to use A/B testing
@@ -300,7 +296,7 @@ export const ABTestWrapper: React.FC<{
   fallback?: React.ReactNode;
 }> = ({ testId, children, fallback }) => {
   const { getVariant, isTestRunning } = useABTest();
-  
+
   if (!isTestRunning(testId)) {
     return <>{fallback || children('control')}</>;
   }
@@ -335,21 +331,21 @@ export const calculateSignificance = (
   // Simplified z-score calculation
   const pooledRate = (controlConversions + variantConversions) / (controlSize + variantSize);
   const standardError = Math.sqrt(
-    pooledRate * (1 - pooledRate) * (1/controlSize + 1/variantSize)
+    pooledRate * (1 - pooledRate) * (1 / controlSize + 1 / variantSize)
   );
-  
+
   const zScore = Math.abs((variantRate - controlRate) / standardError);
-  
+
   // Simplified p-value calculation
   const pValue = 2 * (1 - normalCDF(zScore));
-  
+
   const zCritical = confidenceLevel === 0.95 ? 1.96 : 2.576;
   const significant = zScore > zCritical;
-  
+
   const marginOfError = zCritical * standardError;
   const confidenceInterval: [number, number] = [
-    ((variantRate - controlRate) - marginOfError) * 100,
-    ((variantRate - controlRate) + marginOfError) * 100
+    (variantRate - controlRate - marginOfError) * 100,
+    (variantRate - controlRate + marginOfError) * 100,
   ];
 
   return {
@@ -358,7 +354,7 @@ export const calculateSignificance = (
     variantRate: variantRate * 100,
     uplift,
     confidenceInterval,
-    pValue
+    pValue,
   };
 };
 
@@ -375,7 +371,7 @@ const normalCDF = (x: number): number => {
   x = Math.abs(x) / Math.sqrt(2.0);
 
   const t = 1.0 / (1.0 + p * x);
-  const y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
+  const y = 1.0 - ((((a5 * t + a4) * t + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
 
   return 0.5 * (1.0 + sign * y);
 };
@@ -389,14 +385,13 @@ export const calculateSampleSize = (
 ): number => {
   const zAlpha = confidenceLevel === 0.95 ? 1.96 : 2.576;
   const zBeta = power === 0.8 ? 0.84 : 1.28;
-  
+
   const p1 = baselineRate;
   const p2 = baselineRate + minimumDetectableEffect;
   const pBar = (p1 + p2) / 2;
-  
+
   const sampleSize = Math.ceil(
-    (2 * pBar * (1 - pBar) * Math.pow(zAlpha + zBeta, 2)) /
-    Math.pow(p2 - p1, 2)
+    (2 * pBar * (1 - pBar) * Math.pow(zAlpha + zBeta, 2)) / Math.pow(p2 - p1, 2)
   );
 
   return sampleSize;

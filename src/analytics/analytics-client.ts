@@ -32,7 +32,7 @@ class AnalyticsClient {
         // Initialize real analytics service
         // await this.initializeRealAnalytics();
       }
-      
+
       this.isInitialized = true;
       this.processQueue();
     } catch (error) {
@@ -54,7 +54,7 @@ class AnalyticsClient {
       ...event,
       timestamp: event.timestamp || Date.now(),
       user_id: this.userId,
-      session_id: this.sessionId
+      session_id: this.sessionId,
     };
 
     if (process.env.NODE_ENV === 'development') {
@@ -68,7 +68,7 @@ class AnalyticsClient {
   public track(event: string, properties?: Record<string, any>): void {
     const eventData: AnalyticsEvent = {
       event,
-      properties
+      properties,
     };
 
     if (this.isInitialized) {
@@ -80,7 +80,7 @@ class AnalyticsClient {
 
   public identify(userId: string, traits?: Record<string, any>): void {
     this.userId = userId;
-    
+
     if (process.env.NODE_ENV === 'development') {
       console.log('👤 User identified:', { userId, traits });
     } else {

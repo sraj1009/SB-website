@@ -37,10 +37,7 @@ interface AdvancedSearchProps {
   onProductClick: (product: Product) => void;
 }
 
-const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
-  onSearch,
-  onProductClick
-}) => {
+const AdvancedSearch: React.FC<AdvancedSearchProps> = ({ onSearch, onProductClick }) => {
   const [query, setQuery] = useState('');
   const [filters, setFilters] = useState<SearchFilters>({
     category: [],
@@ -49,7 +46,7 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
     language: [],
     rating: 0,
     inStock: false,
-    freeShipping: false
+    freeShipping: false,
   });
   const [showFilters, setShowFilters] = useState(false);
   const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
@@ -60,18 +57,20 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
 
   // Categories
   const categories = [
-    'Books', 'Poems', 'Rhymes', 'Stories', 'Educational Toys', 'Art Supplies', 'Flash Cards'
+    'Books',
+    'Poems',
+    'Rhymes',
+    'Stories',
+    'Educational Toys',
+    'Art Supplies',
+    'Flash Cards',
   ];
 
   // Age groups
-  const ageGroups = [
-    '0-2 years', '3-5 years', '6-8 years', '9-12 years', '13+ years'
-  ];
+  const ageGroups = ['0-2 years', '3-5 years', '6-8 years', '9-12 years', '13+ years'];
 
   // Languages
-  const languages = [
-    'Tamil', 'English', 'Bilingual', 'Hindi'
-  ];
+  const languages = ['Tamil', 'English', 'Bilingual', 'Hindi'];
 
   // Load trending searches and recent searches
   useEffect(() => {
@@ -98,7 +97,9 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
   const debouncedGetSuggestions = useCallback(
     debounce(async (searchQuery: string) => {
       try {
-        const response = await fetch(`/api/v1/search/suggestions?q=${encodeURIComponent(searchQuery)}`);
+        const response = await fetch(
+          `/api/v1/search/suggestions?q=${encodeURIComponent(searchQuery)}`
+        );
         if (response.ok) {
           const data = await response.json();
           setSuggestions(data.suggestions || []);
@@ -116,13 +117,13 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
         body: JSON.stringify({
           query: searchQuery,
           userHistory: recentSearches,
-          preferences: filters
-        })
+          preferences: filters,
+        }),
       });
 
       if (response.ok) {
@@ -154,7 +155,7 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
   };
 
   const saveRecentSearch = (searchTerm: string) => {
-    const updated = [searchTerm, ...recentSearches.filter(s => s !== searchTerm)].slice(0, 10);
+    const updated = [searchTerm, ...recentSearches.filter((s) => s !== searchTerm)].slice(0, 10);
     setRecentSearches(updated);
     localStorage.setItem('recentSearches', JSON.stringify(updated));
   };
@@ -174,9 +175,9 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
   };
 
   const handleFilterChange = (filterType: keyof SearchFilters, value: any) => {
-    setFilters(prev => ({
+    setFilters((prev) => ({
       ...prev,
-      [filterType]: value
+      [filterType]: value,
     }));
   };
 
@@ -188,7 +189,7 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
       language: [],
       rating: 0,
       inStock: false,
-      freeShipping: false
+      freeShipping: false,
     });
   };
 
@@ -209,7 +210,7 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
     };
   }
 
-  const hasActiveFilters = Object.values(filters).some(value => {
+  const hasActiveFilters = Object.values(filters).some((value) => {
     if (Array.isArray(value)) return value.length > 0;
     if (Array.isArray(value) && value.length === 2) return value[0] > 0 || value[1] < 5000;
     return value !== false && value !== 0;
@@ -241,7 +242,7 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
               </button>
             )}
           </div>
-          
+
           <button
             onClick={() => setShowFilters(!showFilters)}
             className={`px-4 py-3 rounded-lg border transition-colors ${
@@ -253,13 +254,15 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
             <Filter className="w-5 h-5" />
             {hasActiveFilters && (
               <span className="ml-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-                {Object.values(filters).filter(v => 
-                  Array.isArray(v) ? v.length > 0 : v !== false && v !== 0
-                ).length}
+                {
+                  Object.values(filters).filter((v) =>
+                    Array.isArray(v) ? v.length > 0 : v !== false && v !== 0
+                  ).length
+                }
               </span>
             )}
           </button>
-          
+
           <button
             onClick={handleSearch}
             className="px-6 py-3 bg-yellow-500 text-black rounded-lg hover:bg-yellow-600 transition-colors"
@@ -269,76 +272,79 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
         </div>
 
         {/* Search Suggestions Dropdown */}
-        {showSuggestions && (suggestions.length > 0 || recentSearches.length > 0 || trendingSearches.length > 0) && (
-          <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
-            {/* Suggestions */}
-            {suggestions.length > 0 && (
-              <div className="p-4 border-b border-gray-200">
-                <h3 className="text-sm font-medium text-gray-700 mb-2">Suggestions</h3>
-                {suggestions.map((suggestion, index) => (
-                  <button
-                    key={index}
-                    onClick={() => handleSuggestionClick(suggestion)}
-                    className="w-full text-left px-3 py-2 hover:bg-gray-50 rounded flex items-center justify-between group"
-                  >
-                    <div className="flex items-center gap-2">
-                      <Search className="w-4 h-4 text-gray-400" />
-                      <span>{suggestion.text}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {suggestion.type === 'trending' && <TrendingUp className="w-4 h-4 text-green-500" />}
-                      {suggestion.count && (
-                        <span className="text-xs text-gray-500">{suggestion.count} results</span>
-                      )}
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* Recent Searches */}
-            {recentSearches.length > 0 && (
-              <div className="p-4 border-b border-gray-200">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-sm font-medium text-gray-700">Recent Searches</h3>
-                  <button
-                    onClick={clearRecentSearches}
-                    className="text-xs text-gray-500 hover:text-gray-700"
-                  >
-                    Clear
-                  </button>
+        {showSuggestions &&
+          (suggestions.length > 0 || recentSearches.length > 0 || trendingSearches.length > 0) && (
+            <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
+              {/* Suggestions */}
+              {suggestions.length > 0 && (
+                <div className="p-4 border-b border-gray-200">
+                  <h3 className="text-sm font-medium text-gray-700 mb-2">Suggestions</h3>
+                  {suggestions.map((suggestion, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleSuggestionClick(suggestion)}
+                      className="w-full text-left px-3 py-2 hover:bg-gray-50 rounded flex items-center justify-between group"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Search className="w-4 h-4 text-gray-400" />
+                        <span>{suggestion.text}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {suggestion.type === 'trending' && (
+                          <TrendingUp className="w-4 h-4 text-green-500" />
+                        )}
+                        {suggestion.count && (
+                          <span className="text-xs text-gray-500">{suggestion.count} results</span>
+                        )}
+                      </div>
+                    </button>
+                  ))}
                 </div>
-                {recentSearches.map((search, index) => (
-                  <button
-                    key={index}
-                    onClick={() => handleSuggestionClick({ text: search, type: 'product' })}
-                    className="w-full text-left px-3 py-2 hover:bg-gray-50 rounded flex items-center gap-2"
-                  >
-                    <Clock className="w-4 h-4 text-gray-400" />
-                    <span>{search}</span>
-                  </button>
-                ))}
-              </div>
-            )}
+              )}
 
-            {/* Trending Searches */}
-            {trendingSearches.length > 0 && (
-              <div className="p-4">
-                <h3 className="text-sm font-medium text-gray-700 mb-2">Trending Searches</h3>
-                {trendingSearches.map((search, index) => (
-                  <button
-                    key={index}
-                    onClick={() => handleSuggestionClick({ text: search, type: 'trending' })}
-                    className="w-full text-left px-3 py-2 hover:bg-gray-50 rounded flex items-center gap-2"
-                  >
-                    <TrendingUp className="w-4 h-4 text-green-500" />
-                    <span>{search}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+              {/* Recent Searches */}
+              {recentSearches.length > 0 && (
+                <div className="p-4 border-b border-gray-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-sm font-medium text-gray-700">Recent Searches</h3>
+                    <button
+                      onClick={clearRecentSearches}
+                      className="text-xs text-gray-500 hover:text-gray-700"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                  {recentSearches.map((search, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleSuggestionClick({ text: search, type: 'product' })}
+                      className="w-full text-left px-3 py-2 hover:bg-gray-50 rounded flex items-center gap-2"
+                    >
+                      <Clock className="w-4 h-4 text-gray-400" />
+                      <span>{search}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Trending Searches */}
+              {trendingSearches.length > 0 && (
+                <div className="p-4">
+                  <h3 className="text-sm font-medium text-gray-700 mb-2">Trending Searches</h3>
+                  {trendingSearches.map((search, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleSuggestionClick({ text: search, type: 'trending' })}
+                      className="w-full text-left px-3 py-2 hover:bg-gray-50 rounded flex items-center gap-2"
+                    >
+                      <TrendingUp className="w-4 h-4 text-green-500" />
+                      <span>{search}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
       </div>
 
       {/* Filters Panel */}
@@ -369,7 +375,7 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
             <div>
               <h4 className="font-medium mb-3">Categories</h4>
               <div className="space-y-2">
-                {categories.map(category => (
+                {categories.map((category) => (
                   <label key={category} className="flex items-center gap-2">
                     <input
                       type="checkbox"
@@ -378,7 +384,10 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
                         if (e.target.checked) {
                           handleFilterChange('category', [...filters.category, category]);
                         } else {
-                          handleFilterChange('category', filters.category.filter(c => c !== category));
+                          handleFilterChange(
+                            'category',
+                            filters.category.filter((c) => c !== category)
+                          );
                         }
                       }}
                       className="rounded border-gray-300 text-yellow-500 focus:ring-yellow-500"
@@ -393,7 +402,7 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
             <div>
               <h4 className="font-medium mb-3">Age Group</h4>
               <div className="space-y-2">
-                {ageGroups.map(age => (
+                {ageGroups.map((age) => (
                   <label key={age} className="flex items-center gap-2">
                     <input
                       type="checkbox"
@@ -402,7 +411,10 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
                         if (e.target.checked) {
                           handleFilterChange('ageGroup', [...filters.ageGroup, age]);
                         } else {
-                          handleFilterChange('ageGroup', filters.ageGroup.filter(a => a !== age));
+                          handleFilterChange(
+                            'ageGroup',
+                            filters.ageGroup.filter((a) => a !== age)
+                          );
                         }
                       }}
                       className="rounded border-gray-300 text-yellow-500 focus:ring-yellow-500"
@@ -417,7 +429,7 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
             <div>
               <h4 className="font-medium mb-3">Language</h4>
               <div className="space-y-2">
-                {languages.map(language => (
+                {languages.map((language) => (
                   <label key={language} className="flex items-center gap-2">
                     <input
                       type="checkbox"
@@ -426,7 +438,10 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
                         if (e.target.checked) {
                           handleFilterChange('language', [...filters.language, language]);
                         } else {
-                          handleFilterChange('language', filters.language.filter(l => l !== language));
+                          handleFilterChange(
+                            'language',
+                            filters.language.filter((l) => l !== language)
+                          );
                         }
                       }}
                       className="rounded border-gray-300 text-yellow-500 focus:ring-yellow-500"
@@ -444,7 +459,12 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
                 <input
                   type="number"
                   value={filters.priceRange[0]}
-                  onChange={(e) => handleFilterChange('priceRange', [parseInt(e.target.value) || 0, filters.priceRange[1]])}
+                  onChange={(e) =>
+                    handleFilterChange('priceRange', [
+                      parseInt(e.target.value) || 0,
+                      filters.priceRange[1],
+                    ])
+                  }
                   placeholder="Min"
                   className="w-24 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
                 />
@@ -452,7 +472,12 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
                 <input
                   type="number"
                   value={filters.priceRange[1]}
-                  onChange={(e) => handleFilterChange('priceRange', [filters.priceRange[0], parseInt(e.target.value) || 5000])}
+                  onChange={(e) =>
+                    handleFilterChange('priceRange', [
+                      filters.priceRange[0],
+                      parseInt(e.target.value) || 5000,
+                    ])
+                  }
                   placeholder="Max"
                   className="w-24 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
                 />

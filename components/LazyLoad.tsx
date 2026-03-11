@@ -16,7 +16,7 @@ export const LazyLoad: React.FC<LazyLoadProps> = ({
   delay = 200,
   rootMargin = '50px',
   threshold = 0.1,
-  children
+  children,
 }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [shouldLoad, setShouldLoad] = useState(false);
@@ -43,7 +43,7 @@ export const LazyLoad: React.FC<LazyLoadProps> = ({
       },
       {
         rootMargin,
-        threshold
+        threshold,
       }
     );
 
@@ -70,26 +70,32 @@ export const LazyLoad: React.FC<LazyLoadProps> = ({
 };
 
 // Lazy loaded components
-export const LazyProductCard = React.lazy(() => 
-  import('./ProductCard').then(module => ({ default: module.default }))
+export const LazyProductCard = React.lazy(() =>
+  import('./ProductCard').then((module) => ({ default: module.default }))
 );
 
 // Note: ProductList, Checkout, UserProfile components don't exist yet
 // These are placeholders for future implementation
-export const LazyProductList = React.lazy(() => 
-  import('./ProductList').catch(() => ({ default: () => React.createElement('div', null, 'ProductList coming soon') }))
+export const LazyProductList = React.lazy(() =>
+  import('./ProductList').catch(() => ({
+    default: () => React.createElement('div', null, 'ProductList coming soon'),
+  }))
 );
 
-export const LazyCheckout = React.lazy(() => 
-  import('./Checkout').catch(() => ({ default: () => React.createElement('div', null, 'Checkout coming soon') }))
+export const LazyCheckout = React.lazy(() =>
+  import('./Checkout').catch(() => ({
+    default: () => React.createElement('div', null, 'Checkout coming soon'),
+  }))
 );
 
-export const LazyUserProfile = React.lazy(() => 
-  import('./UserProfile').catch(() => ({ default: () => React.createElement('div', null, 'UserProfile coming soon') }))
+export const LazyUserProfile = React.lazy(() =>
+  import('./UserProfile').catch(() => ({
+    default: () => React.createElement('div', null, 'UserProfile coming soon'),
+  }))
 );
 
-export const LazyAdminDashboard = React.lazy(() => 
-  import('./AdminDashboard').then(module => ({ default: module.default }))
+export const LazyAdminDashboard = React.lazy(() =>
+  import('./AdminDashboard').then((module) => ({ default: module.default }))
 );
 
 // Code splitting utility
@@ -110,6 +116,8 @@ export const analyzeBundle = () => {
   if (process.env.NODE_ENV === 'development') {
     // Note: @bundle-analyzer/webpack-bundle-analyzer is not installed
     // This is a placeholder for future bundle analysis
-    console.log('Bundle analyzer placeholder - install @bundle-analyzer/webpack-bundle-analyzer for actual analysis');
+    console.log(
+      'Bundle analyzer placeholder - install @bundle-analyzer/webpack-bundle-analyzer for actual analysis'
+    );
   }
 };

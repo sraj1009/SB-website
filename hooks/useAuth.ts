@@ -2,13 +2,13 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { authService } from '../services/auth.service';
-import { 
-  RegisterRequest, 
-  LoginRequest, 
-  UserProfile, 
+import {
+  RegisterRequest,
+  LoginRequest,
+  UserProfile,
   ChangePasswordRequest,
   PasswordResetRequest,
-  ResetPasswordRequest
+  ResetPasswordRequest,
 } from '../types/api';
 import { toast } from 'react-toastify';
 
@@ -142,7 +142,8 @@ export function useRequestPasswordReset() {
 // Reset password mutation
 export function useResetPassword() {
   return useMutation({
-    mutationFn: (resetData: ResetPasswordRequest) => authService.resetPassword(resetData.token, resetData.newPassword),
+    mutationFn: (resetData: ResetPasswordRequest) =>
+      authService.resetPassword(resetData.token, resetData.newPassword),
     onSuccess: () => {
       toast.success('Password reset successfully! You can now login with your new password.');
     },
@@ -203,18 +204,18 @@ export function useAuth() {
     isAdmin,
     isEmailVerified,
     isLoading: userQuery.isLoading,
-    
+
     // Mutations
     login: login.mutateAsync,
     register: register.mutateAsync,
     logout: logoutMutation.mutateAsync,
     updateProfile: updateProfile.mutateAsync,
-    
+
     // Query state
     isPending: login.isPending || register.isPending || logoutMutation.isPending,
     isError: login.isError || register.isError || logoutMutation.isError,
     error: login.error || register.error || logoutMutation.error,
-    
+
     // Refetch
     refetch: userQuery.refetch,
   };

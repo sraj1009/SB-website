@@ -12,7 +12,7 @@ const InteractiveParticles: React.FC = () => {
 
     let particles: Particle[] = [];
     const particleCount = 65; // Increased for a more "filled" feel
-    let mouse = { x: -1000, y: -1000 };
+    const mouse = { x: -1000, y: -1000 };
 
     class Particle {
       x: number;
@@ -55,17 +55,17 @@ const InteractiveParticles: React.FC = () => {
         this.angle += 0.005;
 
         // Interaction with mouse
-        let dx = mouse.x - this.x;
-        let dy = mouse.y - this.y;
-        let distance = Math.sqrt(dx * dx + dy * dy);
-        let maxDistance = 150;
+        const dx = mouse.x - this.x;
+        const dy = mouse.y - this.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        const maxDistance = 150;
 
         if (distance < maxDistance) {
-          let forceDirectionX = dx / distance;
-          let forceDirectionY = dy / distance;
-          let force = (maxDistance - distance) / maxDistance;
-          let directionX = forceDirectionX * force * this.density;
-          let directionY = forceDirectionY * force * this.density;
+          const forceDirectionX = dx / distance;
+          const forceDirectionY = dy / distance;
+          const force = (maxDistance - distance) / maxDistance;
+          const directionX = forceDirectionX * force * this.density;
+          const directionY = forceDirectionY * force * this.density;
           this.x -= directionX;
           this.y -= directionY;
         }
@@ -81,8 +81,8 @@ const InteractiveParticles: React.FC = () => {
     const init = () => {
       particles = [];
       for (let i = 0; i < particleCount; i++) {
-        let x = Math.random() * canvas.width;
-        let y = Math.random() * canvas.height;
+        const x = Math.random() * canvas.width;
+        const y = Math.random() * canvas.height;
         particles.push(new Particle(x, y));
       }
     };

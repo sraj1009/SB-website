@@ -126,7 +126,7 @@ class AffiliateProgramService {
   private referrals: Map<string, Referral> = new Map();
   private commissions: Map<string, Commission> = new Map();
   private payouts: Map<string, Payout> = new Map();
-  
+
   private readonly tiers: Record<Affiliate['tier'], AffiliateTier> = {
     bronze: {
       name: 'Bronze',
@@ -134,7 +134,7 @@ class AffiliateProgramService {
       minRevenue: 0,
       commissionRate: 5,
       benefits: ['Basic dashboard', 'Standard commission rate'],
-      customCommissionRate: false
+      customCommissionRate: false,
     },
     silver: {
       name: 'Silver',
@@ -142,24 +142,35 @@ class AffiliateProgramService {
       minRevenue: 5000,
       commissionRate: 7,
       benefits: ['Advanced dashboard', 'Higher commission rate', 'Monthly reports'],
-      customCommissionRate: false
+      customCommissionRate: false,
     },
     gold: {
       name: 'Gold',
       minReferrals: 25,
       minRevenue: 15000,
       commissionRate: 10,
-      benefits: ['Premium dashboard', 'Highest commission rate', 'Weekly reports', 'Personal manager'],
-      customCommissionRate: true
+      benefits: [
+        'Premium dashboard',
+        'Highest commission rate',
+        'Weekly reports',
+        'Personal manager',
+      ],
+      customCommissionRate: true,
     },
     platinum: {
       name: 'Platinum',
       minReferrals: 50,
       minRevenue: 50000,
       commissionRate: 12,
-      benefits: ['VIP dashboard', 'Maximum commission rate', 'Real-time reports', 'Dedicated support', 'Custom terms'],
-      customCommissionRate: true
-    }
+      benefits: [
+        'VIP dashboard',
+        'Maximum commission rate',
+        'Real-time reports',
+        'Dedicated support',
+        'Custom terms',
+      ],
+      customCommissionRate: true,
+    },
   };
 
   constructor() {
@@ -241,14 +252,14 @@ class AffiliateProgramService {
       currentBalance: 0,
       totalReferrals: 0,
       activeReferrals: 0,
-      conversionRate: 0
+      conversionRate: 0,
     };
 
     this.affiliates.set(affiliate.id, affiliate);
-    
+
     // In production, save to database
     console.log('Affiliate registered:', affiliate.id);
-    
+
     return affiliate;
   }
 
@@ -276,17 +287,17 @@ class AffiliateProgramService {
       commissionEarned: 0,
       trackingParams: data.trackingParams,
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
     };
 
     this.referrals.set(referral.id, referral);
-    
+
     // Update affiliate stats
     affiliate.totalReferrals++;
     affiliate.updatedAt = new Date();
-    
+
     console.log('Referral created:', referral.id);
-    
+
     return referral;
   }
 
@@ -337,7 +348,7 @@ class AffiliateProgramService {
       commissionRate,
       commissionAmount,
       status: 'pending',
-      createdAt: new Date()
+      createdAt: new Date(),
     };
 
     this.commissions.set(commission.id, commission);
@@ -366,14 +377,20 @@ class AffiliateProgramService {
     let newTier: Affiliate['tier'] | null = null;
 
     // Check from highest to lowest tier
-    if (affiliate.totalReferrals >= this.tiers.platinum.minReferrals && 
-        affiliate.totalEarnings >= this.tiers.platinum.minRevenue) {
+    if (
+      affiliate.totalReferrals >= this.tiers.platinum.minReferrals &&
+      affiliate.totalEarnings >= this.tiers.platinum.minRevenue
+    ) {
       newTier = 'platinum';
-    } else if (affiliate.totalReferrals >= this.tiers.gold.minReferrals && 
-               affiliate.totalEarnings >= this.tiers.gold.minRevenue) {
+    } else if (
+      affiliate.totalReferrals >= this.tiers.gold.minReferrals &&
+      affiliate.totalEarnings >= this.tiers.gold.minRevenue
+    ) {
       newTier = 'gold';
-    } else if (affiliate.totalReferrals >= this.tiers.silver.minReferrals && 
-               affiliate.totalEarnings >= this.tiers.silver.minRevenue) {
+    } else if (
+      affiliate.totalReferrals >= this.tiers.silver.minReferrals &&
+      affiliate.totalEarnings >= this.tiers.silver.minRevenue
+    ) {
       newTier = 'silver';
     }
 
@@ -381,7 +398,7 @@ class AffiliateProgramService {
       affiliate.tier = newTier;
       affiliate.commissionRate = this.tiers[newTier].commissionRate;
       affiliate.updatedAt = new Date();
-      
+
       console.log(`Affiliate ${affiliate.id} upgraded to ${newTier}`);
     }
   }
@@ -393,28 +410,32 @@ class AffiliateProgramService {
       throw new Error('Affiliate not found');
     }
 
-    const affiliateReferrals = Array.from(this.referrals.values())
-      .filter(r => r.affiliateId === affiliateId);
+    const affiliateReferrals = Array.from(this.referrals.values()).filter(
+      (r) => r.affiliateId === affiliateId
+    );
 
-    const affiliateCommissions = Array.from(this.commissions.values())
-      .filter(c => c.affiliateId === affiliateId);
+    const affiliateCommissions = Array.from(this.commissions.values()).filter(
+      (c) => c.affiliateId === affiliateId
+    );
 
-    const pendingReferrals = affiliateReferrals.filter(r => r.status === 'pending').length;
-    const convertedReferrals = affiliateReferrals.filter(r => r.status === 'converted').length;
-    const pendingCommissions = affiliateCommissions.filter(c => c.status === 'pending')
+    const pendingReferrals = affiliateReferrals.filter((r) => r.status === 'pending').length;
+    const convertedReferrals = affiliateReferrals.filter((r) => r.status === 'converted').length;
+    const pendingCommissions = affiliateCommissions
+      .filter((c) => c.status === 'pending')
       .reduce((sum, c) => sum + c.commissionAmount, 0);
-    const paidCommissions = affiliateCommissions.filter(c => c.status === 'paid')
+    const paidCommissions = affiliateCommissions
+      .filter((c) => c.status === 'paid')
       .reduce((sum, c) => sum + c.commissionAmount, 0);
 
-    const conversionRate = affiliate.totalReferrals > 0 
-      ? (convertedReferrals / affiliate.totalReferrals) * 100 
-      : 0;
+    const conversionRate =
+      affiliate.totalReferrals > 0 ? (convertedReferrals / affiliate.totalReferrals) * 100 : 0;
 
-    const averageOrderValue = convertedReferrals > 0
-      ? affiliateReferrals
-          .filter(r => r.status === 'converted' && r.firstOrderAmount)
-          .reduce((sum, r) => sum + (r.firstOrderAmount || 0), 0) / convertedReferrals
-      : 0;
+    const averageOrderValue =
+      convertedReferrals > 0
+        ? affiliateReferrals
+            .filter((r) => r.status === 'converted' && r.firstOrderAmount)
+            .reduce((sum, r) => sum + (r.firstOrderAmount || 0), 0) / convertedReferrals
+        : 0;
 
     return {
       totalReferrals: affiliate.totalReferrals,
@@ -428,7 +449,7 @@ class AffiliateProgramService {
       conversionRate,
       averageOrderValue,
       topPerformingProducts: [], // Would be calculated from order data
-      monthlyEarnings: [] // Would be calculated from commission data
+      monthlyEarnings: [], // Would be calculated from commission data
     };
   }
 
@@ -444,8 +465,9 @@ class AffiliateProgramService {
     }
 
     // Get pending commissions
-    const pendingCommissions = Array.from(this.commissions.values())
-      .filter(c => c.affiliateId === affiliateId && c.status === 'pending');
+    const pendingCommissions = Array.from(this.commissions.values()).filter(
+      (c) => c.affiliateId === affiliateId && c.status === 'pending'
+    );
 
     if (pendingCommissions.length === 0) {
       throw new Error('No pending commissions to payout');
@@ -459,14 +481,14 @@ class AffiliateProgramService {
       amount: totalAmount,
       status: 'pending',
       paymentMethod: affiliate.paymentMethod,
-      commissionIds: pendingCommissions.map(c => c.id),
-      createdAt: new Date()
+      commissionIds: pendingCommissions.map((c) => c.id),
+      createdAt: new Date(),
     };
 
     this.payouts.set(payout.id, payout);
 
     // Update commissions
-    pendingCommissions.forEach(commission => {
+    pendingCommissions.forEach((commission) => {
       commission.status = 'confirmed';
       commission.payoutId = payout.id;
       commission.confirmedAt = new Date();
@@ -497,7 +519,7 @@ class AffiliateProgramService {
       payout.status = 'completed';
       payout.completedAt = new Date();
       payout.transactionId = transactionId || 'txn_' + Math.random().toString(36).substr(2, 9);
-      
+
       console.log('Payout completed:', payoutId);
     }, 5000);
   }
@@ -529,20 +551,17 @@ class AffiliateProgramService {
 
   // Get affiliate referrals
   getAffiliateReferrals(affiliateId: string): Referral[] {
-    return Array.from(this.referrals.values())
-      .filter(r => r.affiliateId === affiliateId);
+    return Array.from(this.referrals.values()).filter((r) => r.affiliateId === affiliateId);
   }
 
   // Get affiliate commissions
   getAffiliateCommissions(affiliateId: string): Commission[] {
-    return Array.from(this.commissions.values())
-      .filter(c => c.affiliateId === affiliateId);
+    return Array.from(this.commissions.values()).filter((c) => c.affiliateId === affiliateId);
   }
 
   // Get affiliate payouts
   getAffiliatePayouts(affiliateId: string): Payout[] {
-    return Array.from(this.payouts.values())
-      .filter(p => p.affiliateId === affiliateId);
+    return Array.from(this.payouts.values()).filter((p) => p.affiliateId === affiliateId);
   }
 
   // Generate affiliate dashboard data
@@ -563,7 +582,7 @@ class AffiliateProgramService {
       referrals: this.getAffiliateReferrals(affiliateId),
       commissions: this.getAffiliateCommissions(affiliateId),
       payouts: this.getAffiliatePayouts(affiliateId),
-      tier: this.tiers[affiliate.tier]
+      tier: this.tiers[affiliate.tier],
     };
   }
 
@@ -588,13 +607,13 @@ class AffiliateProgramService {
       banners: [
         `${baseUrl}/banners/affiliate-${affiliate.code}-1.png`,
         `${baseUrl}/banners/affiliate-${affiliate.code}-2.png`,
-        `${baseUrl}/banners/affiliate-${affiliate.code}-3.png`
+        `${baseUrl}/banners/affiliate-${affiliate.code}-3.png`,
       ],
       socialPosts: [
         `🎉 Discover amazing Tamil educational content for kids at SINGGLEBEE! Use my referral code ${affiliate.code} for special discounts! ${referralLink}`,
         `📚 Looking for quality educational books and poems for your children? Check out SINGGLEBEE! Referral code: ${affiliate.code} ${referralLink}`,
-        `🌟 Give your kids the gift of learning with SINGGLEBEE's premium educational content. Use code ${affiliate.code} at checkout! ${referralLink}`
-      ]
+        `🌟 Give your kids the gift of learning with SINGGLEBEE's premium educational content. Use code ${affiliate.code} at checkout! ${referralLink}`,
+      ],
     };
   }
 }

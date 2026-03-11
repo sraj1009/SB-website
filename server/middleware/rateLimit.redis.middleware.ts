@@ -34,13 +34,11 @@ export const RATE_LIMIT_CONFIGS = {
  */
 export const rateLimitRedis = (config: RateLimitConfig) => {
   const redis = redisClient;
-  
+
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
       // Generate key for rate limiting
-      const key = config.keyGenerator 
-        ? config.keyGenerator(req)
-        : generateRateLimitKey(req);
+      const key = config.keyGenerator ? config.keyGenerator(req) : generateRateLimitKey(req);
 
       // Get current request count
       const current = await redis.get(key);
@@ -66,7 +64,7 @@ export const rateLimitRedis = (config: RateLimitConfig) => {
             message: config.message || 'Too many requests, please try again later.',
             retryAfter: ttl,
             resetTime: resetTime.toISOString(),
-          }
+          },
         });
       }
 
@@ -74,7 +72,7 @@ export const rateLimitRedis = (config: RateLimitConfig) => {
       const pipeline = redis.pipeline();
       pipeline.incr(key);
       pipeline.expire(key, Math.ceil(config.windowMs / 1000));
-      
+
       const results = await pipeline.exec();
       const newRequests = results?.[0]?.[1] || 1;
 
@@ -117,7 +115,7 @@ export const userRateLimit = (config: RateLimitConfig) => {
       }
       // Fallback to IP-based limiting
       return generateRateLimitKey(req);
-    }
+    },
   });
 };
 
@@ -129,32 +127,34 @@ export const ipWhitelistRateLimit = (config: RateLimitConfig, whitelist: string[
     ...config,
     keyGenerator: (req: Request) => {
       const ip = req.ip || req.connection.remoteAddress || 'unknown';
-      
+
       // Skip rate limiting for whitelisted IPs
       if (whitelist.includes(ip)) {
         return ''; // Empty key will be handled below
       }
-      
+
       const endpoint = req.route?.path || req.path || 'unknown';
       return RedisClient.getKeys.rateLimit.endpoint(endpoint, ip);
-    }
+    },
   });
 };
 
 /**
  * Progressive rate limiting (increasingly strict limits)
  */
-export const progressiveRateLimit = (tiers: Array<{
-  windowMs: number;
-  maxRequests: number;
-  trigger?: (req: Request) => boolean;
-}>) => {
+export const progressiveRateLimit = (
+  tiers: Array<{
+    windowMs: number;
+    maxRequests: number;
+    trigger?: (req: Request) => boolean;
+  }>
+) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
       const redis = redisClient;
 
       // Find applicable tier
-      const tier = tiers.find(t => !t.trigger || t.trigger(req)) || tiers[0];
+      const tier = tiers.find((t) => !t.trigger || t.trigger(req)) || tiers[0];
 
       const key = generateRateLimitKey(req) + ':progressive';
       const current = await redis.get(key);
@@ -172,7 +172,7 @@ export const progressiveRateLimit = (tiers: Array<{
             message: 'Too many requests, please try again later.',
             retryAfter: ttl,
             resetTime: resetTime.toISOString(),
-          }
+          },
         });
       }
 
@@ -197,7 +197,10 @@ export const progressiveRateLimit = (tiers: Array<{
 /**
  * Rate limiting for API endpoints with different configurations
  */
-export const createRateLimitMiddleware = (type: keyof typeof RATE_LIMIT_CONFIGS, endpoint: string) => {
+export const createRateLimitMiddleware = (
+  type: keyof typeof RATE_LIMIT_CONFIGS,
+  endpoint: string
+) => {
   const config = RATE_LIMIT_CONFIGS[type];
   const endpointConfig = config[endpoint as keyof typeof config];
 
@@ -210,7 +213,7 @@ export const createRateLimitMiddleware = (type: keyof typeof RATE_LIMIT_CONFIGS,
     keyGenerator: (req: Request) => {
       const ip = req.ip || req.connection.remoteAddress || 'unknown';
       return RedisClient.getKeys.rateLimit.endpoint(`${type}:${endpoint}`, ip);
-    }
+    },
   });
 };
 
@@ -221,7 +224,10 @@ export class RateLimitUtils {
   /**
    * Check current rate limit status for a key
    */
-  static async checkRateLimit(key: string, config: RateLimitConfig): Promise<{
+  static async checkRateLimit(
+    key: string,
+    config: RateLimitConfig
+  ): Promise<{
     remaining: number;
     resetTime: Date;
     isLimited: boolean;
@@ -270,7 +276,7 @@ export class RateLimitUtils {
     try {
       const redis = redisClient;
       const keys = await redis.keys(pattern);
-      
+
       let totalRequests = 0;
       const endpointCounts: Record<string, number> = {};
 
@@ -288,7 +294,7 @@ export class RateLimitUtils {
       }
 
       const topEndpoints = Object.entries(endpointCounts)
-        .sort(([,a], [,b]) => b - a)
+        .sort(([, a], [, b]) => b - a)
         .slice(0, 10)
         .map(([endpoint, requests]) => ({ endpoint, requests }));
 
@@ -314,7 +320,7 @@ export class RateLimitUtils {
     try {
       const redis = redisClient;
       const keys = await redis.keys('singglebee:ratelimit:*');
-      
+
       if (keys.length > 0) {
         const deleted = await redis.del(...keys);
         logger.info(`Cleared ${deleted} rate limit entries`);

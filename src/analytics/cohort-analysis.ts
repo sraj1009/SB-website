@@ -70,7 +70,7 @@ class CohortAnalysis {
       const data = {
         cohorts: Array.from(this.cohorts.entries()),
         users: Array.from(this.users.entries()),
-        weeklyReports: this.weeklyReports
+        weeklyReports: this.weeklyReports,
       };
       localStorage.setItem('cohort_data', JSON.stringify(data));
     } catch (error) {
@@ -80,19 +80,18 @@ class CohortAnalysis {
 
   private scheduleWeeklyReport(): void {
     // Schedule weekly report generation
-    setInterval(() => {
-      this.generateWeeklyReport();
-    }, 7 * 24 * 60 * 60 * 1000); // 7 days
+    setInterval(
+      () => {
+        this.generateWeeklyReport();
+      },
+      7 * 24 * 60 * 60 * 1000
+    ); // 7 days
   }
 
   // Assign user to cohort based on acquisition date
-  assignUserToCohort(
-    userId: string,
-    acquisitionDate: string,
-    channel: string = 'organic'
-  ): void {
+  assignUserToCohort(userId: string, acquisitionDate: string, channel: string = 'organic'): void {
     const cohortId = this.generateCohortId(acquisitionDate);
-    
+
     // Create or get cohort
     if (!this.cohorts.has(cohortId)) {
       this.cohorts.set(cohortId, {
@@ -107,8 +106,8 @@ class CohortAnalysis {
           day1: 0,
           day7: 0,
           day30: 0,
-          day90: 0
-        }
+          day90: 0,
+        },
       });
     }
 
@@ -121,7 +120,7 @@ class CohortAnalysis {
       totalPurchases: 0,
       totalRevenue: 0,
       lastActivityDate: new Date().toISOString(),
-      isActive: true
+      isActive: true,
     };
 
     this.users.set(userId, userCohort);
@@ -135,7 +134,7 @@ class CohortAnalysis {
       user_id: userId,
       cohort_id: cohortId,
       acquisition_date: acquisitionDate,
-      channel
+      channel,
     });
 
     this.saveCohortData();
@@ -151,7 +150,20 @@ class CohortAnalysis {
 
   private getCohortName(date: string): string {
     const d = new Date(date);
-    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const monthNames = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
     const week = Math.ceil(d.getDate() / 7);
     return `${monthNames[d.getMonth()]} Week ${week} ${d.getFullYear()}`;
   }
@@ -170,8 +182,7 @@ class CohortAnalysis {
 
     const now = new Date();
     const daysSinceAcquisition = Math.floor(
-      (now.getTime() - new Date(userCohort.acquisitionDate).getTime()) / 
-      (1000 * 60 * 60 * 24)
+      (now.getTime() - new Date(userCohort.acquisitionDate).getTime()) / (1000 * 60 * 60 * 24)
     );
 
     // Update user activity
@@ -231,7 +242,7 @@ class CohortAnalysis {
   // Calculate retention rates for all cohorts
   calculateRetentionRates(): void {
     const now = new Date();
-    
+
     this.cohorts.forEach((cohort, cohortId) => {
       const cohortDate = new Date(cohort.cohortDate);
       const daysSinceCohort = Math.floor(
@@ -240,8 +251,8 @@ class CohortAnalysis {
 
       // Calculate retention for each period
       const periods = ['D1', 'D7', 'D30', 'D90', 'D180', 'D365'];
-      
-      periods.forEach(period => {
+
+      periods.forEach((period) => {
         const periodDays = this.getPeriodDays(period);
         if (daysSinceCohort >= periodDays) {
           const activeUsers = this.getActiveUsersInCohort(cohortId, periodDays);
@@ -255,12 +266,12 @@ class CohortAnalysis {
 
   private getPeriodDays(period: string): number {
     const periodMap: Record<string, number> = {
-      'D1': 1,
-      'D7': 7,
-      'D30': 30,
-      'D90': 90,
-      'D180': 180,
-      'D365': 365
+      D1: 1,
+      D7: 7,
+      D30: 30,
+      D90: 90,
+      D180: 180,
+      D365: 365,
     };
     return periodMap[period] || 0;
   }
@@ -270,7 +281,7 @@ class CohortAnalysis {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - days);
 
-    this.users.forEach(user => {
+    this.users.forEach((user) => {
       if (user.cohortId === cohortId) {
         const lastActivity = new Date(user.lastActivityDate);
         if (lastActivity >= cutoffDate) {
@@ -289,13 +300,13 @@ class CohortAnalysis {
 
     this.cohorts.forEach((cohort, cohortId) => {
       const periods = ['D1', 'D7', 'D30', 'D90'];
-      
-      periods.forEach(period => {
+
+      periods.forEach((period) => {
         const retentionRate = cohort.retentionRates[period] || 0;
         const repeatPurchaseRate = cohort.repeatPurchaseRates[period] || 0;
         const revenuePerUser = cohort.revenuePerUser[period] || 0;
         const churnRate = 100 - retentionRate;
-        
+
         // Calculate LTV (simplified)
         const lifetimeValue = revenuePerUser * (retentionRate / 100) * 12; // 12 months projection
 
@@ -304,12 +315,14 @@ class CohortAnalysis {
           period,
           retentionRate,
           repeatPurchaseRate,
-          averageOrderValue: cohort.cohortSize > 0 ? 
-            (Object.values(cohort.revenuePerUser).reduce((sum, val) => sum + val, 0) / 
-             Object.keys(cohort.revenuePerUser).length) : 0,
+          averageOrderValue:
+            cohort.cohortSize > 0
+              ? Object.values(cohort.revenuePerUser).reduce((sum, val) => sum + val, 0) /
+                Object.keys(cohort.revenuePerUser).length
+              : 0,
           revenuePerUser,
           churnRate,
-          lifetimeValue
+          lifetimeValue,
         };
 
         report.push(metrics);
@@ -325,7 +338,7 @@ class CohortAnalysis {
       total_cohorts: this.cohorts.size,
       total_users: this.users.size,
       avg_retention_d7: this.calculateAverageRetention('D7'),
-      avg_retention_d30: this.calculateAverageRetention('D30')
+      avg_retention_d30: this.calculateAverageRetention('D30'),
     });
 
     return report;
@@ -333,11 +346,12 @@ class CohortAnalysis {
 
   private calculateAverageRetention(period: string): number {
     const retentionRates = Array.from(this.cohorts.values())
-      .map(cohort => cohort.retentionRates[period] || 0)
-      .filter(rate => rate > 0);
-    
-    return retentionRates.length > 0 ? 
-      retentionRates.reduce((sum, rate) => sum + rate, 0) / retentionRates.length : 0;
+      .map((cohort) => cohort.retentionRates[period] || 0)
+      .filter((rate) => rate > 0);
+
+    return retentionRates.length > 0
+      ? retentionRates.reduce((sum, rate) => sum + rate, 0) / retentionRates.length
+      : 0;
   }
 
   // Get cohort retention heatmap data
@@ -349,16 +363,15 @@ class CohortAnalysis {
     const heatmap = [];
 
     this.cohorts.forEach((cohort, cohortId) => {
-      const periods = ['D1', 'D7', 'D30', 'D90', 'D180', 'D365']
-        .map(period => ({
-          period,
-          rate: cohort.retentionRates[period] || 0
-        }));
+      const periods = ['D1', 'D7', 'D30', 'D90', 'D180', 'D365'].map((period) => ({
+        period,
+        rate: cohort.retentionRates[period] || 0,
+      }));
 
       heatmap.push({
         cohortId,
         cohortName: cohort.cohortName,
-        periods
+        periods,
       });
     });
 
@@ -379,28 +392,32 @@ class CohortAnalysis {
       totalRevenue: number;
     };
   }> {
-    return cohortIds.map(cohortId => {
-      const cohort = this.cohorts.get(cohortId);
-      if (!cohort) return null;
+    return cohortIds
+      .map((cohortId) => {
+        const cohort = this.cohorts.get(cohortId);
+        if (!cohort) return null;
 
-      const totalRevenue = Object.values(cohort.revenuePerUser)
-        .reduce((sum, revenue) => sum + revenue, 0);
-      const avgRevenuePerUser = cohort.cohortSize > 0 ? totalRevenue / cohort.cohortSize : 0;
+        const totalRevenue = Object.values(cohort.revenuePerUser).reduce(
+          (sum, revenue) => sum + revenue,
+          0
+        );
+        const avgRevenuePerUser = cohort.cohortSize > 0 ? totalRevenue / cohort.cohortSize : 0;
 
-      return {
-        cohortId,
-        cohortName: cohort.cohortName,
-        metrics: {
-          size: cohort.cohortSize,
-          day1Retention: cohort.metrics.day1,
-          day7Retention: cohort.metrics.day7,
-          day30Retention: cohort.metrics.day30,
-          day90Retention: cohort.metrics.day90,
-          avgRevenuePerUser,
-          totalRevenue
-        }
-      };
-    }).filter(Boolean) as any[];
+        return {
+          cohortId,
+          cohortName: cohort.cohortName,
+          metrics: {
+            size: cohort.cohortSize,
+            day1Retention: cohort.metrics.day1,
+            day7Retention: cohort.metrics.day7,
+            day30Retention: cohort.metrics.day30,
+            day90Retention: cohort.metrics.day90,
+            avgRevenuePerUser,
+            totalRevenue,
+          },
+        };
+      })
+      .filter(Boolean) as any[];
   }
 
   // Export cohort data for external analysis
@@ -412,7 +429,7 @@ class CohortAnalysis {
     return {
       cohorts: Array.from(this.cohorts.values()),
       users: Array.from(this.users.values()),
-      weeklyReports: this.weeklyReports
+      weeklyReports: this.weeklyReports,
     };
   }
 
@@ -447,8 +464,10 @@ class CohortAnalysis {
 
       // Check repeat purchase rates
       const repeatRates = Object.values(cohort.repeatPurchaseRates);
-      const avgRepeatRate = repeatRates.length > 0 ? 
-        repeatRates.reduce((sum, rate) => sum + rate, 0) / repeatRates.length : 0;
+      const avgRepeatRate =
+        repeatRates.length > 0
+          ? repeatRates.reduce((sum, rate) => sum + rate, 0) / repeatRates.length
+          : 0;
 
       if (avgRepeatRate < 15) {
         riskFactors.push('Low repeat purchase rate');
@@ -460,7 +479,7 @@ class CohortAnalysis {
           cohortId,
           cohortName: cohort.cohortName,
           riskFactors,
-          recommendations
+          recommendations,
         });
       }
     });
@@ -473,11 +492,7 @@ class CohortAnalysis {
 export const cohortAnalysis = new CohortAnalysis();
 
 // Helper functions for tracking cohort events
-export const trackUserAcquisition = (
-  userId: string,
-  channel: string,
-  acquisitionDate?: string
-) => {
+export const trackUserAcquisition = (userId: string, channel: string, acquisitionDate?: string) => {
   const date = acquisitionDate || new Date().toISOString();
   cohortAnalysis.assignUserToCohort(userId, date, channel);
 };

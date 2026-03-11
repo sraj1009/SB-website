@@ -8,6 +8,7 @@ import { PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics';
 import { SimpleLogRecordProcessor, ConsoleLogRecordExporter } from '@opentelemetry/sdk-logs';
 import { LoggerProvider } from '@opentelemetry/sdk-logs';
 import { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
+import { SpanStatusCode } from '@opentelemetry/api';
 import config from '../config/config.js';
 
 // Initialize OpenTelemetry

@@ -30,7 +30,7 @@ const envVarsSchema = Joi.object()
     ADMIN_EMAIL: Joi.string().email().required(),
     ADMIN_PASSWORD: Joi.string().required(),
     GEMINI_API_KEY: Joi.string().required(),
-    REDIS_URL: Joi.string().description('Redis connection string'),
+    REDIS_URL: Joi.string().required().description('Redis connection string'),
   })
   .unknown();
 

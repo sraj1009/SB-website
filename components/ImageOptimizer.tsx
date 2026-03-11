@@ -27,7 +27,7 @@ export const ImageOptimizer: React.FC<ImageOptimizerProps> = ({
   blurDataURL,
   sizes = '(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw',
   quality = 75,
-  format = 'webp'
+  format = 'webp',
 }) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState(false);
@@ -39,19 +39,19 @@ export const ImageOptimizer: React.FC<ImageOptimizerProps> = ({
     if (originalSrc.includes('cloudinary') || originalSrc.includes('imgix')) {
       return `${originalSrc}?w=${width}&h=${height}&q=${quality}&f=${format}&auto=format`;
     }
-    
+
     // For Vercel Image Optimization
     if (originalSrc.startsWith('/')) {
       return `/_next/image?url=${encodeURIComponent(originalSrc)}&w=${width}&h=${height}&q=${quality}`;
     }
-    
+
     return originalSrc;
   };
 
   // Generate blur placeholder
   const generateBlurPlaceholder = () => {
     if (blurDataURL) return blurDataURL;
-    
+
     // Generate a simple blur placeholder
     const canvas = document.createElement('canvas');
     canvas.width = width || 100;
@@ -87,7 +87,7 @@ export const ImageOptimizer: React.FC<ImageOptimizerProps> = ({
 
   if (error) {
     return (
-      <div 
+      <div
         className={`bg-gray-200 flex items-center justify-center ${className}`}
         style={{ width: width || '100%', height: height || 'auto' }}
       >
@@ -100,18 +100,18 @@ export const ImageOptimizer: React.FC<ImageOptimizerProps> = ({
     <div className={`relative overflow-hidden ${className}`}>
       {/* Blur placeholder */}
       {placeholder === 'blur' && !isLoaded && (
-        <div 
+        <div
           className="absolute inset-0 blur-sm"
           style={{
             backgroundImage: `url(${blurSrc})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             filter: 'blur(20px)',
-            transform: 'scale(1.1)'
+            transform: 'scale(1.1)',
           }}
         />
       )}
-      
+
       {/* Main image */}
       <img
         ref={imgRef}
@@ -129,14 +129,12 @@ export const ImageOptimizer: React.FC<ImageOptimizerProps> = ({
         style={{
           objectFit: 'cover',
           width: width || '100%',
-          height: height || 'auto'
+          height: height || 'auto',
         }}
       />
-      
+
       {/* Loading skeleton */}
-      {!isLoaded && (
-        <div className="absolute inset-0 bg-gray-200 animate-pulse" />
-      )}
+      {!isLoaded && <div className="absolute inset-0 bg-gray-200 animate-pulse" />}
     </div>
   );
 };
@@ -154,7 +152,7 @@ export const ProductImage: React.FC<{
   const sizeMap = {
     small: { width: 80, height: 80 },
     medium: { width: 200, height: 200 },
-    large: { width: 400, height: 400 }
+    large: { width: 400, height: 400 },
   };
 
   const { width, height } = sizeMap[size];

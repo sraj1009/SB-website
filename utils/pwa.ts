@@ -1,6 +1,6 @@
 // 📱 Progressive Web App Utilities for SINGGLEBEE
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
 interface ServiceWorkerMessage {
   type: string;
@@ -26,16 +26,16 @@ class PWAManager {
     try {
       // Register service worker
       await this.registerServiceWorker();
-      
+
       // Request notification permission
       await this.requestNotificationPermission();
-      
+
       // Install prompt handler
       this.setupInstallPrompt();
-      
+
       // Background sync setup
       this.setupBackgroundSync();
-      
+
       console.log('PWA initialized successfully');
     } catch (error) {
       console.error('PWA initialization failed:', error);
@@ -48,7 +48,7 @@ class PWAManager {
       try {
         const registration = await navigator.serviceWorker.register('/sw.js');
         this.swRegistration = registration;
-        
+
         // Listen for service worker updates
         registration.addEventListener('updatefound', () => {
           const newWorker = registration.installing;
@@ -92,7 +92,7 @@ class PWAManager {
           badge: '/pwa-192x192.png',
           tag: 'singglebee-notification',
           requireInteraction: false,
-          ...options as NotificationOptions
+          ...(options as NotificationOptions),
         } as NotificationOptions);
       } catch (error) {
         console.error('Failed to show notification:', error);
@@ -107,7 +107,7 @@ class PWAManager {
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
-      
+
       // Show install button or banner
       this.showInstallPrompt(deferredPrompt);
     });
@@ -120,9 +120,9 @@ class PWAManager {
           {
             action: 'open',
             title: 'Open App',
-            icon: '/pwa-192x192.png'
-          }
-        ]
+            icon: '/pwa-192x192.png',
+          },
+        ],
       } as NotificationOptions);
     });
   }
@@ -132,33 +132,36 @@ class PWAManager {
     // Create install prompt UI
     const installButton = document.createElement('button');
     installButton.textContent = 'Install App';
-    installButton.className = 'fixed bottom-4 right-4 bg-yellow-500 text-black px-4 py-2 rounded-lg shadow-lg z-50';
+    installButton.className =
+      'fixed bottom-4 right-4 bg-yellow-500 text-black px-4 py-2 rounded-lg shadow-lg z-50';
     installButton.onclick = async () => {
       if (deferredPrompt) {
         deferredPrompt.prompt();
         const { outcome } = await deferredPrompt.userChoice;
         deferredPrompt = null;
-        
+
         if (outcome === 'accepted') {
           console.log('User accepted the install prompt');
         }
-        
+
         installButton.remove();
       }
     };
-    
+
     document.body.appendChild(installButton);
   }
 
   // Setup background sync
   private setupBackgroundSync(): void {
-    if ('serviceWorker' in navigator && 'sync' in (this.swRegistration as any)) {
-      navigator.serviceWorker.ready.then((registration) => {
-        // Register sync events
-        return (registration.sync as any).register('background-sync');
-      }).catch((error) => {
-        console.log('Background sync registration failed:', error);
-      });
+    if ('serviceWorker' in navigator && 'sync' in window) {
+      navigator.serviceWorker.ready
+        .then((registration) => {
+          // Register sync events
+          return (registration as any).sync.register('background-sync');
+        })
+        .catch((error) => {
+          console.log('Background sync registration failed:', error);
+        });
     }
   }
 
@@ -168,7 +171,7 @@ class PWAManager {
     window.addEventListener('online', () => {
       this.isOnline = true;
       this.showNotification('Back Online', {
-        body: 'Your connection has been restored'
+        body: 'Your connection has been restored',
       });
       this.syncOfflineData();
     });
@@ -176,7 +179,7 @@ class PWAManager {
     window.addEventListener('offline', () => {
       this.isOnline = false;
       this.showNotification('Offline Mode', {
-        body: 'You are currently offline. Some features may be limited.'
+        body: 'You are currently offline. Some features may be limited.',
       });
     });
 
@@ -207,7 +210,8 @@ class PWAManager {
   // Show update notification
   private showUpdateNotification(): void {
     const updateButton = document.createElement('div');
-    updateButton.className = 'fixed top-4 right-4 bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+    updateButton.className =
+      'fixed top-4 right-4 bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
     updateButton.innerHTML = `
       <div class="flex items-center gap-2">
         <span>New version available!</span>
@@ -221,14 +225,14 @@ class PWAManager {
   // Show cache updated notification
   private showCacheUpdatedNotification(): void {
     this.showNotification('Content Updated', {
-      body: 'Latest educational content is now available offline'
+      body: 'Latest educational content is now available offline',
     });
   }
 
   // Show sync completed notification
   private showSyncCompletedNotification(payload: any): void {
     this.showNotification('Sync Completed', {
-      body: `${payload.synced} items have been synchronized`
+      body: `${payload.synced} items have been synchronized`,
     });
   }
 
@@ -237,7 +241,7 @@ class PWAManager {
     this.showNotification(payload.title, {
       body: payload.body,
       data: payload.data,
-      actions: payload.actions
+      actions: payload.actions,
     } as NotificationOptions);
   }
 
@@ -300,8 +304,10 @@ class PWAManager {
 
   // Check if PWA is installed
   isPWAInstalled(): boolean {
-    return window.matchMedia('(display-mode: standalone)').matches ||
-           (window.navigator as any).standalone === true;
+    return (
+      window.matchMedia('(display-mode: standalone)').matches ||
+      (window.navigator as any).standalone === true
+    );
   }
 
   // Get app version
@@ -351,7 +357,7 @@ class PWAManager {
         const used = estimate.usage || 0;
         const quota = estimate.quota || 0;
         const percentage = quota > 0 ? (used / quota) * 100 : 0;
-        
+
         return { used, quota, percentage };
       } catch (error) {
         console.error('Failed to get storage usage:', error);
@@ -366,14 +372,14 @@ class PWAManager {
     try {
       // Clear caches
       const cacheNames = await caches.keys();
-      await Promise.all(cacheNames.map(name => caches.delete(name)));
-      
+      await Promise.all(cacheNames.map((name) => caches.delete(name)));
+
       // Clear local storage
       localStorage.clear();
-      
+
       // Clear session storage
       sessionStorage.clear();
-      
+
       console.log('All app data cleared');
     } catch (error) {
       console.error('Failed to clear app data:', error);
@@ -391,20 +397,23 @@ export const usePWA = () => {
   useEffect(() => {
     // Initialize PWA
     pwaManager.initialize();
-    
-    // Check if installed
-    setIsInstalled(pwaManager.isPWAInstalled());
-    
-    // Get storage usage
-    pwaManager.getStorageUsage().then(setStorageUsage);
-    
+
+    // Check if installed and get storage usage asynchronously
+    const checkPWAStatus = async () => {
+      setIsInstalled(pwaManager.isPWAInstalled());
+      const usage = await pwaManager.getStorageUsage();
+      setStorageUsage(usage);
+    };
+
+    checkPWAStatus();
+
     // Listen for online/offline changes
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
-    
+
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
-    
+
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
@@ -419,7 +428,7 @@ export const usePWA = () => {
     shareContent: pwaManager.shareContent.bind(pwaManager),
     addToHomeScreen: pwaManager.addToHomeScreen.bind(pwaManager),
     clearAllData: pwaManager.clearAllData.bind(pwaManager),
-    getAppVersion: pwaManager.getAppVersion.bind(pwaManager)
+    getAppVersion: pwaManager.getAppVersion.bind(pwaManager),
   };
 };
 

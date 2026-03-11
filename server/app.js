@@ -5,10 +5,11 @@ import compression from 'compression';
 import mongoSanitize from 'express-mongo-sanitize';
 import cookieParser from 'cookie-parser';
 import promBundle from 'express-prom-bundle';
-import { initializeTracing } from './otel/tracing.js';
+import config from './config/config.js';
+// import { initializeTracing } from './otel/tracing.js';
 
 // Initialize OpenTelemetry first
-initializeTracing();
+// initializeTracing(); // Commented out for now
 import { globalLimiter } from './middleware/rateLimiter.js';
 import errorHandler, { notFoundHandler } from './middleware/errorHandler.js';
 import logger from './utils/logger.js';
@@ -18,6 +19,7 @@ import swaggerUi from 'swagger-ui-express';
 import swaggerSpec from './config/swagger.js';
 import { register } from './utils/metrics.js';
 import authRoutes from './routes/api/v1/auth.js';
+// import productRoutes from './routes/api/v1/products.js';
 import productRoutes from './routes/api/v1/products.js';
 import orderRoutes from './routes/api/v1/orders.js';
 import adminRoutes from './routes/api/v1/admin.js';

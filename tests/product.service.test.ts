@@ -276,7 +276,9 @@ describe('ProductService', () => {
       const mockError = new Error('Failed to fetch related products');
       vi.mocked(apiClient.get).mockRejectedValue(mockError);
 
-      await expect(productService.getRelatedProducts('1')).rejects.toThrow('Failed to fetch related products');
+      await expect(productService.getRelatedProducts('1')).rejects.toThrow(
+        'Failed to fetch related products'
+      );
     });
   });
 
@@ -344,7 +346,9 @@ describe('ProductService', () => {
       const mockError = new Error('Failed to fetch featured products');
       vi.mocked(apiClient.get).mockRejectedValue(mockError);
 
-      await expect(productService.getFeaturedProducts()).rejects.toThrow('Failed to fetch featured products');
+      await expect(productService.getFeaturedProducts()).rejects.toThrow(
+        'Failed to fetch featured products'
+      );
     });
   });
 
@@ -377,7 +381,9 @@ describe('ProductService', () => {
       const mockError = new Error('Failed to fetch recommendations');
       vi.mocked(apiClient.get).mockRejectedValue(mockError);
 
-      await expect(productService.getRecommendations()).rejects.toThrow('Failed to fetch recommendations');
+      await expect(productService.getRecommendations()).rejects.toThrow(
+        'Failed to fetch recommendations'
+      );
     });
   });
 
@@ -428,7 +434,9 @@ describe('ProductService', () => {
       const mockError = new Error('Failed to fetch category products');
       vi.mocked(apiClient.get).mockRejectedValue(mockError);
 
-      await expect(productService.getProductsByCategory('books')).rejects.toThrow('Failed to fetch category products');
+      await expect(productService.getProductsByCategory('books')).rejects.toThrow(
+        'Failed to fetch category products'
+      );
     });
   });
 
@@ -478,7 +486,9 @@ describe('ProductService', () => {
       const mockError = new Error('Failed to fetch author products');
       vi.mocked(apiClient.get).mockRejectedValue(mockError);
 
-      await expect(productService.getProductsByAuthor('Test Author')).rejects.toThrow('Failed to fetch author products');
+      await expect(productService.getProductsByAuthor('Test Author')).rejects.toThrow(
+        'Failed to fetch author products'
+      );
     });
   });
 
@@ -513,7 +523,9 @@ describe('ProductService', () => {
       const mockError = new Error('Failed to fetch analytics');
       vi.mocked(apiClient.get).mockRejectedValue(mockError);
 
-      await expect(productService.getProductAnalytics('1')).rejects.toThrow('Failed to fetch analytics');
+      await expect(productService.getProductAnalytics('1')).rejects.toThrow(
+        'Failed to fetch analytics'
+      );
     });
   });
 
@@ -539,7 +551,9 @@ describe('ProductService', () => {
       const mockError = new Error('Failed to fetch popular searches');
       vi.mocked(apiClient.get).mockRejectedValue(mockError);
 
-      await expect(productService.getPopularSearches()).rejects.toThrow('Failed to fetch popular searches');
+      await expect(productService.getPopularSearches()).rejects.toThrow(
+        'Failed to fetch popular searches'
+      );
     });
   });
 
@@ -574,7 +588,9 @@ describe('ProductService', () => {
       const mockError = new Error('Failed to fetch price history');
       vi.mocked(apiClient.get).mockRejectedValue(mockError);
 
-      await expect(productService.getPriceHistory('1')).rejects.toThrow('Failed to fetch price history');
+      await expect(productService.getPriceHistory('1')).rejects.toThrow(
+        'Failed to fetch price history'
+      );
     });
   });
 
@@ -609,7 +625,9 @@ describe('ProductService', () => {
       const mockError = new Error('Failed to check availability');
       vi.mocked(apiClient.post).mockRejectedValue(mockError);
 
-      await expect(productService.checkAvailability(['1'])).rejects.toThrow('Failed to check availability');
+      await expect(productService.checkAvailability(['1'])).rejects.toThrow(
+        'Failed to check availability'
+      );
     });
   });
 
@@ -653,14 +671,18 @@ describe('ProductService', () => {
     it('should validate product IDs for comparison', async () => {
       await expect(productService.compareProducts([])).rejects.toThrow(ValidationError);
       await expect(productService.compareProducts(['1'])).rejects.toThrow(ValidationError); // Less than 2
-      await expect(productService.compareProducts(['1', '2', '3', '4', '5'])).rejects.toThrow(ValidationError); // More than 4
+      await expect(productService.compareProducts(['1', '2', '3', '4', '5'])).rejects.toThrow(
+        ValidationError
+      ); // More than 4
     });
 
     it('should handle product comparison errors', async () => {
       const mockError = new Error('Failed to compare products');
       vi.mocked(apiClient.post).mockRejectedValue(mockError);
 
-      await expect(productService.compareProducts(['1', '2'])).rejects.toThrow('Failed to compare products');
+      await expect(productService.compareProducts(['1', '2'])).rejects.toThrow(
+        'Failed to compare products'
+      );
     });
   });
 
@@ -693,7 +715,9 @@ describe('ProductService', () => {
       const mockError = new Error('Failed to fetch trending products');
       vi.mocked(apiClient.get).mockRejectedValue(mockError);
 
-      await expect(productService.getTrendingProducts()).rejects.toThrow('Failed to fetch trending products');
+      await expect(productService.getTrendingProducts()).rejects.toThrow(
+        'Failed to fetch trending products'
+      );
     });
   });
 
@@ -723,7 +747,9 @@ describe('ProductService', () => {
       const mockError = new Error('Failed to fetch product stats');
       vi.mocked(apiClient.get).mockRejectedValue(mockError);
 
-      await expect(productService.getProductStats()).rejects.toThrow('Failed to fetch product stats');
+      await expect(productService.getProductStats()).rejects.toThrow(
+        'Failed to fetch product stats'
+      );
     });
   });
 
@@ -744,7 +770,9 @@ describe('ProductService', () => {
     it('should get payment method display name correctly', () => {
       expect((productService as any).getPaymentMethodDisplayName('UPI')).toBe('UPI');
       expect((productService as any).getPaymentMethodDisplayName('COD')).toBe('Cash on Delivery');
-      expect((productService as any).getPaymentMethodDisplayName('Cashfree')).toBe('Cashfree Payment Gateway');
+      expect((productService as any).getPaymentMethodDisplayName('Cashfree')).toBe(
+        'Cashfree Payment Gateway'
+      );
     });
   });
 

@@ -63,7 +63,7 @@ class AdminService {
   async createProduct(productData: ProductFormData, imageFile?: File): Promise<AdminProduct> {
     try {
       const formData = new FormData();
-      
+
       // Add all product fields to FormData
       Object.entries(productData).forEach(([key, value]) => {
         if (typeof value === 'boolean') {
@@ -81,13 +81,13 @@ class AdminService {
       const response = await fetch('/api/v1/admin/products', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${api.TokenManager.getAccessToken()}`,
+          Authorization: `Bearer ${api.TokenManager.getAccessToken()}`,
         },
         body: formData,
       });
 
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.error?.message || 'Failed to create product');
       }
@@ -99,10 +99,14 @@ class AdminService {
   }
 
   // Update product
-  async updateProduct(id: string, productData: Partial<ProductFormData>, imageFile?: File): Promise<AdminProduct> {
+  async updateProduct(
+    id: string,
+    productData: Partial<ProductFormData>,
+    imageFile?: File
+  ): Promise<AdminProduct> {
     try {
       const formData = new FormData();
-      
+
       // Add all product fields to FormData
       Object.entries(productData).forEach(([key, value]) => {
         if (typeof value === 'boolean') {
@@ -120,13 +124,13 @@ class AdminService {
       const response = await fetch(`/api/v1/admin/products/${id}`, {
         method: 'PUT',
         headers: {
-          'Authorization': `Bearer ${api.TokenManager.getAccessToken()}`,
+          Authorization: `Bearer ${api.TokenManager.getAccessToken()}`,
         },
         body: formData,
       });
 
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.error?.message || 'Failed to update product');
       }
@@ -214,15 +218,29 @@ class AdminService {
     const colors: Record<string, { color: string; bgColor: string; textColor: string }> = {
       active: { color: 'border-green-500', bgColor: 'bg-green-100', textColor: 'text-green-800' },
       inactive: { color: 'border-gray-500', bgColor: 'bg-gray-100', textColor: 'text-gray-800' },
-      'out_of_stock': { color: 'border-red-500', bgColor: 'bg-red-100', textColor: 'text-red-800' },
-      pending: { color: 'border-yellow-500', bgColor: 'bg-yellow-100', textColor: 'text-yellow-800' },
+      out_of_stock: { color: 'border-red-500', bgColor: 'bg-red-100', textColor: 'text-red-800' },
+      pending: {
+        color: 'border-yellow-500',
+        bgColor: 'bg-yellow-100',
+        textColor: 'text-yellow-800',
+      },
       verified: { color: 'border-green-500', bgColor: 'bg-green-100', textColor: 'text-green-800' },
       shipped: { color: 'border-blue-500', bgColor: 'bg-blue-100', textColor: 'text-blue-800' },
-      delivered: { color: 'border-green-500', bgColor: 'bg-green-100', textColor: 'text-green-800' },
+      delivered: {
+        color: 'border-green-500',
+        bgColor: 'bg-green-100',
+        textColor: 'text-green-800',
+      },
       cancelled: { color: 'border-red-500', bgColor: 'bg-red-100', textColor: 'text-red-800' },
     };
 
-    return colors[status] || { color: 'border-gray-500', bgColor: 'bg-gray-100', textColor: 'text-gray-800' };
+    return (
+      colors[status] || {
+        color: 'border-gray-500',
+        bgColor: 'bg-gray-100',
+        textColor: 'text-gray-800',
+      }
+    );
   }
 
   // Check if status is positive
@@ -287,12 +305,12 @@ class AdminService {
   async processImageUpload(file: File): Promise<ProductImage> {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      
+
       reader.onload = (e) => {
         // In a real implementation, you would upload to server here
         // For now, return a placeholder
         const imageUrl = `/uploads/products/${Date.now()}-${file.name}`;
-        
+
         resolve({
           url: imageUrl,
           alt: file.name,
@@ -312,27 +330,38 @@ class AdminService {
   async exportProducts(params: ProductQueryParams = {}): Promise<string> {
     try {
       const products = await this.getProducts({ ...params, limit: 1000 });
-      
+
       // Create CSV content
-      const headers = ['Title', 'Author', 'Category', 'Price', 'Stock', 'Status', 'SKU', 'Language'];
+      const headers = [
+        'Title',
+        'Author',
+        'Category',
+        'Price',
+        'Stock',
+        'Status',
+        'SKU',
+        'Language',
+      ];
       const csvContent = [
         headers.join(','),
-        ...products.products.map(product => [
-          `"${product.title}"`,
-          `"${product.author}"`,
-          `"${product.category}"`,
-          product.price,
-          product.stockQuantity,
-          `"${product.status}"`,
-          `"${product.sku}"`,
-          `"${product.language}"`
-        ].join(','))
+        ...products.products.map((product) =>
+          [
+            `"${product.title}"`,
+            `"${product.author}"`,
+            `"${product.category}"`,
+            product.price,
+            product.stockQuantity,
+            `"${product.status}"`,
+            `"${product.sku}"`,
+            `"${product.language}"`,
+          ].join(',')
+        ),
       ].join('\n');
 
       // Create download link
       const blob = new Blob([csvContent], { type: 'text/csv' });
       const url = URL.createObjectURL(blob);
-      
+
       return url;
     } catch (error) {
       throw new Error('Failed to export products');
@@ -343,26 +372,36 @@ class AdminService {
   async exportOrders(params: OrderQueryParams = {}): Promise<string> {
     try {
       const orders = await this.getOrders({ ...params, limit: 1000 });
-      
+
       // Create CSV content
-      const headers = ['Order ID', 'Customer', 'Email', 'Total', 'Status', 'Payment Method', 'Date'];
+      const headers = [
+        'Order ID',
+        'Customer',
+        'Email',
+        'Total',
+        'Status',
+        'Payment Method',
+        'Date',
+      ];
       const csvContent = [
         headers.join(','),
-        ...orders.orders.map(order => [
-          `"${order.orderId}"`,
-          `"${order.user.fullName}"`,
-          `"${order.user.email}"`,
-          order.total,
-          `"${order.status}"`,
-          `"${order.paymentMethod}"`,
-          `"${this.formatDateTime(order.createdAt)}"`
-        ].join(','))
+        ...orders.orders.map((order) =>
+          [
+            `"${order.orderId}"`,
+            `"${order.user.fullName}"`,
+            `"${order.user.email}"`,
+            order.total,
+            `"${order.status}"`,
+            `"${order.paymentMethod}"`,
+            `"${this.formatDateTime(order.createdAt)}"`,
+          ].join(',')
+        ),
       ].join('\n');
 
       // Create download link
       const blob = new Blob([csvContent], { type: 'text/csv' });
       const url = URL.createObjectURL(blob);
-      
+
       return url;
     } catch (error) {
       throw new Error('Failed to export orders');

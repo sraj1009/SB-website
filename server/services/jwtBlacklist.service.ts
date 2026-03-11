@@ -20,14 +20,14 @@ export class JWTBlacklistService {
   async addToBlacklist(token: string, reason?: string): Promise<void> {
     try {
       const decoded = jwt.decode(token) as any;
-      
+
       if (!decoded || !decoded.jti) {
         throw new Error('Invalid JWT token or missing jti claim');
       }
 
       const jti = decoded.jti;
       const expiresIn = decoded.exp - Math.floor(Date.now() / 1000);
-      
+
       if (expiresIn <= 0) {
         logger.info(`Token ${jti} already expired, not adding to blacklist`);
         return;
@@ -65,14 +65,14 @@ export class JWTBlacklistService {
   async isBlacklisted(token: string): Promise<boolean> {
     try {
       const decoded = jwt.decode(token) as any;
-      
+
       if (!decoded || !decoded.jti) {
         return false; // Invalid token, but not blacklisted
       }
 
       const jti = decoded.jti;
       const blacklistEntry = await this.redis.get(RedisClient.getKeys.auth.blacklist(jti));
-      
+
       return blacklistEntry !== null;
     } catch (error) {
       logger.error('Failed to check JWT blacklist status:', error);
@@ -86,7 +86,7 @@ export class JWTBlacklistService {
   async getBlacklistEntry(jti: string): Promise<any> {
     try {
       const entry = await this.redis.get(RedisClient.getKeys.auth.blacklist(jti));
-      
+
       if (!entry) {
         return null;
       }
@@ -118,13 +118,13 @@ export class JWTBlacklistService {
     try {
       const pattern = 'singglebee:blacklist:*';
       const keys = await this.redis.keys(pattern);
-      
+
       if (keys.length > 0) {
         const deleted = await this.redis.del(...keys);
         logger.info(`Cleared ${deleted} blacklist entries`);
         return deleted;
       }
-      
+
       return 0;
     } catch (error) {
       logger.error('Failed to clear JWT blacklist:', error);
@@ -139,23 +139,23 @@ export class JWTBlacklistService {
     try {
       const pattern = 'singglebee:blacklist:*';
       const keys = await this.redis.keys(pattern);
-      
-      let totalEntries = keys.length;
+
+      const totalEntries = keys.length;
       let expiredEntries = 0;
       let recentEntries = 0;
-      const oneHourAgo = Date.now() - (60 * 60 * 1000);
+      const oneHourAgo = Date.now() - 60 * 60 * 1000;
 
       for (const key of keys) {
         try {
           const entry = await this.redis.get(key);
           if (entry) {
             const data = JSON.parse(entry);
-            
+
             // Check if expired
             if (new Date(data.expiresAt).getTime() < Date.now()) {
               expiredEntries++;
             }
-            
+
             // Check if recent (within last hour)
             if (new Date(data.blacklistedAt).getTime() > oneHourAgo) {
               recentEntries++;
@@ -185,7 +185,7 @@ export class JWTBlacklistService {
     try {
       const pattern = 'singglebee:blacklist:*';
       const keys = await this.redis.keys(pattern);
-      
+
       let cleaned = 0;
       const now = Date.now();
 
@@ -194,7 +194,7 @@ export class JWTBlacklistService {
           const entry = await this.redis.get(key);
           if (entry) {
             const data = JSON.parse(entry);
-            
+
             // Check if expired
             if (new Date(data.expiresAt).getTime() < now) {
               await this.redis.del(key);
@@ -227,11 +227,11 @@ export class JWTBlacklistService {
     for (const { token, reason } of tokens) {
       try {
         const decoded = jwt.decode(token) as any;
-        
+
         if (decoded && decoded.jti) {
           const jti = decoded.jti;
           const expiresIn = decoded.exp - Math.floor(now / 1000);
-          
+
           if (expiresIn > 0) {
             const blacklistData = {
               jti,

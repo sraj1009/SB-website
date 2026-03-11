@@ -23,7 +23,7 @@ const SECURITY_CONFIG = {
       saltRounds: 12, // High cost for security
     },
   },
-  
+
   // JWT configuration
   jwt: {
     accessTokenExpiry: '15m',
@@ -32,20 +32,20 @@ const SECURITY_CONFIG = {
     audience: 'singglebee-users',
     algorithm: 'HS256',
   },
-  
+
   // Session management
   session: {
     maxConcurrentSessions: 5, // Max 5 devices per user
     sessionTimeout: 24 * 60 * 60, // 24 hours in seconds
   },
-  
+
   // MFA configuration
   mfa: {
     issuer: 'SINGGLEBEE',
     window: 1, // Allow 1 step of clock drift for TOTP
     digits: 6,
   },
-  
+
   // Rate limiting
   rateLimit: {
     maxLoginAttempts: 5,
@@ -106,7 +106,7 @@ export class SecureAuthService {
    */
   generateTokens(payload: any): { accessToken: string; refreshToken: string; jti: string } {
     const jti = crypto.randomUUID(); // JWT ID for token tracking
-    
+
     // Access token (short-lived)
     const accessToken = jwt.sign(
       {
@@ -149,8 +149,9 @@ export class SecureAuthService {
    */
   async verifyToken(token: string, type: 'access' | 'refresh'): Promise<any> {
     try {
-      const secret = type === 'access' ? process.env.JWT_ACCESS_SECRET : process.env.JWT_REFRESH_SECRET;
-      
+      const secret =
+        type === 'access' ? process.env.JWT_ACCESS_SECRET : process.env.JWT_REFRESH_SECRET;
+
       const decoded = jwt.verify(token, secret, {
         issuer: SECURITY_CONFIG.jwt.issuer,
         audience: SECURITY_CONFIG.jwt.audience,
@@ -195,10 +196,14 @@ export class SecureAuthService {
   async blacklistToken(jti: string, expiresIn: number): Promise<void> {
     try {
       const blacklistKey = `singglebee:blacklist:${jti}`;
-      await this.redis.setex(blacklistKey, expiresIn, JSON.stringify({
-        blacklistedAt: new Date().toISOString(),
-        reason: 'User logout or token refresh',
-      }));
+      await this.redis.setex(
+        blacklistKey,
+        expiresIn,
+        JSON.stringify({
+          blacklistedAt: new Date().toISOString(),
+          reason: 'User logout or token refresh',
+        })
+      );
     } catch (error) {
       logger.error('Token blacklisting error:', error);
     }
@@ -207,7 +212,11 @@ export class SecureAuthService {
   /**
    * Generate MFA secret for user
    */
-  generateMFASecret(userEmail: string): { secret: string; qrCodeUrl: string; backupCodes: string[] } {
+  generateMFASecret(userEmail: string): {
+    secret: string;
+    qrCodeUrl: string;
+    backupCodes: string[];
+  } {
     const secret = speakeasy.generateSecret({
       name: `SINGGLEBEE (${userEmail})`,
       issuer: SECURITY_CONFIG.mfa.issuer,
@@ -224,7 +233,7 @@ export class SecureAuthService {
     });
 
     // Generate backup codes
-    const backupCodes = Array.from({ length: 10 }, () => 
+    const backupCodes = Array.from({ length: 10 }, () =>
       crypto.randomBytes(4).toString('hex').toUpperCase()
     );
 
@@ -272,14 +281,14 @@ export class SecureAuthService {
     try {
       const backupCodesKey = `singglebee:backup_codes:${userId}`;
       const storedCodes = await this.redis.get(backupCodesKey);
-      
+
       if (!storedCodes) {
         return false;
       }
 
       const codes = JSON.parse(storedCodes);
       const codeIndex = codes.indexOf(code.toUpperCase());
-      
+
       if (codeIndex === -1) {
         return false;
       }
@@ -322,9 +331,9 @@ export class SecureAuthService {
 
       // Get current sessions
       const sessions = await this.redis.lrange(sessionKey, 0, -1);
-      
+
       // Remove expired sessions
-      const validSessions = sessions.filter(session => {
+      const validSessions = sessions.filter((session) => {
         try {
           const parsed = JSON.parse(session);
           const sessionAge = (Date.now() - new Date(parsed.lastActivity).getTime()) / 1000;
@@ -359,7 +368,9 @@ export class SecureAuthService {
   /**
    * Check login attempts and apply rate limiting
    */
-  async checkLoginAttempts(identifier: string): Promise<{ allowed: boolean; remainingAttempts: number; lockoutTime?: number }> {
+  async checkLoginAttempts(
+    identifier: string
+  ): Promise<{ allowed: boolean; remainingAttempts: number; lockoutTime?: number }> {
     try {
       const attemptsKey = `singglebee:login_attempts:${identifier}`;
       const lockoutKey = `singglebee:login_lockout:${identifier}`;
@@ -369,7 +380,7 @@ export class SecureAuthService {
       if (lockoutData) {
         const lockout = JSON.parse(lockoutData);
         const remainingTime = lockout.lockedUntil - Date.now();
-        
+
         if (remainingTime > 0) {
           return {
             allowed: false,
@@ -383,18 +394,25 @@ export class SecureAuthService {
       }
 
       // Get current attempts
-      const attempts = await this.redis.get(attemptsKey) || '0';
+      const attempts = (await this.redis.get(attemptsKey)) || '0';
       const attemptCount = parseInt(attempts);
-      const remainingAttempts = Math.max(0, SECURITY_CONFIG.rateLimit.maxLoginAttempts - attemptCount - 1);
+      const remainingAttempts = Math.max(
+        0,
+        SECURITY_CONFIG.rateLimit.maxLoginAttempts - attemptCount - 1
+      );
 
       if (remainingAttempts <= 0) {
         // Lock out the user
-        const lockoutUntil = Date.now() + (SECURITY_CONFIG.rateLimit.lockoutDuration * 1000);
-        await this.redis.setex(lockoutKey, SECURITY_CONFIG.rateLimit.lockoutDuration, JSON.stringify({
-          lockedUntil,
-          reason: 'Too many failed login attempts',
-        }));
-        
+        const lockoutUntil = Date.now() + SECURITY_CONFIG.rateLimit.lockoutDuration * 1000;
+        await this.redis.setex(
+          lockoutKey,
+          SECURITY_CONFIG.rateLimit.lockoutDuration,
+          JSON.stringify({
+            lockedUntil,
+            reason: 'Too many failed login attempts',
+          })
+        );
+
         // Clear attempts counter
         await this.redis.del(attemptsKey);
 
@@ -435,7 +453,7 @@ export class SecureAuthService {
     try {
       const attemptsKey = `singglebee:login_attempts:${identifier}`;
       const lockoutKey = `singglebee:login_lockout:${identifier}`;
-      
+
       await this.redis.del(attemptsKey);
       await this.redis.del(lockoutKey);
     } catch (error) {
@@ -477,14 +495,16 @@ export class SecureAuthService {
   /**
    * Refresh access token
    */
-  async refreshAccessToken(refreshToken: string): Promise<{ accessToken: string; refreshToken: string }> {
+  async refreshAccessToken(
+    refreshToken: string
+  ): Promise<{ accessToken: string; refreshToken: string }> {
     try {
       // Verify refresh token
       const decoded = await this.verifyToken(refreshToken, 'refresh');
-      
+
       // Blacklist old refresh token
       await this.blacklistToken(decoded.jti, SECURITY_CONFIG.jwt.refreshTokenExpiry);
-      
+
       // Generate new tokens
       const newTokens = this.generateTokens({
         userId: decoded.userId,
@@ -507,17 +527,19 @@ export class SecureAuthService {
       const sessionKey = `singglebee:sessions:${userId}`;
       const sessions = await this.redis.lrange(sessionKey, 0, -1);
 
-      return sessions.map(session => {
-        try {
-          const parsed = JSON.parse(session);
-          return {
-            ...parsed,
-            isCurrent: false, // Would need to compare with current token
-          };
-        } catch {
-          return null;
-        }
-      }).filter(Boolean);
+      return sessions
+        .map((session) => {
+          try {
+            const parsed = JSON.parse(session);
+            return {
+              ...parsed,
+              isCurrent: false, // Would need to compare with current token
+            };
+          } catch {
+            return null;
+          }
+        })
+        .filter(Boolean);
     } catch (error) {
       logger.error('Get sessions error:', error);
       return [];

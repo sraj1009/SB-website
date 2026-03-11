@@ -12,7 +12,10 @@ const DashboardCustomers: React.FC<DashboardCustomersProps> = ({ customers, isLo
     return (
       <div className="space-y-4">
         {[...Array(5)].map((_, i) => (
-          <div key={i} className="bg-white rounded-[2rem] p-6 shadow-honey border-4 border-brand-primary/20 animate-pulse">
+          <div
+            key={i}
+            className="bg-white rounded-[2rem] p-6 shadow-honey border-4 border-brand-primary/20 animate-pulse"
+          >
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-brand-light rounded-full"></div>
               <div className="flex-1">
@@ -26,9 +29,10 @@ const DashboardCustomers: React.FC<DashboardCustomersProps> = ({ customers, isLo
     );
   }
 
-  const filteredCustomers = customers.filter(customer => 
-    customer.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    customer.email?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredCustomers = customers.filter(
+    (customer) =>
+      customer.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      customer.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -54,38 +58,51 @@ const DashboardCustomers: React.FC<DashboardCustomersProps> = ({ customers, isLo
           </div>
         ) : (
           filteredCustomers.map((customer) => (
-            <div key={customer.id} className="bg-white rounded-[2rem] p-6 shadow-honey border-4 border-brand-primary/20 hover:scale-105 transition-transform">
+            <div
+              key={customer.id}
+              className="bg-white rounded-[2rem] p-6 shadow-honey border-4 border-brand-primary/20 hover:scale-105 transition-transform"
+            >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-brand-primary rounded-full flex items-center justify-center font-bold text-brand-black">
                     {customer.name?.charAt(0).toUpperCase() || 'U'}
                   </div>
                   <div>
-                    <h4 className="font-bold text-brand-black">{customer.name || 'Unknown Customer'}</h4>
+                    <h4 className="font-bold text-brand-black">
+                      {customer.name || 'Unknown Customer'}
+                    </h4>
                     <p className="text-sm text-gray-500">{customer.email || 'No email'}</p>
                     <p className="text-sm text-gray-500">{customer.phone || 'No phone'}</p>
                   </div>
                 </div>
-                
+
                 <div className="text-right">
                   <div className="mb-2">
                     <p className="text-sm text-gray-500">Total Orders</p>
-                    <p className="text-xl font-black text-brand-black">{customer.totalOrders || 0}</p>
+                    <p className="text-xl font-black text-brand-black">
+                      {customer.totalOrders || 0}
+                    </p>
                   </div>
                   <div className="mb-2">
                     <p className="text-sm text-gray-500">Total Spent</p>
-                    <p className="text-lg font-bold text-brand-black">₹{customer.totalSpent || 0}</p>
+                    <p className="text-lg font-bold text-brand-black">
+                      ₹{customer.totalSpent || 0}
+                    </p>
                   </div>
                   <div>
-                    <span className={`px-3 py-1 rounded-xl text-sm font-bold ${
-                      customer.isActive ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-600'
-                    }`}>
+                    <span
+                      className={`px-3 py-1 rounded-xl text-sm font-bold ${
+                        customer.isActive
+                          ? 'bg-green-100 text-green-600'
+                          : 'bg-gray-100 text-gray-600'
+                      }`}
+                    >
                       {customer.isActive ? 'Active' : 'Inactive'}
                     </span>
                   </div>
                 </div>
               </div>
-              
+
               <div className="mt-4 pt-4 border-t border-brand-primary/20 flex gap-2">
                 <button className="px-4 py-2 bg-brand-primary text-brand-black rounded-xl font-bold hover:scale-105 transition-transform">
                   View Orders

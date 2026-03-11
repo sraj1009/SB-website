@@ -1,7 +1,14 @@
 import React, { useState } from 'react';
 import BeeCharacter from './BeeCharacter';
 
-export type SupportPageType = 'help' | 'returns' | 'shipping' | 'contact' | 'about' | 'terms' | 'privacy';
+export type SupportPageType =
+  | 'help'
+  | 'returns'
+  | 'shipping'
+  | 'contact'
+  | 'about'
+  | 'terms'
+  | 'privacy';
 
 interface SupportPageProps {
   page: SupportPageType;
@@ -752,7 +759,8 @@ const SupportPage: React.FC<SupportPageProps> = ({ page, onBack, onNavigate }) =
 
               <div className="pt-10 border-t border-brand-primary/5">
                 <p className="text-sm text-gray-400 font-bold text-center">
-                  By using SinggleBee, you agree to the collection and use of info as described here.
+                  By using SinggleBee, you agree to the collection and use of info as described
+                  here.
                 </p>
               </div>
             </div>

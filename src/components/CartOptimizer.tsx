@@ -58,7 +58,7 @@ const CartOptimizer: React.FC<CartOptimizerProps> = ({
   items,
   onAddItem,
   onRemoveItem,
-  onUpdateQuantity
+  onUpdateQuantity,
 }) => {
   const [optimizationData, setOptimizationData] = useState<OptimizationData | null>(null);
   const [timeLeft, setTimeLeft] = useState<string>('');
@@ -82,7 +82,7 @@ const CartOptimizer: React.FC<CartOptimizerProps> = ({
   }, [optimizationData]);
 
   const calculateOptimizations = () => {
-    const currentTotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const currentTotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
     const amountForFreeShipping = Math.max(0, FREE_SHIPPING_THRESHOLD - currentTotal);
 
     // Generate recommendations
@@ -98,7 +98,7 @@ const CartOptimizer: React.FC<CartOptimizerProps> = ({
       recommendedProducts,
       bundleDiscounts,
       timeLimitedOffer,
-      smartUpsell
+      smartUpsell,
     });
 
     // Track cart optimization calculation
@@ -106,8 +106,8 @@ const CartOptimizer: React.FC<CartOptimizerProps> = ({
       cart_value: currentTotal,
       items_count: items.length,
       free_shipping_progress: (currentTotal / FREE_SHIPPING_THRESHOLD) * 100,
-      bundle_applicable: bundleDiscounts.some(b => b.applicable),
-      time_offer_active: timeLimitedOffer?.isActive || false
+      bundle_applicable: bundleDiscounts.some((b) => b.applicable),
+      time_offer_active: timeLimitedOffer?.isActive || false,
     });
   };
 
@@ -121,7 +121,7 @@ const CartOptimizer: React.FC<CartOptimizerProps> = ({
         price: 599,
         quantity: 1,
         category: 'books',
-        image: '/images/book-004.jpg'
+        image: '/images/book-004.jpg',
       },
       {
         id: 'stationery-003',
@@ -130,7 +130,7 @@ const CartOptimizer: React.FC<CartOptimizerProps> = ({
         price: 299,
         quantity: 1,
         category: 'stationery',
-        image: '/images/notebook-set.jpg'
+        image: '/images/notebook-set.jpg',
       },
       {
         id: 'book-005',
@@ -139,17 +139,17 @@ const CartOptimizer: React.FC<CartOptimizerProps> = ({
         price: 449,
         quantity: 1,
         category: 'books',
-        image: '/images/book-005.jpg'
-      }
+        image: '/images/book-005.jpg',
+      },
     ];
 
     // Filter out items already in cart and recommend based on categories
-    const cartCategories = cartItems.map(item => item.category);
-    const cartProductIds = cartItems.map(item => item.productId);
+    const cartCategories = cartItems.map((item) => item.category);
+    const cartProductIds = cartItems.map((item) => item.productId);
 
     return allProducts
-      .filter(product => !cartProductIds.includes(product.productId))
-      .filter(product => cartCategories.includes(product.category)) // Same category preference
+      .filter((product) => !cartProductIds.includes(product.productId))
+      .filter((product) => cartCategories.includes(product.category)) // Same category preference
       .slice(0, 3);
   };
 
@@ -163,7 +163,7 @@ const CartOptimizer: React.FC<CartOptimizerProps> = ({
         discountPercentage: 15,
         discountAmount: 0,
         applicable: false,
-        savings: 0
+        savings: 0,
       },
       {
         id: 'stationery-bundle',
@@ -173,7 +173,7 @@ const CartOptimizer: React.FC<CartOptimizerProps> = ({
         discountPercentage: 10,
         discountAmount: 0,
         applicable: false,
-        savings: 0
+        savings: 0,
       },
       {
         id: 'mixed-bundle',
@@ -183,13 +183,13 @@ const CartOptimizer: React.FC<CartOptimizerProps> = ({
         discountPercentage: 20,
         discountAmount: 0,
         applicable: false,
-        savings: 0
-      }
+        savings: 0,
+      },
     ];
 
     // Check bundle applicability
-    bundles.forEach(bundle => {
-      const eligibleItems = cartItems.filter(item => 
+    bundles.forEach((bundle) => {
+      const eligibleItems = cartItems.filter((item) =>
         bundle.requiredItems.includes(item.category)
       );
 
@@ -200,7 +200,10 @@ const CartOptimizer: React.FC<CartOptimizerProps> = ({
       }
 
       if (bundle.applicable) {
-        const eligibleTotal = eligibleItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        const eligibleTotal = eligibleItems.reduce(
+          (sum, item) => sum + item.price * item.quantity,
+          0
+        );
         bundle.savings = eligibleTotal * (bundle.discountPercentage / 100);
         bundle.discountAmount = bundle.savings;
       }
@@ -221,7 +224,7 @@ const CartOptimizer: React.FC<CartOptimizerProps> = ({
         discountPercentage: 5,
         expiresAt,
         message: 'Complete checkout in 10 min for 5% off!',
-        isActive: true
+        isActive: true,
       };
     }
 
@@ -232,7 +235,7 @@ const CartOptimizer: React.FC<CartOptimizerProps> = ({
     // Generate upsell items based on cart contents
     const upsellItems: UpsellItem[] = [];
 
-    cartItems.forEach(item => {
+    cartItems.forEach((item) => {
       if (item.category === 'books') {
         upsellItems.push({
           product: {
@@ -242,10 +245,10 @@ const CartOptimizer: React.FC<CartOptimizerProps> = ({
             price: 99,
             quantity: 1,
             category: 'stationery',
-            image: '/images/bookmarks.jpg'
+            image: '/images/bookmarks.jpg',
           },
           reason: 'Customers who bought this book also loved these bookmarks',
-          confidence: 0.85
+          confidence: 0.85,
         });
       }
 
@@ -258,10 +261,10 @@ const CartOptimizer: React.FC<CartOptimizerProps> = ({
             price: 199,
             quantity: 1,
             category: 'stationery',
-            image: '/images/pen-set.jpg'
+            image: '/images/pen-set.jpg',
           },
           reason: 'Complete your stationery collection',
-          confidence: 0.78
+          confidence: 0.78,
         });
       }
     });
@@ -288,12 +291,12 @@ const CartOptimizer: React.FC<CartOptimizerProps> = ({
 
   const handleAddRecommendedItem = (item: CartItem) => {
     onAddItem(item);
-    
+
     analytics.track('recommended_item_added', {
       product_id: item.productId,
       product_name: item.name,
       price: item.price,
-      source: 'cart_optimizer'
+      source: 'cart_optimizer',
     });
 
     trackAddToCart(item.productId, item.price, item.quantity);
@@ -305,11 +308,12 @@ const CartOptimizer: React.FC<CartOptimizerProps> = ({
       bundle_id: bundle.id,
       bundle_name: bundle.name,
       discount_percentage: bundle.discountPercentage,
-      savings: bundle.savings
+      savings: bundle.savings,
     });
   };
 
-  const freeShippingProgress = (optimizationData?.currentTotal || 0) / FREE_SHIPPING_THRESHOLD * 100;
+  const freeShippingProgress =
+    ((optimizationData?.currentTotal || 0) / FREE_SHIPPING_THRESHOLD) * 100;
 
   if (!optimizationData) {
     return <div>Loading cart optimizations...</div>;
@@ -325,14 +329,14 @@ const CartOptimizer: React.FC<CartOptimizerProps> = ({
             ₹{optimizationData.currentTotal} / ₹{FREE_SHIPPING_THRESHOLD}
           </span>
         </div>
-        
+
         <div className="w-full bg-gray-200 rounded-full h-3 mb-2">
-          <div 
+          <div
             className="bg-green-500 h-3 rounded-full transition-all duration-500"
             style={{ width: `${Math.min(freeShippingProgress, 100)}%` }}
           />
         </div>
-        
+
         {optimizationData.amountForFreeShipping > 0 ? (
           <p className="text-sm text-orange-600 font-medium">
             Add ₹{optimizationData.amountForFreeShipping} more for FREE shipping! 🚚
@@ -361,12 +365,14 @@ const CartOptimizer: React.FC<CartOptimizerProps> = ({
       )}
 
       {/* Bundle Discounts */}
-      {optimizationData.bundleDiscounts.some(b => b.applicable) && (
+      {optimizationData.bundleDiscounts.some((b) => b.applicable) && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h3 className="text-lg font-semibold text-blue-800 mb-3">💰 Bundle Discounts Available</h3>
+          <h3 className="text-lg font-semibold text-blue-800 mb-3">
+            💰 Bundle Discounts Available
+          </h3>
           {optimizationData.bundleDiscounts
-            .filter(bundle => bundle.applicable)
-            .map(bundle => (
+            .filter((bundle) => bundle.applicable)
+            .map((bundle) => (
               <div key={bundle.id} className="flex items-center justify-between mb-2">
                 <div>
                   <p className="font-medium text-blue-700">{bundle.name}</p>
@@ -398,14 +404,14 @@ const CartOptimizer: React.FC<CartOptimizerProps> = ({
               {showUpsell ? 'Hide' : 'Show'}
             </button>
           </div>
-          
+
           {showUpsell && (
             <div className="space-y-2">
               {optimizationData.smartUpsell.map((upsell, index) => (
                 <div key={index} className="flex items-center justify-between bg-white p-3 rounded">
                   <div className="flex items-center space-x-3">
-                    <img 
-                      src={upsell.product.image} 
+                    <img
+                      src={upsell.product.image}
                       alt={upsell.product.name}
                       className="w-12 h-12 object-cover rounded"
                     />
@@ -442,13 +448,13 @@ const CartOptimizer: React.FC<CartOptimizerProps> = ({
               {showBundle ? 'Hide' : 'Show'}
             </button>
           </div>
-          
+
           {showBundle && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {optimizationData.recommendedProducts.map(product => (
+              {optimizationData.recommendedProducts.map((product) => (
                 <div key={product.id} className="flex items-center space-x-3 bg-white p-3 rounded">
-                  <img 
-                    src={product.image} 
+                  <img
+                    src={product.image}
                     alt={product.name}
                     className="w-16 h-16 object-cover rounded"
                   />
@@ -493,8 +499,9 @@ const CartOptimizer: React.FC<CartOptimizerProps> = ({
           <div className="border-t pt-2 flex justify-between font-bold text-lg">
             <span>Total</span>
             <span>
-              ₹{optimizationData.amountForFreeShipping > 0 
-                ? optimizationData.currentTotal + 99 
+              ₹
+              {optimizationData.amountForFreeShipping > 0
+                ? optimizationData.currentTotal + 99
                 : optimizationData.currentTotal}
             </span>
           </div>

@@ -1,5 +1,5 @@
 import express from 'express';
-import { deleteUserData, exportUserData, getDataActivities } from '../../controllers/gdprController.js';
+import { deleteUserData, exportUserData, getDataActivities } from '../../../controllers/gdprController.js';
 import { authenticate } from '../../../middleware/auth.js';
 import { rateLimit } from 'express-rate-limit';
 

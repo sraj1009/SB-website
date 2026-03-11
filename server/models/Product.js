@@ -246,11 +246,6 @@ productSchema.virtual('discountedPrice').get(function () {
   return this.price;
 });
 
-// Virtual for 'image' (returns first in array)
-productSchema.virtual('image').get(function () {
-  return this.images && this.images.length > 0 ? this.images[0] : null;
-});
-
 // Virtual for 'stock' backward compatibility
 productSchema
   .virtual('stock')

@@ -29,7 +29,9 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
   currentTime,
 }) => {
   return (
-    <div className={`${collapsed ? 'w-20' : 'w-64'} bg-white rounded-[2rem] shadow-honey border-4 border-brand-primary/20 p-6 transition-all duration-300 h-fit sticky top-6`}>
+    <div
+      className={`${collapsed ? 'w-20' : 'w-64'} bg-white rounded-[2rem] shadow-honey border-4 border-brand-primary/20 p-6 transition-all duration-300 h-fit sticky top-6`}
+    >
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         {!collapsed && (

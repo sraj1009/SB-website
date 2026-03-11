@@ -22,13 +22,16 @@ export const reviewKeys = {
 };
 
 // Get reviews for a product
-export function useReviews(productId: string, filters: {
-  page?: number;
-  limit?: number;
-  sortBy?: 'newest' | 'oldest' | 'rating-high' | 'rating-low' | 'helpful';
-  rating?: number;
-  verifiedOnly?: boolean;
-} = {}) {
+export function useReviews(
+  productId: string,
+  filters: {
+    page?: number;
+    limit?: number;
+    sortBy?: 'newest' | 'oldest' | 'rating-high' | 'rating-low' | 'helpful';
+    rating?: number;
+    verifiedOnly?: boolean;
+  } = {}
+) {
   return useQuery({
     queryKey: reviewKeys.list(productId, filters),
     queryFn: () => reviewService.getReviews(productId, filters),
@@ -39,14 +42,17 @@ export function useReviews(productId: string, filters: {
 }
 
 // Get infinite reviews
-export function useInfiniteReviews(productId: string, filters: {
-  sortBy?: 'newest' | 'oldest' | 'rating-high' | 'rating-low' | 'helpful';
-  rating?: number;
-  verifiedOnly?: boolean;
-} = {}) {
+export function useInfiniteReviews(
+  productId: string,
+  filters: {
+    sortBy?: 'newest' | 'oldest' | 'rating-high' | 'rating-low' | 'helpful';
+    rating?: number;
+    verifiedOnly?: boolean;
+  } = {}
+) {
   return useInfiniteQuery({
     queryKey: reviewKeys.list(productId, filters),
-    queryFn: ({ pageParam = 1 }) => 
+    queryFn: ({ pageParam = 1 }) =>
       reviewService.getReviews(productId, { ...filters, page: pageParam }),
     getNextPageParam: (lastPage, allPages) => {
       if (lastPage.pagination.page < lastPage.pagination.totalPages) {
@@ -76,11 +82,16 @@ export function useCreateReview() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ productId, reviewData }: { productId: string; reviewData: CreateReviewRequest }) => 
-      reviewService.createReview(productId, reviewData),
+    mutationFn: ({
+      productId,
+      reviewData,
+    }: {
+      productId: string;
+      reviewData: CreateReviewRequest;
+    }) => reviewService.createReview(productId, reviewData),
     onSuccess: (data, variables) => {
       toast.success('Review submitted successfully! 🎉');
-      
+
       // Invalidate review queries
       queryClient.invalidateQueries({ queryKey: reviewKeys.list(variables.productId) });
       queryClient.invalidateQueries({ queryKey: reviewKeys.summary(variables.productId) });
@@ -98,11 +109,11 @@ export function useUpdateReview() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ reviewId, reviewData }: { reviewId: string; reviewData: UpdateReviewRequest }) => 
+    mutationFn: ({ reviewId, reviewData }: { reviewId: string; reviewData: UpdateReviewRequest }) =>
       reviewService.updateReview(reviewId, reviewData),
     onSuccess: (data) => {
       toast.success('Review updated successfully!');
-      
+
       // Invalidate review queries
       queryClient.invalidateQueries({ queryKey: reviewKeys.all });
     },
@@ -121,7 +132,7 @@ export function useDeleteReview() {
     mutationFn: (reviewId: string) => reviewService.deleteReview(reviewId),
     onSuccess: () => {
       toast.success('Review deleted successfully');
-      
+
       // Invalidate review queries
       queryClient.invalidateQueries({ queryKey: reviewKeys.all });
     },
@@ -140,7 +151,7 @@ export function useMarkHelpful() {
     mutationFn: (reviewId: string) => reviewService.markHelpful(reviewId),
     onSuccess: (data) => {
       toast.success('Marked as helpful! 👍');
-      
+
       // Update the specific review in cache
       queryClient.setQueryData(reviewKeys.detail(data.id), data);
     },
@@ -159,7 +170,7 @@ export function useRemoveHelpful() {
     mutationFn: (reviewId: string) => reviewService.removeHelpful(reviewId),
     onSuccess: (data) => {
       toast.success('Helpful vote removed');
-      
+
       // Update the specific review in cache
       queryClient.setQueryData(reviewKeys.detail(data.id), data);
     },
@@ -173,7 +184,7 @@ export function useRemoveHelpful() {
 // Report review mutation
 export function useReportReview() {
   return useMutation({
-    mutationFn: ({ reviewId, reason }: { reviewId: string; reason: string }) => 
+    mutationFn: ({ reviewId, reason }: { reviewId: string; reason: string }) =>
       reviewService.reportReview(reviewId, reason),
     onSuccess: () => {
       toast.success('Review reported. Thank you for helping us maintain quality! 🙏');
@@ -186,12 +197,14 @@ export function useReportReview() {
 }
 
 // Get user's reviews
-export function useUserReviews(filters: {
-  page?: number;
-  limit?: number;
-  productId?: string;
-  rating?: number;
-} = {}) {
+export function useUserReviews(
+  filters: {
+    page?: number;
+    limit?: number;
+    productId?: string;
+    rating?: number;
+  } = {}
+) {
   return useQuery({
     queryKey: reviewKeys.userReviews(filters),
     queryFn: () => reviewService.getUserReviews(filters),
@@ -201,11 +214,13 @@ export function useUserReviews(filters: {
 }
 
 // Get review statistics (admin only)
-export function useReviewStats(filters: {
-  startDate?: string;
-  endDate?: string;
-  productId?: string;
-} = {}) {
+export function useReviewStats(
+  filters: {
+    startDate?: string;
+    endDate?: string;
+    productId?: string;
+  } = {}
+) {
   return useQuery({
     queryKey: reviewKeys.stats(),
     queryFn: () => reviewService.getReviewStats(filters),
@@ -222,7 +237,7 @@ export function useApproveReview() {
     mutationFn: (reviewId: string) => reviewService.approveReview(reviewId),
     onSuccess: (data) => {
       toast.success('Review approved ✅');
-      
+
       // Update review in cache
       queryClient.setQueryData(reviewKeys.detail(data.id), data);
       queryClient.invalidateQueries({ queryKey: reviewKeys.pending() });
@@ -239,11 +254,11 @@ export function useRejectReview() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ reviewId, reason }: { reviewId: string; reason: string }) => 
+    mutationFn: ({ reviewId, reason }: { reviewId: string; reason: string }) =>
       reviewService.rejectReview(reviewId, reason),
     onSuccess: (data) => {
       toast.success('Review rejected ❌');
-      
+
       // Update review in cache
       queryClient.setQueryData(reviewKeys.detail(data.id), data);
       queryClient.invalidateQueries({ queryKey: reviewKeys.pending() });
@@ -260,11 +275,11 @@ export function useRespondToReview() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ reviewId, response }: { reviewId: string; response: string }) => 
+    mutationFn: ({ reviewId, response }: { reviewId: string; response: string }) =>
       reviewService.respondToReview(reviewId, response),
     onSuccess: (data) => {
       toast.success('Response added successfully! 💬');
-      
+
       // Update review in cache
       queryClient.setQueryData(reviewKeys.detail(data.id), data);
     },
@@ -276,10 +291,12 @@ export function useRespondToReview() {
 }
 
 // Get pending reviews (admin only)
-export function usePendingReviews(filters: {
-  page?: number;
-  limit?: number;
-} = {}) {
+export function usePendingReviews(
+  filters: {
+    page?: number;
+    limit?: number;
+  } = {}
+) {
   return useQuery({
     queryKey: reviewKeys.pending(),
     queryFn: () => reviewService.getPendingReviews(filters),
@@ -313,14 +330,14 @@ export function useReviewSummary(productId: string) {
 // Custom hook for review management
 export function useReviewManager() {
   const queryClient = useQueryClient();
-  
+
   const createReview = useCreateReview();
   const updateReview = useUpdateReview();
   const deleteReview = useDeleteReview();
   const markHelpful = useMarkHelpful();
   const removeHelpful = useRemoveHelpful();
   const reportReview = useReportReview();
-  
+
   return {
     // Mutations
     createReview: createReview.mutateAsync,
@@ -329,7 +346,7 @@ export function useReviewManager() {
     markHelpful: markHelpful.mutateAsync,
     removeHelpful: removeHelpful.mutateAsync,
     reportReview: reportReview.mutateAsync,
-    
+
     // Loading states
     isCreating: createReview.isPending,
     isUpdating: updateReview.isPending,
@@ -337,7 +354,7 @@ export function useReviewManager() {
     isMarkingHelpful: markHelpful.isPending,
     isRemovingHelpful: removeHelpful.isPending,
     isReporting: reportReview.isPending,
-    
+
     // Error states
     createError: createReview.error,
     updateError: updateReview.error,
@@ -351,20 +368,20 @@ export function useReviewManager() {
 // Custom hook for review moderation (admin)
 export function useReviewModeration() {
   const queryClient = useQueryClient();
-  
+
   const approveReview = useApproveReview();
   const rejectReview = useRejectReview();
   const respondToReview = useRespondToReview();
-  
+
   return {
     approveReview: approveReview.mutateAsync,
     rejectReview: rejectReview.mutateAsync,
     respondToReview: respondToReview.mutateAsync,
-    
+
     isApproving: approveReview.isPending,
     isRejecting: rejectReview.isPending,
     isResponding: respondToReview.isPending,
-    
+
     approveError: approveReview.error,
     rejectError: rejectReview.error,
     respondError: respondToReview.error,
@@ -374,19 +391,19 @@ export function useReviewModeration() {
 // Custom hook for review filters
 export function useReviewFilters(initialFilters: any = {}) {
   const [filters, setFilters] = React.useState(initialFilters);
-  
+
   const updateFilter = React.useCallback((key: string, value: any) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
+    setFilters((prev) => ({ ...prev, [key]: value }));
   }, []);
-  
+
   const clearFilters = React.useCallback(() => {
     setFilters({});
   }, []);
-  
+
   const resetFilters = React.useCallback(() => {
     setFilters(initialFilters);
   }, [initialFilters]);
-  
+
   return {
     filters,
     setFilters,
@@ -399,19 +416,21 @@ export function useReviewFilters(initialFilters: any = {}) {
 // Custom hook for review rating breakdown
 export function useReviewRatingBreakdown(productId: string) {
   const reviews = useReviews(productId);
-  
+
   const ratingBreakdown = React.useMemo(() => {
     if (!reviews.data?.summary) return null;
-    
+
     const { ratingDistribution, totalReviews } = reviews.data.summary;
-    
-    return Object.entries(ratingDistribution).map(([rating, count]) => ({
-      rating: parseInt(rating),
-      count,
-      percentage: totalReviews > 0 ? (count / totalReviews) * 100 : 0,
-    })).sort((a, b) => b.rating - a.rating);
+
+    return Object.entries(ratingDistribution)
+      .map(([rating, count]) => ({
+        rating: parseInt(rating),
+        count,
+        percentage: totalReviews > 0 ? (count / totalReviews) * 100 : 0,
+      }))
+      .sort((a, b) => b.rating - a.rating);
   }, [reviews.data]);
-  
+
   return {
     ratingBreakdown,
     isLoading: reviews.isLoading,
@@ -424,12 +443,12 @@ export function useReviewHelpful(reviewId: string) {
   const review = useReview(reviewId);
   const markHelpful = useMarkHelpful();
   const removeHelpful = useRemoveHelpful();
-  
+
   const isHelpful = React.useMemo(() => {
     // This would need to be tracked in user state/localStorage
     return false; // Placeholder
   }, [reviewId]);
-  
+
   const handleToggleHelpful = React.useCallback(() => {
     if (isHelpful) {
       removeHelpful.mutate(reviewId);
@@ -437,7 +456,7 @@ export function useReviewHelpful(reviewId: string) {
       markHelpful.mutate(reviewId);
     }
   }, [isHelpful, reviewId, markHelpful, removeHelpful]);
-  
+
   return {
     isHelpful,
     helpfulCount: review.data?.helpfulCount || 0,
@@ -454,41 +473,44 @@ export function useReviewForm() {
     title: '',
     comment: '',
   });
-  
+
   const [errors, setErrors] = React.useState<Record<string, string>>({});
-  
+
   const validateForm = React.useCallback(() => {
     const newErrors: Record<string, string> = {};
-    
+
     if (formData.rating < 1 || formData.rating > 5) {
       newErrors.rating = 'Rating is required';
     }
-    
+
     if (!formData.comment || formData.comment.trim().length < 10) {
       newErrors.comment = 'Review must be at least 10 characters';
     }
-    
+
     if (formData.comment && formData.comment.trim().length > 1000) {
       newErrors.comment = 'Review must be less than 1000 characters';
     }
-    
+
     if (formData.title && formData.title.trim().length > 100) {
       newErrors.title = 'Title must be less than 100 characters';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   }, [formData]);
-  
-  const updateField = React.useCallback((field: keyof CreateReviewRequest, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    
-    // Clear error for this field
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
-    }
-  }, [errors]);
-  
+
+  const updateField = React.useCallback(
+    (field: keyof CreateReviewRequest, value: any) => {
+      setFormData((prev) => ({ ...prev, [field]: value }));
+
+      // Clear error for this field
+      if (errors[field]) {
+        setErrors((prev) => ({ ...prev, [field]: '' }));
+      }
+    },
+    [errors]
+  );
+
   const resetForm = React.useCallback(() => {
     setFormData({
       rating: 0,
@@ -497,7 +519,7 @@ export function useReviewForm() {
     });
     setErrors({});
   }, []);
-  
+
   return {
     formData,
     errors,
@@ -511,10 +533,10 @@ export function useReviewForm() {
 // Custom hook for review analytics
 export function useReviewAnalytics() {
   const stats = useReviewStats();
-  
+
   const analytics = React.useMemo(() => {
     if (!stats.data) return null;
-    
+
     return {
       totalReviews: stats.data.totalReviews,
       averageRating: stats.data.averageRating,
@@ -524,7 +546,7 @@ export function useReviewAnalytics() {
       recentReviews: stats.data.recentReviews,
     };
   }, [stats.data]);
-  
+
   return {
     analytics,
     isLoading: stats.isLoading,
@@ -536,7 +558,7 @@ export function useReviewAnalytics() {
 // Custom hook for review notifications
 export function useReviewNotifications() {
   const pendingReviews = usePendingReviews({ limit: 10 });
-  
+
   // Show notification for pending reviews
   React.useEffect(() => {
     if (pendingReviews.data?.reviews && pendingReviews.data.reviews.length > 0) {
@@ -547,7 +569,7 @@ export function useReviewNotifications() {
       }
     }
   }, [pendingReviews.data]);
-  
+
   return {
     pendingReviews: pendingReviews.data?.reviews || [],
     pendingCount: pendingReviews.data?.reviews?.length || 0,

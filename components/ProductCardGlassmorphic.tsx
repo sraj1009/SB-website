@@ -23,7 +23,7 @@ const Rating: React.FC<RatingProps> = ({ rating, size = 'md' }) => {
   const sizeClasses = {
     sm: 'w-3 h-3',
     md: 'w-4 h-4',
-    lg: 'w-5 h-5'
+    lg: 'w-5 h-5',
   };
 
   return (
@@ -32,9 +32,7 @@ const Rating: React.FC<RatingProps> = ({ rating, size = 'md' }) => {
         <Star
           key={star}
           className={`${sizeClasses[size]} ${
-            star <= rating 
-              ? 'text-yellow-500 fill-yellow-500' 
-              : 'text-gray-300'
+            star <= rating ? 'text-yellow-500 fill-yellow-500' : 'text-gray-300'
           }`}
           strokeWidth={2}
         />
@@ -62,7 +60,7 @@ const ProductCardGlassmorphic: React.FC<ProductCardGlassmorphicProps> = ({
   isWishlisted = false,
   onToggleWishlist,
   index = 0,
-  className = "",
+  className = '',
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isImageLoaded, setIsImageLoaded] = useState(false);
@@ -101,10 +99,7 @@ const ProductCardGlassmorphic: React.FC<ProductCardGlassmorphicProps> = ({
         className={`
           relative overflow-hidden rounded-3xl transition-all duration-300
           bg-white/85 backdrop-blur-xl border border-gray-200
-          ${isHovered 
-            ? 'shadow-2xl border-yellow-400/50 ring-4 ring-yellow-400/20' 
-            : 'shadow-lg'
-          }
+          ${isHovered ? 'shadow-2xl border-yellow-400/50 ring-4 ring-yellow-400/20' : 'shadow-lg'}
         `}
         style={{
           backdropFilter: 'blur(12px)',
@@ -112,7 +107,7 @@ const ProductCardGlassmorphic: React.FC<ProductCardGlassmorphicProps> = ({
         }}
       >
         {/* Honeycomb Pattern Overlay */}
-        <div 
+        <div
           className="absolute inset-0 opacity-10 pointer-events-none"
           style={{
             backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='52' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0 L52 15 L52 37 L30 52 L8 37 L8 15 Z' fill='none' stroke='%23FFA500' stroke-width='0.5'/%3E%3C/svg%3E")`,
@@ -149,19 +144,22 @@ const ProductCardGlassmorphic: React.FC<ProductCardGlassmorphicProps> = ({
           )}
 
           {/* Quick Actions Overlay */}
-          <div className={`
+          <div
+            className={`
             absolute top-3 right-3 flex flex-col gap-2 transition-all duration-300
             ${isHovered ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-2'}
-          `}>
+          `}
+          >
             {/* Wishlist Button */}
             <button
               onClick={handleToggleWishlist}
               className={`
                 w-10 h-10 rounded-full backdrop-blur-md border border-white/30
                 flex items-center justify-center transition-all duration-200
-                ${isWishlisted 
-                  ? 'bg-red-500 text-white' 
-                  : 'bg-white/20 text-gray-600 hover:bg-white/30'
+                ${
+                  isWishlisted
+                    ? 'bg-red-500 text-white'
+                    : 'bg-white/20 text-gray-600 hover:bg-white/30'
                 }
               `}
               aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
@@ -213,9 +211,7 @@ const ProductCardGlassmorphic: React.FC<ProductCardGlassmorphicProps> = ({
             <h3 className="text-base font-semibold text-gray-900 leading-tight line-clamp-2">
               {product.title}
             </h3>
-            {product.author && (
-              <p className="text-sm text-gray-600">by {product.author}</p>
-            )}
+            {product.author && <p className="text-sm text-gray-600">by {product.author}</p>}
           </div>
 
           {/* Rating */}
@@ -224,13 +220,9 @@ const ProductCardGlassmorphic: React.FC<ProductCardGlassmorphicProps> = ({
           {/* Price and Action */}
           <div className="flex items-center justify-between pt-4 border-t border-gray-100">
             <div className="space-y-1">
-              <div className="text-2xl font-bold text-amber-600">
-                ₹{product.price}
-              </div>
+              <div className="text-2xl font-bold text-amber-600">₹{product.price}</div>
               {product.originalPrice && product.originalPrice > product.price && (
-                <div className="text-sm text-gray-500 line-through">
-                  ₹{product.originalPrice}
-                </div>
+                <div className="text-sm text-gray-500 line-through">₹{product.originalPrice}</div>
               )}
             </div>
 
@@ -241,16 +233,17 @@ const ProductCardGlassmorphic: React.FC<ProductCardGlassmorphicProps> = ({
               className={`
                 relative overflow-hidden px-4 py-2 rounded-xl font-semibold text-sm
                 transition-all duration-200 flex items-center gap-2 min-h-[44px]
-                ${product.isOutOfStock
-                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                  : 'bg-gradient-to-r from-amber-400 to-amber-500 text-white hover:from-amber-500 hover:to-amber-600 shadow-md hover:shadow-lg active:scale-95'
+                ${
+                  product.isOutOfStock
+                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-amber-400 to-amber-500 text-white hover:from-amber-500 hover:to-amber-600 shadow-md hover:shadow-lg active:scale-95'
                 }
               `}
               aria-label={product.isOutOfStock ? 'Out of stock' : 'Add to cart'}
             >
               <ShoppingCart className="w-4 h-4" />
               <span>{product.isOutOfStock ? 'Unavailable' : 'Add'}</span>
-              
+
               {/* Shimmer Effect */}
               {!product.isOutOfStock && (
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
@@ -260,13 +253,14 @@ const ProductCardGlassmorphic: React.FC<ProductCardGlassmorphicProps> = ({
         </div>
 
         {/* Hover Glow Effect */}
-        <div 
+        <div
           className={`
             absolute inset-0 rounded-3xl opacity-0 transition-opacity duration-300 pointer-events-none
             ${isHovered ? 'opacity-100' : 'opacity-0'}
           `}
           style={{
-            background: 'linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 165, 0, 0.1) 100%)',
+            background:
+              'linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 165, 0, 0.1) 100%)',
             boxShadow: 'inset 0 0 30px rgba(255, 193, 7, 0.2)',
           }}
         />

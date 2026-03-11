@@ -17,7 +17,7 @@ const ProductGridGlassmorphic: React.FC<ProductGridGlassmorphicProps> = ({
   onProductClick,
   onQuickView,
   isLoading = false,
-  className = "",
+  className = '',
 }) => {
   if (isLoading) {
     return (
@@ -27,7 +27,7 @@ const ProductGridGlassmorphic: React.FC<ProductGridGlassmorphicProps> = ({
             <div className="bg-white/85 backdrop-blur-xl border border-gray-200 rounded-3xl overflow-hidden shadow-lg">
               {/* Image Skeleton */}
               <div className="aspect-[4/5] bg-gradient-to-br from-gray-100 to-gray-50"></div>
-              
+
               {/* Content Skeleton */}
               <div className="p-6 space-y-4">
                 <div className="h-3 w-20 bg-gray-200 rounded-full"></div>
@@ -63,7 +63,7 @@ const ProductGridGlassmorphic: React.FC<ProductGridGlassmorphicProps> = ({
   }
 
   return (
-    <div 
+    <div
       className={`
         grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6
         ${className}

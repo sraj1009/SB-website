@@ -114,11 +114,12 @@ const ProductCard: React.FC<ProductCardProps> = ({
               onClick={handleAddToCart}
               disabled={addStatus !== 'idle' || product.isOutOfStock || product.isComingSoon}
               className={`group/hive flex items-center gap-2.5 px-6 py-3 rounded-full text-[10px] font-black uppercase tracking-[0.18em] backdrop-blur-md shadow-2xl transition-all duration-500 transform border w-max
-                ${product.isOutOfStock || product.isComingSoon
-                  ? 'bg-zinc-200/90 text-zinc-400 border-zinc-300 cursor-not-allowed shadow-none'
-                  : addStatus === 'idle'
-                    ? 'bg-brand-black/90 text-brand-primary border-brand-primary/20 shadow-brand-primary/10 hover:bg-brand-primary hover:text-white hover:border-white/20 hover:shadow-brand-primary/30 hover:scale-[1.03] active:scale-95'
-                    : ''
+                ${
+                  product.isOutOfStock || product.isComingSoon
+                    ? 'bg-zinc-200/90 text-zinc-400 border-zinc-300 cursor-not-allowed shadow-none'
+                    : addStatus === 'idle'
+                      ? 'bg-brand-black/90 text-brand-primary border-brand-primary/20 shadow-brand-primary/10 hover:bg-brand-primary hover:text-white hover:border-white/20 hover:shadow-brand-primary/30 hover:scale-[1.03] active:scale-95'
+                      : ''
                 }
                 ${addStatus === 'loading' ? 'bg-brand-dark/60 text-white cursor-wait border-white/10' : ''}
                 ${addStatus === 'success' ? 'bg-brand-meadow text-white border-brand-meadow/50 shadow-brand-meadow/20 scale-[1.03]' : ''}
@@ -199,9 +200,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
                 onToggleWishlist();
               }}
               className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 backdrop-blur-md border shadow-lg
-                ${isWishlisted
-                  ? 'bg-rose-500 text-white border-rose-400 scale-110'
-                  : 'bg-white/80 text-gray-400 border-white/50 hover:text-rose-500 hover:bg-white hover:border-rose-200'
+                ${
+                  isWishlisted
+                    ? 'bg-rose-500 text-white border-rose-400 scale-110'
+                    : 'bg-white/80 text-gray-400 border-white/50 hover:text-rose-500 hover:bg-white hover:border-rose-200'
                 }`}
             >
               <svg

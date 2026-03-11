@@ -94,8 +94,8 @@ class EmailMarketingService {
       secure: false,
       auth: {
         user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-      }
+        pass: process.env.SMTP_PASS,
+      },
     });
   }
 
@@ -116,7 +116,7 @@ class EmailMarketingService {
           openRate: 0,
           clickRate: 0,
           createdAt: new Date(),
-          updatedAt: new Date()
+          updatedAt: new Date(),
         },
         {
           id: 'welcome-series-2',
@@ -130,7 +130,7 @@ class EmailMarketingService {
           openRate: 0,
           clickRate: 0,
           createdAt: new Date(),
-          updatedAt: new Date()
+          updatedAt: new Date(),
         },
         {
           id: 'abandoned-cart-1',
@@ -144,7 +144,7 @@ class EmailMarketingService {
           openRate: 0,
           clickRate: 0,
           createdAt: new Date(),
-          updatedAt: new Date()
+          updatedAt: new Date(),
         },
         {
           id: 'abandoned-cart-2',
@@ -158,11 +158,11 @@ class EmailMarketingService {
           openRate: 0,
           clickRate: 0,
           createdAt: new Date(),
-          updatedAt: new Date()
-        }
+          updatedAt: new Date(),
+        },
       ];
 
-      defaultCampaigns.forEach(campaign => {
+      defaultCampaigns.forEach((campaign) => {
         this.campaigns.set(campaign.id, campaign);
       });
     } catch (error) {
@@ -180,26 +180,26 @@ class EmailMarketingService {
           conditions: {
             purchaseHistory: {
               minOrders: 0,
-              maxOrders: 1
-            }
+              maxOrders: 1,
+            },
           },
           customerCount: 0,
           isActive: true,
           createdAt: new Date(),
-          updatedAt: new Date()
+          updatedAt: new Date(),
         },
         {
           id: 'repeat-customers',
           name: 'Repeat Customers',
           conditions: {
             purchaseHistory: {
-              minOrders: 2
-            }
+              minOrders: 2,
+            },
           },
           customerCount: 0,
           isActive: true,
           createdAt: new Date(),
-          updatedAt: new Date()
+          updatedAt: new Date(),
         },
         {
           id: 'high-value-customers',
@@ -207,13 +207,13 @@ class EmailMarketingService {
           conditions: {
             purchaseHistory: {
               minAmount: 1000,
-              minOrders: 3
-            }
+              minOrders: 3,
+            },
           },
           customerCount: 0,
           isActive: true,
           createdAt: new Date(),
-          updatedAt: new Date()
+          updatedAt: new Date(),
         },
         {
           id: 'inactive-customers',
@@ -221,18 +221,18 @@ class EmailMarketingService {
           conditions: {
             activity: {
               lastLogin: {
-                before: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // 30 days ago
-              }
-            }
+                before: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
+              },
+            },
           },
           customerCount: 0,
           isActive: true,
           createdAt: new Date(),
-          updatedAt: new Date()
-        }
+          updatedAt: new Date(),
+        },
       ];
 
-      defaultSegments.forEach(segment => {
+      defaultSegments.forEach((segment) => {
         this.segments.set(segment.id, segment);
       });
     } catch (error) {
@@ -262,12 +262,12 @@ class EmailMarketingService {
         headers: {
           'X-Mailer': 'SINGGLEBEE Email Marketing',
           'X-Priority': '3',
-          'X-Campaign-ID': campaignId || ''
-        }
+          'X-Campaign-ID': campaignId || '',
+        },
       };
 
       const result = await this.transporter.sendMail(mailOptions);
-      
+
       // Track analytics
       if (campaignId) {
         this.trackEmailSent(campaignId);
@@ -282,11 +282,7 @@ class EmailMarketingService {
   }
 
   // Trigger campaign
-  async triggerCampaign(
-    campaignId: string,
-    customerData: any,
-    customData?: any
-  ): Promise<void> {
+  async triggerCampaign(campaignId: string, customerData: any, customData?: any): Promise<void> {
     const campaign = this.campaigns.get(campaignId);
     if (!campaign || !campaign.isActive) {
       return;
@@ -306,7 +302,7 @@ class EmailMarketingService {
 
     // Send email
     const success = await this.sendEmail(customerData.email, personalizedTemplate, campaignId);
-    
+
     if (success) {
       // Update campaign stats
       campaign.sentCount++;
@@ -342,7 +338,7 @@ class EmailMarketingService {
       '{{order_id}}': customData?.orderId || '',
       '{{order_total}}': customData?.orderTotal || 0,
       '{{unsub_url}}': `${process.env.FRONTEND_URL}/unsubscribe?email=${customerData.email}`,
-      '{{website_url}}': process.env.FRONTEND_URL || 'https://singglebee.com'
+      '{{website_url}}': process.env.FRONTEND_URL || 'https://singglebee.com',
     };
 
     for (const [placeholder, value] of Object.entries(replacements)) {
@@ -364,9 +360,7 @@ class EmailMarketingService {
     today.setHours(0, 0, 0, 0);
 
     const analytics = this.analytics.get(campaignId)!;
-    const todayAnalytics = analytics.find(a => 
-      a.date.toDateString() === today.toDateString()
-    );
+    const todayAnalytics = analytics.find((a) => a.date.toDateString() === today.toDateString());
 
     if (todayAnalytics) {
       todayAnalytics.sent++;
@@ -382,7 +376,7 @@ class EmailMarketingService {
         spamComplaints: 0,
         revenue: 0,
         conversionRate: 0,
-        date: today
+        date: today,
       });
     }
   }
@@ -408,16 +402,17 @@ class EmailMarketingService {
   }
 
   // Update analytics
-  private updateAnalytics(campaignId: string, metric: keyof Omit<EmailAnalytics, 'campaignId' | 'date' | 'conversionRate' | 'revenue'>): void {
+  private updateAnalytics(
+    campaignId: string,
+    metric: keyof Omit<EmailAnalytics, 'campaignId' | 'date' | 'conversionRate' | 'revenue'>
+  ): void {
     const analytics = this.analytics.get(campaignId);
     if (!analytics) return;
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const todayAnalytics = analytics.find(a => 
-      a.date.toDateString() === today.toDateString()
-    );
+    const todayAnalytics = analytics.find((a) => a.date.toDateString() === today.toDateString());
 
     if (todayAnalytics) {
       todayAnalytics[metric]++;
@@ -429,7 +424,8 @@ class EmailMarketingService {
   private calculateRates(analytics: EmailAnalytics): void {
     analytics.openRate = analytics.sent > 0 ? (analytics.opened / analytics.sent) * 100 : 0;
     analytics.clickRate = analytics.sent > 0 ? (analytics.clicked / analytics.sent) * 100 : 0;
-    analytics.conversionRate = analytics.clicked > 0 ? (analytics.revenue / analytics.clicked) * 100 : 0;
+    analytics.conversionRate =
+      analytics.clicked > 0 ? (analytics.revenue / analytics.clicked) * 100 : 0;
   }
 
   // Get welcome template
@@ -509,7 +505,7 @@ class EmailMarketingService {
         Happy learning! 📖
         
         Unsubscribe: {{unsub_url}}
-      `
+      `,
     };
   }
 
@@ -579,7 +575,7 @@ class EmailMarketingService {
         Items in your cart are reserved for you. Complete your purchase before they're gone!
         
         Unsubscribe: {{unsub_url}}
-      `
+      `,
     };
   }
 
@@ -650,7 +646,7 @@ class EmailMarketingService {
         Happy learning! 📖
         
         Unsubscribe: {{unsub_url}}
-      `
+      `,
     };
   }
 
@@ -722,7 +718,7 @@ class EmailMarketingService {
         Happy learning! 📖
         
         Unsubscribe: {{unsub_url}}
-      `
+      `,
     };
   }
 
@@ -760,7 +756,7 @@ class EmailMarketingService {
       openRate: 0,
       clickRate: 0,
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
     };
 
     this.campaigns.set(campaignId, campaign);
@@ -771,14 +767,14 @@ class EmailMarketingService {
   async sendCampaignToSegment(campaignId: string, segmentId: string): Promise<void> {
     const campaign = this.campaigns.get(campaignId);
     const segment = this.segments.get(segmentId);
-    
+
     if (!campaign || !segment) {
       throw new Error('Campaign or segment not found');
     }
 
     // Get customers in segment (in production, query database)
     const customers = await this.getSegmentCustomers(segmentId);
-    
+
     // Send emails
     for (const customer of customers) {
       await this.triggerCampaign(campaignId, customer);

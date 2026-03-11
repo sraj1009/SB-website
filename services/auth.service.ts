@@ -1,23 +1,18 @@
 // Authentication Service for SINGGLEBEE Frontend
 
 import apiClient, { TokenManager } from './api-client';
-import { 
-  ApiResponse, 
-  RegisterRequest, 
-  LoginRequest, 
-  AuthResponse, 
-  TokenResponse, 
+import {
+  ApiResponse,
+  RegisterRequest,
+  LoginRequest,
+  AuthResponse,
+  TokenResponse,
   UserProfile,
   ChangePasswordRequest,
   PasswordResetRequest,
-  ResetPasswordRequest
+  ResetPasswordRequest,
 } from '../types/api';
-import { 
-  AuthError, 
-  ValidationError, 
-  ErrorHandler,
-  createError
-} from '../utils/error-handler';
+import { AuthError, ValidationError, ErrorHandler, createError } from '../utils/error-handler';
 
 class AuthService {
   private static instance: AuthService;
@@ -33,7 +28,7 @@ class AuthService {
   async register(userData: RegisterRequest): Promise<AuthResponse> {
     try {
       const response = await apiClient.post<AuthResponse>('/auth/signup', userData);
-      
+
       if (!response.success || !response.data) {
         throw createError(
           response.error?.message || 'Registration failed',
@@ -59,7 +54,7 @@ class AuthService {
   async login(credentials: LoginRequest): Promise<AuthResponse> {
     try {
       const response = await apiClient.post<AuthResponse>('/auth/signin', credentials);
-      
+
       if (!response.success || !response.data) {
         throw createError(
           response.error?.message || 'Login failed',
@@ -101,15 +96,15 @@ class AuthService {
   async refreshToken(): Promise<TokenResponse> {
     try {
       const refreshToken = TokenManager.getRefreshToken();
-      
+
       if (!refreshToken) {
         throw new AuthError('No refresh token available', 'NO_REFRESH_TOKEN');
       }
 
       const response = await apiClient.post<TokenResponse>('/auth/refresh', {
-        refreshToken
+        refreshToken,
       });
-      
+
       if (!response.success || !response.data) {
         throw createError(
           response.error?.message || 'Token refresh failed',
@@ -134,7 +129,7 @@ class AuthService {
   async getCurrentUser(): Promise<UserProfile> {
     try {
       const response = await apiClient.get<UserProfile>('/auth/me');
-      
+
       if (!response.success || !response.data) {
         throw createError(
           response.error?.message || 'Failed to get user profile',
@@ -156,7 +151,7 @@ class AuthService {
   async updateProfile(userData: Partial<UserProfile>): Promise<UserProfile> {
     try {
       const response = await apiClient.put<UserProfile>('/auth/me', userData);
-      
+
       if (!response.success || !response.data) {
         throw createError(
           response.error?.message || 'Failed to update profile',
@@ -178,7 +173,7 @@ class AuthService {
   async changePassword(passwordData: ChangePasswordRequest): Promise<void> {
     try {
       const response = await apiClient.post('/auth/change-password', passwordData);
-      
+
       if (!response.success) {
         throw createError(
           response.error?.message || 'Failed to change password',
@@ -195,7 +190,7 @@ class AuthService {
   async requestPasswordReset(email: string): Promise<void> {
     try {
       const response = await apiClient.post('/auth/forgot-password', { email });
-      
+
       if (!response.success) {
         throw createError(
           response.error?.message || 'Failed to request password reset',
@@ -212,7 +207,7 @@ class AuthService {
   async resetPassword(resetData: ResetPasswordRequest): Promise<void> {
     try {
       const response = await apiClient.post('/auth/reset-password', resetData);
-      
+
       if (!response.success) {
         throw createError(
           response.error?.message || 'Failed to reset password',
@@ -229,7 +224,7 @@ class AuthService {
   async verifyEmail(token: string): Promise<void> {
     try {
       const response = await apiClient.post('/auth/verify-email', { token });
-      
+
       if (!response.success) {
         throw createError(
           response.error?.message || 'Failed to verify email',
@@ -246,7 +241,7 @@ class AuthService {
   async resendVerificationEmail(): Promise<void> {
     try {
       const response = await apiClient.post('/auth/resend-verification');
-      
+
       if (!response.success) {
         throw createError(
           response.error?.message || 'Failed to resend verification email',
@@ -335,7 +330,9 @@ class AuthService {
     }
 
     if (!userData.password || !this.validatePassword(userData.password)) {
-      errors.push('Password must be at least 8 characters long and contain uppercase, lowercase, number, and special character');
+      errors.push(
+        'Password must be at least 8 characters long and contain uppercase, lowercase, number, and special character'
+      );
     }
 
     if (userData.phone && !this.validatePhone(userData.phone)) {
@@ -373,7 +370,9 @@ class AuthService {
     }
 
     if (!passwordData.newPassword || !this.validatePassword(passwordData.newPassword)) {
-      errors.push('New password must be at least 8 characters long and contain uppercase, lowercase, number, and special character');
+      errors.push(
+        'New password must be at least 8 characters long and contain uppercase, lowercase, number, and special character'
+      );
     }
 
     if (passwordData.currentPassword === passwordData.newPassword) {

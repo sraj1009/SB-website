@@ -34,8 +34,7 @@ export function useOrders(filters: OrderFilters = {}) {
 export function useInfiniteOrders(filters: OrderFilters = {}) {
   return useInfiniteQuery({
     queryKey: orderKeys.list(filters),
-    queryFn: ({ pageParam = 1 }) => 
-      orderService.getOrders({ ...filters, page: pageParam }),
+    queryFn: ({ pageParam = 1 }) => orderService.getOrders({ ...filters, page: pageParam }),
     getNextPageParam: (lastPage, allPages) => {
       if (lastPage.page < lastPage.totalPages) {
         return lastPage.page + 1;
@@ -66,11 +65,11 @@ export function useCreateOrder() {
     mutationFn: (orderData: CreateOrderRequest) => orderService.createOrder(orderData),
     onSuccess: (data) => {
       toast.success(`Order ${orderService.formatOrderId(data.orderId)} created successfully! 🎉`);
-      
+
       // Invalidate cart and orders queries
       queryClient.invalidateQueries({ queryKey: ['cart'] });
       queryClient.invalidateQueries({ queryKey: orderKeys.all });
-      
+
       return data;
     },
     onError: (error) => {
@@ -85,11 +84,11 @@ export function useCancelOrder() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ orderId, reason }: { orderId: string; reason?: string }) => 
+    mutationFn: ({ orderId, reason }: { orderId: string; reason?: string }) =>
       orderService.cancelOrder(orderId, reason),
     onSuccess: (data, variables) => {
       toast.success(`Order ${orderService.formatOrderId(variables.orderId)} cancelled`);
-      
+
       // Invalidate order queries
       queryClient.invalidateQueries({ queryKey: orderKeys.detail(variables.orderId) });
       queryClient.invalidateQueries({ queryKey: orderKeys.all });
@@ -106,11 +105,11 @@ export function useUploadPaymentReceipt() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ orderId, file }: { orderId: string; file: File }) => 
+    mutationFn: ({ orderId, file }: { orderId: string; file: File }) =>
       orderService.uploadPaymentReceipt(orderId, file),
     onSuccess: (data, variables) => {
       toast.success('Payment receipt uploaded successfully! 📄');
-      
+
       // Invalidate order queries
       queryClient.invalidateQueries({ queryKey: orderKeys.detail(variables.orderId) });
       queryClient.invalidateQueries({ queryKey: orderKeys.all });
@@ -139,11 +138,11 @@ export function useUpdateOrderStatus() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ orderId, statusUpdate }: { orderId: string; statusUpdate: OrderStatusUpdate }) => 
+    mutationFn: ({ orderId, statusUpdate }: { orderId: string; statusUpdate: OrderStatusUpdate }) =>
       orderService.updateOrderStatus(orderId, statusUpdate),
     onSuccess: (data, variables) => {
       toast.success(`Order status updated to ${variables.statusUpdate.status}`);
-      
+
       // Invalidate order queries
       queryClient.invalidateQueries({ queryKey: orderKeys.detail(variables.orderId) });
       queryClient.invalidateQueries({ queryKey: orderKeys.all });
@@ -163,7 +162,7 @@ export function useVerifyOrder() {
     mutationFn: (orderId: string) => orderService.verifyOrder(orderId),
     onSuccess: (data, variables) => {
       toast.success(`Order ${orderService.formatOrderId(variables.orderId)} verified ✅`);
-      
+
       // Invalidate order queries
       queryClient.invalidateQueries({ queryKey: orderKeys.detail(variables.orderId) });
       queryClient.invalidateQueries({ queryKey: orderKeys.all });
@@ -180,11 +179,18 @@ export function useProcessRefund() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ orderId, amount, reason }: { orderId: string; amount: number; reason: string }) => 
-      orderService.processRefund(orderId, amount, reason),
+    mutationFn: ({
+      orderId,
+      amount,
+      reason,
+    }: {
+      orderId: string;
+      amount: number;
+      reason: string;
+    }) => orderService.processRefund(orderId, amount, reason),
     onSuccess: (data, variables) => {
       toast.success(`Refund of ₹${variables.amount} processed successfully`);
-      
+
       // Invalidate order queries
       queryClient.invalidateQueries({ queryKey: orderKeys.detail(variables.orderId) });
       queryClient.invalidateQueries({ queryKey: orderKeys.all });
@@ -227,11 +233,13 @@ export function useCreatePaymentSession() {
 }
 
 // Get order statistics
-export function useOrderStats(filters: {
-  startDate?: string;
-  endDate?: string;
-  status?: string;
-} = {}) {
+export function useOrderStats(
+  filters: {
+    startDate?: string;
+    endDate?: string;
+    status?: string;
+  } = {}
+) {
   return useQuery({
     queryKey: orderKeys.stats(),
     queryFn: () => orderService.getOrderStats(filters),
@@ -253,11 +261,11 @@ export function useOrderAnalytics() {
 // Export orders
 export function useExportOrders() {
   return useMutation({
-    mutationFn: (filters: OrderFilters & { format: 'csv' | 'excel' | 'pdf' }) => 
+    mutationFn: (filters: OrderFilters & { format: 'csv' | 'excel' | 'pdf' }) =>
       orderService.exportOrders(filters),
     onSuccess: (data) => {
       toast.success('Orders exported successfully! Download will start shortly.');
-      
+
       // Trigger download
       const link = document.createElement('a');
       link.href = data.downloadUrl;
@@ -287,7 +295,7 @@ export function useOrderInvoices(orderId: string) {
 // Download invoice
 export function useDownloadInvoice() {
   return useMutation({
-    mutationFn: ({ orderId, invoiceId }: { orderId: string; invoiceId: string }) => 
+    mutationFn: ({ orderId, invoiceId }: { orderId: string; invoiceId: string }) =>
       orderService.downloadInvoice(orderId, invoiceId),
     onSuccess: () => {
       toast.success('Invoice downloaded successfully! 📄');
@@ -302,7 +310,7 @@ export function useDownloadInvoice() {
 // Custom hook for order management
 export function useOrderManager() {
   const queryClient = useQueryClient();
-  
+
   const createOrder = useCreateOrder();
   const cancelOrder = useCancelOrder();
   const uploadReceipt = useUploadPaymentReceipt();
@@ -310,7 +318,7 @@ export function useOrderManager() {
   const verifyOrder = useVerifyOrder();
   const processRefund = useProcessRefund();
   const createPaymentSession = useCreatePaymentSession();
-  
+
   return {
     // Mutations
     createOrder: createOrder.mutateAsync,
@@ -320,7 +328,7 @@ export function useOrderManager() {
     verifyOrder: verifyOrder.mutateAsync,
     processRefund: processRefund.mutateAsync,
     createPaymentSession: createPaymentSession.mutateAsync,
-    
+
     // Loading states
     isCreating: createOrder.isPending,
     isCancelling: cancelOrder.isPending,
@@ -329,7 +337,7 @@ export function useOrderManager() {
     isVerifying: verifyOrder.isPending,
     isRefunding: processRefund.isPending,
     isCreatingPayment: createPaymentSession.isPending,
-    
+
     // Error states
     createError: createOrder.error,
     cancelError: cancelOrder.error,
@@ -344,19 +352,19 @@ export function useOrderManager() {
 // Custom hook for order filters
 export function useOrderFilters(initialFilters: OrderFilters = {}) {
   const [filters, setFilters] = React.useState<OrderFilters>(initialFilters);
-  
+
   const updateFilter = React.useCallback((key: keyof OrderFilters, value: any) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
+    setFilters((prev) => ({ ...prev, [key]: value }));
   }, []);
-  
+
   const clearFilters = React.useCallback(() => {
     setFilters({});
   }, []);
-  
+
   const resetFilters = React.useCallback(() => {
     setFilters(initialFilters);
   }, [initialFilters]);
-  
+
   return {
     filters,
     setFilters,
@@ -370,24 +378,30 @@ export function useOrderFilters(initialFilters: OrderFilters = {}) {
 export function useOrderActions(orderId: string) {
   const queryClient = useQueryClient();
   const order = useOrder(orderId);
-  
+
   const cancelOrder = useCancelOrder();
   const uploadReceipt = useUploadPaymentReceipt();
   const trackOrder = useTrackOrder(orderId);
-  
+
   const canCancel = order.data ? orderService.canCancelOrder(order.data) : false;
   const canReturn = order.data ? orderService.canReturnOrder(order.data) : false;
-  
-  const handleCancel = React.useCallback((reason?: string) => {
-    if (window.confirm('Are you sure you want to cancel this order?')) {
-      cancelOrder.mutate({ orderId, reason });
-    }
-  }, [orderId, cancelOrder]);
-  
-  const handleUploadReceipt = React.useCallback((file: File) => {
-    uploadReceipt.mutate({ orderId, file });
-  }, [orderId, uploadReceipt]);
-  
+
+  const handleCancel = React.useCallback(
+    (reason?: string) => {
+      if (window.confirm('Are you sure you want to cancel this order?')) {
+        cancelOrder.mutate({ orderId, reason });
+      }
+    },
+    [orderId, cancelOrder]
+  );
+
+  const handleUploadReceipt = React.useCallback(
+    (file: File) => {
+      uploadReceipt.mutate({ orderId, file });
+    },
+    [orderId, uploadReceipt]
+  );
+
   return {
     order: order.data,
     isLoading: order.isLoading,
@@ -395,19 +409,19 @@ export function useOrderActions(orderId: string) {
     canReturn,
     tracking: trackOrder.data,
     isTracking: trackOrder.isLoading,
-    
+
     // Actions
     cancel: handleCancel,
     uploadReceipt: handleUploadReceipt,
-    
+
     // Loading states
     isCancelling: cancelOrder.isPending,
     isUploading: uploadReceipt.isPending,
-    
+
     // Error states
     cancelError: cancelOrder.error,
     uploadError: uploadReceipt.error,
-    
+
     // Refetch
     refetch: order.refetch,
   };
@@ -416,21 +430,27 @@ export function useOrderActions(orderId: string) {
 // Custom hook for order status management
 export function useOrderStatusManagement() {
   const queryClient = useQueryClient();
-  
+
   const updateStatus = useUpdateOrderStatus();
   const verifyOrder = useVerifyOrder();
-  
-  const handleStatusUpdate = React.useCallback((orderId: string, status: string, data?: any) => {
-    updateStatus.mutate({
-      orderId,
-      statusUpdate: { status: status as any, ...data }
-    });
-  }, [updateStatus]);
-  
-  const handleVerify = React.useCallback((orderId: string) => {
-    verifyOrder.mutate(orderId);
-  }, [verifyOrder]);
-  
+
+  const handleStatusUpdate = React.useCallback(
+    (orderId: string, status: string, data?: any) => {
+      updateStatus.mutate({
+        orderId,
+        statusUpdate: { status: status as any, ...data },
+      });
+    },
+    [updateStatus]
+  );
+
+  const handleVerify = React.useCallback(
+    (orderId: string) => {
+      verifyOrder.mutate(orderId);
+    },
+    [verifyOrder]
+  );
+
   return {
     updateStatus: handleStatusUpdate,
     verifyOrder: handleVerify,
@@ -445,7 +465,7 @@ export function useOrderStatusManagement() {
 export function useOrderDashboard() {
   const stats = useOrderStats();
   const analytics = useOrderAnalytics();
-  
+
   return {
     stats: stats.data,
     analytics: analytics.data,
@@ -462,14 +482,14 @@ export function useOrderDashboard() {
 export function useOrderSearch() {
   const [searchQuery, setSearchQuery] = React.useState('');
   const [filters, setFilters] = React.useState<OrderFilters>({});
-  
+
   const debouncedQuery = useDebounce(searchQuery, 300);
-  
+
   const orders = useOrders({
     ...filters,
     search: debouncedQuery,
   });
-  
+
   return {
     searchQuery,
     setSearchQuery,
@@ -485,24 +505,24 @@ export function useOrderSearch() {
 // Utility hook for debouncing
 function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = React.useState<T>(value);
-  
+
   React.useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedValue(value);
     }, delay);
-    
+
     return () => {
       clearTimeout(handler);
     };
   }, [value, delay]);
-  
+
   return debouncedValue;
 }
 
 // Custom hook for order notifications
 export function useOrderNotifications() {
   const orders = useOrders({ status: 'pending' });
-  
+
   // Check for new pending orders and show notification
   React.useEffect(() => {
     if (orders.data?.data && orders.data.data.length > 0) {
@@ -513,7 +533,7 @@ export function useOrderNotifications() {
       }
     }
   }, [orders.data]);
-  
+
   return {
     pendingOrders: orders.data?.data || [],
     pendingCount: orders.data?.data?.length || 0,

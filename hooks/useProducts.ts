@@ -151,7 +151,16 @@ export const useProductFilter = ({
     });
 
     return result;
-  }, [products, selectedCategory, searchQuery, priceRange, minRating, sortBy, selectedLanguage, calculateRelevance]);
+  }, [
+    products,
+    selectedCategory,
+    searchQuery,
+    priceRange,
+    minRating,
+    sortBy,
+    selectedLanguage,
+    calculateRelevance,
+  ]);
 
   return { filteredProducts, calculateRelevance };
 };

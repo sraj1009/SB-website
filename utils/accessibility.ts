@@ -17,11 +17,11 @@ export class AccessibilityManager {
       const r = parseInt(hex.substr(0, 2), 16) / 255;
       const g = parseInt(hex.substr(2, 2), 16) / 255;
       const b = parseInt(hex.substr(4, 2), 16) / 255;
-      
-      const sRGB = [r, g, b].map(val => {
+
+      const sRGB = [r, g, b].map((val) => {
         return val <= 0.03928 ? val / 12.92 : Math.pow((val + 0.055) / 1.055, 2.4);
       });
-      
+
       return 0.2126 * sRGB[0] + 0.7152 * sRGB[1] + 0.0722 * sRGB[2];
     };
 
@@ -29,14 +29,19 @@ export class AccessibilityManager {
     const l2 = getLuminance(background);
     const lighter = Math.max(l1, l2);
     const darker = Math.min(l1, l2);
-    
+
     return (lighter + 0.05) / (darker + 0.05);
   }
 
   // Validate color contrast against WCAG standards
-  static validateColorContrast(foreground: string, background: string, level: 'AA' | 'AAA' = 'AA', size: 'normal' | 'large' = 'normal'): boolean {
+  static validateColorContrast(
+    foreground: string,
+    background: string,
+    level: 'AA' | 'AAA' = 'AA',
+    size: 'normal' | 'large' = 'normal'
+  ): boolean {
     const ratio = this.checkColorContrast(foreground, background);
-    
+
     if (level === 'AA') {
       return size === 'large' ? ratio >= 3 : ratio >= 4.5;
     } else {
@@ -57,9 +62,9 @@ export class AccessibilityManager {
     announcement.setAttribute('aria-atomic', 'true');
     announcement.className = 'sr-only';
     announcement.textContent = message;
-    
+
     document.body.appendChild(announcement);
-    
+
     setTimeout(() => {
       document.body.removeChild(announcement);
     }, 1000);
@@ -69,7 +74,7 @@ export class AccessibilityManager {
   static isAccessibleToScreenReaders(element: HTMLElement): boolean {
     const styles = window.getComputedStyle(element);
     const rect = element.getBoundingClientRect();
-    
+
     return (
       styles.display !== 'none' &&
       styles.visibility !== 'hidden' &&
@@ -85,7 +90,7 @@ export class AccessibilityManager {
     const skipLinks = [
       { href: '#main-content', text: 'Skip to main content' },
       { href: '#navigation', text: 'Skip to navigation' },
-      { href: '#search', text: 'Skip to search' }
+      { href: '#search', text: 'Skip to search' },
     ];
 
     const skipLinksContainer = document.createElement('div');
@@ -93,13 +98,13 @@ export class AccessibilityManager {
     skipLinksContainer.setAttribute('role', 'navigation');
     skipLinksContainer.setAttribute('aria-label', 'Skip navigation links');
 
-    skipLinks.forEach(link => {
+    skipLinks.forEach((link) => {
       const anchor = document.createElement('a');
       anchor.href = link.href;
       anchor.textContent = link.text;
       anchor.className = 'skip-link';
       anchor.setAttribute('aria-label', link.text);
-      
+
       skipLinksContainer.appendChild(anchor);
     });
 
@@ -131,14 +136,18 @@ export class AccessibilityManager {
     });
 
     // Handle focus management
-    document.addEventListener('focusin', (e) => {
-      const target = e.target as HTMLElement;
-      
-      // Ensure focus is visible
-      if (target && !this.isAccessibleToScreenReaders(target)) {
-        this.announce('Element is not accessible to screen readers', 'assertive');
-      }
-    }, true);
+    document.addEventListener(
+      'focusin',
+      (e) => {
+        const target = e.target as HTMLElement;
+
+        // Ensure focus is visible
+        if (target && !this.isAccessibleToScreenReaders(target)) {
+          this.announce('Element is not accessible to screen readers', 'assertive');
+        }
+      },
+      true
+    );
   }
 
   // Validate form accessibility
@@ -153,11 +162,11 @@ export class AccessibilityManager {
     const inputs = form.querySelectorAll('input, textarea, select');
     inputs.forEach((input, index) => {
       const inputElement = input as HTMLInputElement;
-      
+
       // Check for associated label
-      const label = form.querySelector(`label[for="${inputElement.id}"]`) || 
-                   inputElement.closest('label');
-      
+      const label =
+        form.querySelector(`label[for="${inputElement.id}"]`) || inputElement.closest('label');
+
       if (!label) {
         errors.push(`Input ${index + 1} has no associated label`);
       } else {
@@ -170,17 +179,21 @@ export class AccessibilityManager {
 
       // Check for required field indicators
       if (inputElement.required) {
-        const requiredIndicator = inputElement.getAttribute('aria-required') === 'true' ||
-                               inputElement.closest('label')?.querySelector('.required') ||
-                               inputElement.getAttribute('required') !== null;
-        
+        const requiredIndicator =
+          inputElement.getAttribute('aria-required') === 'true' ||
+          inputElement.closest('label')?.querySelector('.required') ||
+          inputElement.getAttribute('required') !== null;
+
         if (!requiredIndicator) {
           warnings.push(`Required input ${index + 1} should have a clear indicator`);
         }
       }
 
       // Check for error messages
-      if (inputElement.hasAttribute('aria-invalid') && inputElement.getAttribute('aria-invalid') === 'true') {
+      if (
+        inputElement.hasAttribute('aria-invalid') &&
+        inputElement.getAttribute('aria-invalid') === 'true'
+      ) {
         const errorId = inputElement.getAttribute('aria-describedby');
         if (!errorId || !document.getElementById(errorId)) {
           errors.push(`Invalid input ${index + 1} has no associated error message`);
@@ -197,7 +210,7 @@ export class AccessibilityManager {
     const filename = src.split('/').pop()?.split('.')[0] || '';
     const descriptiveText = filename
       .replace(/[-_]/g, ' ')
-      .replace(/\b\w/g, l => l.toUpperCase())
+      .replace(/\b\w/g, (l) => l.toUpperCase())
       .trim();
 
     return context ? `${descriptiveText} - ${context}` : descriptiveText;
@@ -249,7 +262,7 @@ export class AccessibilityManager {
     // Simplified Flesch Reading Ease score
     const avgSentenceLength = words / sentences;
     const avgWordLength = characters / words;
-    const score = 206.835 - (1.015 * avgSentenceLength) - (84.6 * avgWordLength);
+    const score = 206.835 - 1.015 * avgSentenceLength - 84.6 * avgWordLength;
 
     const issues: string[] = [];
 
@@ -276,7 +289,7 @@ export class AccessibilityManager {
   // Generate accessible table structure
   static generateAccessibleTable(headers: string[], data: string[][]): string {
     let tableHTML = '<table role="table" aria-label="Data table">';
-    
+
     // Header
     tableHTML += '<thead><tr>';
     headers.forEach((header, index) => {
@@ -294,7 +307,7 @@ export class AccessibilityManager {
         const tag = isHeader ? 'th' : 'td';
         const scope = isHeader ? 'row' : undefined;
         const headers = isHeader ? undefined : `header-${cellIndex}`;
-        
+
         tableHTML += `<${tag} ${scope ? `scope="${scope}"` : ''} ${headers ? `headers="${headers}"` : ''}>${cell}</${tag}>`;
       });
       tableHTML += '</tr>';
@@ -384,7 +397,7 @@ export const useAccessibility = () => {
     announce: AccessibilityManager.announce,
     generateId: AccessibilityManager.generateId,
     validateColorContrast: AccessibilityManager.validateColorContrast,
-    createFocusTrap: AccessibilityManager.createFocusTrap
+    createFocusTrap: AccessibilityManager.createFocusTrap,
   };
 };
 

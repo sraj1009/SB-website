@@ -2,13 +2,13 @@
 
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
 import { ApiResponse, RequestConfig } from '../types/api';
-import { 
-  ErrorHandler, 
-  ApiError, 
-  AuthError, 
+import {
+  ErrorHandler,
+  ApiError,
+  AuthError,
   NetworkError,
   isNetworkError,
-  isAuthError
+  isAuthError,
 } from '../utils/error-handler';
 
 // API Configuration
@@ -106,7 +106,7 @@ class ApiClient {
       timeout: API_TIMEOUT,
       headers: {
         'Content-Type': 'application/json',
-        'Accept': 'application/json',
+        Accept: 'application/json',
       },
     });
 
@@ -147,10 +147,13 @@ class ApiClient {
       (response) => {
         // Log response in development
         if (import.meta.env.DEV) {
-          console.log(`✅ API Response: ${response.config.method?.toUpperCase()} ${response.config.url}`, {
-            status: response.status,
-            data: response.data,
-          });
+          console.log(
+            `✅ API Response: ${response.config.method?.toUpperCase()} ${response.config.url}`,
+            {
+              status: response.status,
+              data: response.data,
+            }
+          );
         }
 
         return response;
@@ -184,12 +187,12 @@ class ApiClient {
               // Refresh failed, clear tokens and redirect to login
               TokenManager.clearTokens();
               this.requestQueue.rejectQueue(refreshError);
-              
+
               // Redirect to login page
               if (typeof window !== 'undefined') {
                 window.location.href = '/login';
               }
-              
+
               return Promise.reject(refreshError);
             } finally {
               this.requestQueue.setRefreshing(false);
@@ -197,27 +200,27 @@ class ApiClient {
           } else {
             // Add request to queue while refreshing
             return new Promise((resolve, reject) => {
-              this.requestQueue.addRequestToQueue(
-                (token) => {
-                  originalRequest.headers.Authorization = `Bearer ${token}`;
-                  resolve(this.axiosInstance(originalRequest));
-                },
-                reject
-              );
+              this.requestQueue.addRequestToQueue((token) => {
+                originalRequest.headers.Authorization = `Bearer ${token}`;
+                resolve(this.axiosInstance(originalRequest));
+              }, reject);
             });
           }
         }
 
         // Handle other errors
         const apiError = ErrorHandler.handleApiError(error, originalRequest.url);
-        
+
         // Log error in development
         if (import.meta.env.DEV) {
-          console.error(`❌ API Error: ${originalRequest.method?.toUpperCase()} ${originalRequest.url}`, {
-            status: error.response.status,
-            data: error.response.data,
-            error: apiError,
-          });
+          console.error(
+            `❌ API Error: ${originalRequest.method?.toUpperCase()} ${originalRequest.url}`,
+            {
+              status: error.response.status,
+              data: error.response.data,
+              error: apiError,
+            }
+          );
         }
 
         return Promise.reject(apiError);
@@ -227,7 +230,7 @@ class ApiClient {
 
   private async refreshToken(): Promise<string> {
     const refreshToken = TokenManager.getRefreshToken();
-    
+
     if (!refreshToken) {
       throw new AuthError('No refresh token available', 'NO_REFRESH_TOKEN');
     }
@@ -260,46 +263,29 @@ class ApiClient {
   }
 
   private generateRequestId(): string {
-    return Math.random().toString(36).substring(2, 15) + 
-           Math.random().toString(36).substring(2, 15);
+    return (
+      Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+    );
   }
 
   // HTTP Methods with retry logic
-  async get<T = any>(
-    url: string, 
-    config?: RequestConfig
-  ): Promise<ApiResponse<T>> {
+  async get<T = any>(url: string, config?: RequestConfig): Promise<ApiResponse<T>> {
     return this.request<T>({ ...config, url });
   }
 
-  async post<T = any>(
-    url: string, 
-    data?: any, 
-    config?: RequestConfig
-  ): Promise<ApiResponse<T>> {
+  async post<T = any>(url: string, data?: any, config?: RequestConfig): Promise<ApiResponse<T>> {
     return this.request<T>({ ...config, url, data });
   }
 
-  async put<T = any>(
-    url: string, 
-    data?: any, 
-    config?: RequestConfig
-  ): Promise<ApiResponse<T>> {
+  async put<T = any>(url: string, data?: any, config?: RequestConfig): Promise<ApiResponse<T>> {
     return this.request<T>({ ...config, url, data });
   }
 
-  async patch<T = any>(
-    url: string, 
-    data?: any, 
-    config?: RequestConfig
-  ): Promise<ApiResponse<T>> {
+  async patch<T = any>(url: string, data?: any, config?: RequestConfig): Promise<ApiResponse<T>> {
     return this.request<T>({ ...config, url, data });
   }
 
-  async delete<T = any>(
-    url: string, 
-    config?: RequestConfig
-  ): Promise<ApiResponse<T>> {
+  async delete<T = any>(url: string, config?: RequestConfig): Promise<ApiResponse<T>> {
     return this.request<T>({ ...config, url });
   }
 
@@ -332,7 +318,11 @@ class ApiClient {
   }
 
   // Upload payment proof (orderId + proof file) to /payments/upload-proof
-  async uploadPaymentProof(orderId: string, file: File, onProgress?: (progress: number) => void): Promise<ApiResponse<{ orderId: string; status: string }>> {
+  async uploadPaymentProof(
+    orderId: string,
+    file: File,
+    onProgress?: (progress: number) => void
+  ): Promise<ApiResponse<{ orderId: string; status: string }>> {
     const formData = new FormData();
     formData.append('orderId', orderId);
     formData.append('proof', file);
@@ -342,7 +332,9 @@ class ApiClient {
       url: '/payments/upload-proof',
       data: formData,
       timeout: 60000,
-      onUploadProgress: onProgress ? (e) => onProgress(Math.round((e.loaded * 100) / (e.total || 1))) : undefined,
+      onUploadProgress: onProgress
+        ? (e) => onProgress(Math.round((e.loaded * 100) / (e.total || 1)))
+        : undefined,
     });
     return response.data;
   }
@@ -365,21 +357,17 @@ class ApiClient {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
-      onUploadProgress: onProgress ? (progressEvent: { loaded: number; total?: number }) => {
-        const progress = Math.round(
-          (progressEvent.loaded * 100) / (progressEvent.total || 1)
-        );
-        onProgress(progress);
-      } : undefined,
+      onUploadProgress: onProgress
+        ? (progressEvent: { loaded: number; total?: number }) => {
+            const progress = Math.round((progressEvent.loaded * 100) / (progressEvent.total || 1));
+            onProgress(progress);
+          }
+        : undefined,
     } as RequestConfig & { url: string });
   }
 
   // Download method
-  async download(
-    url: string,
-    filename?: string,
-    config?: RequestConfig
-  ): Promise<void> {
+  async download(url: string, filename?: string, config?: RequestConfig): Promise<void> {
     const response = await this.axiosInstance.request({
       ...config,
       method: 'GET',

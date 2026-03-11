@@ -1,7 +1,7 @@
 /// <reference types="vitest" />
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import { resolve } from 'path'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import { resolve } from 'path';
 
 export default defineConfig({
   plugins: [react()],
@@ -13,14 +13,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
-      exclude: [
-        'node_modules/',
-        'test/',
-        '**/*.d.ts',
-        '**/*.config.*',
-        'dist/',
-        'coverage/',
-      ],
+      exclude: ['node_modules/', 'test/', '**/*.d.ts', '**/*.config.*', 'dist/', 'coverage/'],
     },
   },
   resolve: {
@@ -32,4 +25,4 @@ export default defineConfig({
       '@types': resolve(__dirname, './types'),
     },
   },
-})
+});

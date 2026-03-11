@@ -30,49 +30,43 @@ export const cache = (options: CacheOptions = {}) => {
       return next();
     }
 
-    const cacheKey = opts.keyGenerator 
-      ? opts.keyGenerator(req)
-      : generateCacheKey(req);
+    const cacheKey = opts.keyGenerator ? opts.keyGenerator(req) : generateCacheKey(req);
 
     try {
       // Try to get from cache
       const cachedData = await redisClient.get(cacheKey);
-      
+
       if (cachedData) {
         const data = JSON.parse(cachedData);
         logger.debug(`Cache hit for key: ${cacheKey}`);
-        
+
         // Set cache headers
         res.set('X-Cache', 'HIT');
         res.set('X-Cache-Key', cacheKey);
-        
+
         return res.json(data);
       }
 
       // Cache miss - continue to controller
       logger.debug(`Cache miss for key: ${cacheKey}`);
-      
+
       // Store original res.json method
       const originalJson = res.json;
-      
+
       // Override res.json to cache the response
-      res.json = function(data: any) {
+      res.json = function (data: any) {
         // Only cache successful responses
         if (res.statusCode >= 200 && res.statusCode < 300) {
           // Cache the response asynchronously (don't block the response)
-          redisClient.setex(
-            cacheKey, 
-            opts.ttl || 300, 
-            JSON.stringify(data)
-          ).catch(error => {
+          redisClient.setex(cacheKey, opts.ttl || 300, JSON.stringify(data)).catch((error) => {
             logger.error('Failed to cache response:', error);
           });
-          
+
           // Set cache headers
           res.set('X-Cache', 'MISS');
           res.set('X-Cache-Key', cacheKey);
         }
-        
+
         // Call original json method
         return originalJson.call(this, data);
       };
@@ -94,17 +88,17 @@ export const invalidateCache = (patterns: string[]) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     // Store original res.json method
     const originalJson = res.json;
-    
+
     // Override res.json to invalidate cache after successful response
-    res.json = function(data: any) {
+    res.json = function (data: any) {
       // Only invalidate on successful responses
       if (res.statusCode >= 200 && res.statusCode < 300) {
         // Invalidate cache patterns asynchronously
-        invalidateCachePatterns(patterns).catch(error => {
+        invalidateCachePatterns(patterns).catch((error) => {
           logger.error('Failed to invalidate cache:', error);
         });
       }
-      
+
       // Call original json method
       return originalJson.call(this, data);
     };
@@ -121,7 +115,7 @@ function generateCacheKey(req: Request): string {
   const path = req.path || '';
   const query = JSON.stringify(req.query || {});
   const params = JSON.stringify(req.params || {});
-  
+
   return `singglebee:cache:${baseUrl}${path}:${Buffer.from(query + params).toString('base64')}`;
 }
 
@@ -130,7 +124,7 @@ function generateCacheKey(req: Request): string {
  */
 async function invalidateCachePatterns(patterns: string[]): Promise<void> {
   const client = redisClient;
-  
+
   for (const pattern of patterns) {
     try {
       const keys = await client.keys(pattern);
@@ -236,11 +230,11 @@ export class CacheHelper {
     try {
       const serialized = JSON.stringify(value);
       const result = await redisClient.setnx(key, serialized);
-      
+
       if (result && ttl) {
         await redisClient.expire(key, ttl);
       }
-      
+
       return result === 1;
     } catch (error) {
       logger.error(`Cache setnx error for key ${key}:`, error);
@@ -254,7 +248,7 @@ export class CacheHelper {
   static async mget<T>(keys: string[]): Promise<(T | null)[]> {
     try {
       const values = await redisClient.mget(...keys);
-      return values.map(value => value ? JSON.parse(value) : null);
+      return values.map((value) => (value ? JSON.parse(value) : null));
     } catch (error) {
       logger.error('Cache mget error:', error);
       return keys.map(() => null);
@@ -264,18 +258,20 @@ export class CacheHelper {
   /**
    * Set multiple values in cache
    */
-  static async mset(keyValuePairs: Array<{key: string, value: any, ttl?: number}>): Promise<void> {
+  static async mset(
+    keyValuePairs: Array<{ key: string; value: any; ttl?: number }>
+  ): Promise<void> {
     try {
       const pipeline = redisClient.pipeline();
-      
-      for (const {key, value, ttl} of keyValuePairs) {
+
+      for (const { key, value, ttl } of keyValuePairs) {
         const serialized = JSON.stringify(value);
         pipeline.set(key, serialized);
         if (ttl) {
           pipeline.expire(key, ttl);
         }
       }
-      
+
       await pipeline.exec();
     } catch (error) {
       logger.error('Cache mset error:', error);

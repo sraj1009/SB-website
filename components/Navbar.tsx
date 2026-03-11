@@ -94,7 +94,7 @@ const Navbar: React.FC<NavbarProps> = ({
               onClick={onNavigateHome}
             >
               <img
-                src="/assets/brand-logo.png"
+                src="/brand-logo.png"
                 alt="SINGGLEBEE Logo"
                 className={`${scrolled ? 'h-14 md:h-20' : 'h-20 md:h-28'} w-auto transition-all duration-500 group-hover:scale-105`}
               />

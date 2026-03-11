@@ -5,7 +5,7 @@ interface HeroGlassmorphicProps {
   onShopNow: () => void;
 }
 
-const HoneycombPattern: React.FC<{ className?: string }> = ({ className = "" }) => (
+const HoneycombPattern: React.FC<{ className?: string }> = ({ className = '' }) => (
   <svg
     className={`absolute inset-0 w-full h-full ${className}`}
     xmlns="http://www.w3.org/2000/svg"
@@ -39,7 +39,7 @@ const FloatingCard: React.FC<{
   children: React.ReactNode;
   className?: string;
   delay?: number;
-}> = ({ children, className = "", delay = 0 }) => (
+}> = ({ children, className = '', delay = 0 }) => (
   <div
     className={`absolute backdrop-blur-xl bg-white/10 border border-white/20 rounded-3xl shadow-2xl p-8 animate-float ${className}`}
     style={{
@@ -87,7 +87,7 @@ const HeroGlassmorphic: React.FC<HeroGlassmorphicProps> = ({ onShopNow }) => {
     >
       {/* Honeycomb Background Pattern */}
       <HoneycombPattern className="opacity-15" />
-      
+
       {/* Animated Gradient Orbs */}
       <div className="absolute inset-0 overflow-hidden">
         <div
@@ -164,7 +164,6 @@ const HeroGlassmorphic: React.FC<HeroGlassmorphicProps> = ({ onShopNow }) => {
       {/* Main Content */}
       <div className="relative z-10 flex items-center justify-center min-h-screen px-6 lg:px-12">
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-          
           {/* Left Content */}
           <div className="text-center lg:text-left space-y-8">
             {/* Badge */}
@@ -186,7 +185,8 @@ const HeroGlassmorphic: React.FC<HeroGlassmorphicProps> = ({ onShopNow }) => {
                 </span>
               </h1>
               <p className="text-xl sm:text-2xl lg:text-3xl text-gray-700 font-medium leading-relaxed max-w-lg mx-auto lg:mx-0">
-                Discover premium educational books, artisan honey, and nature-inspired learning supplies
+                Discover premium educational books, artisan honey, and nature-inspired learning
+                supplies
               </p>
             </div>
 
@@ -205,10 +205,8 @@ const HeroGlassmorphic: React.FC<HeroGlassmorphicProps> = ({ onShopNow }) => {
                 <ChevronRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
               </button>
-              
-              <button
-                className="group inline-flex items-center justify-center px-8 py-4 text-lg font-bold text-amber-700 bg-white/20 backdrop-blur-md border border-white/30 rounded-2xl transition-all duration-300 hover:bg-white/30 hover:scale-105 active:scale-95 min-h-[48px]"
-              >
+
+              <button className="group inline-flex items-center justify-center px-8 py-4 text-lg font-bold text-amber-700 bg-white/20 backdrop-blur-md border border-white/30 rounded-2xl transition-all duration-300 hover:bg-white/30 hover:scale-105 active:scale-95 min-h-[48px]">
                 <Heart className="w-5 h-5 mr-3" />
                 Browse Collection
               </button>

@@ -39,29 +39,29 @@ export interface CarbonFootprint {
 class CarbonCalculator {
   private emissionFactors: Record<string, number> = {
     // Manufacturing emissions (kg CO2e per kg)
-    'paper_book': 0.8,
-    'hardcover_book': 1.2,
-    'stationery': 0.6,
-    'honey_raw': 0.3,
-    'honey_processed': 0.5,
-    
+    paper_book: 0.8,
+    hardcover_book: 1.2,
+    stationery: 0.6,
+    honey_raw: 0.3,
+    honey_processed: 0.5,
+
     // Shipping emissions (kg CO2e per km per kg)
-    'truck_standard': 0.00012,
-    'truck_electric': 0.00004,
-    'air_freight': 0.0006,
-    'sea_freight': 0.000015,
-    'rail_freight': 0.00002,
-    
+    truck_standard: 0.00012,
+    truck_electric: 0.00004,
+    air_freight: 0.0006,
+    sea_freight: 0.000015,
+    rail_freight: 0.00002,
+
     // Packaging emissions (kg CO2e per unit)
-    'cardboard_box': 0.2,
-    'paper_packaging': 0.05,
-    'plastic_free': 0.01,
-    'biodegradable': 0.03,
-    
+    cardboard_box: 0.2,
+    paper_packaging: 0.05,
+    plastic_free: 0.01,
+    biodegradable: 0.03,
+
     // Operations emissions (kg CO2e per kWh)
-    'renewable_energy': 0.02,
-    'grid_energy': 0.5,
-    'solar_panel': 0.04
+    renewable_energy: 0.02,
+    grid_energy: 0.5,
+    solar_panel: 0.04,
   };
 
   private offsetProjects: CarbonOffset[] = [
@@ -73,7 +73,7 @@ class CarbonCalculator {
       carbonReduction: 1,
       certification: 'Verra VCS',
       projectType: 'reforestation',
-      location: 'Tamil Nadu, India'
+      location: 'Tamil Nadu, India',
     },
     {
       id: 'solar_farms',
@@ -83,7 +83,7 @@ class CarbonCalculator {
       carbonReduction: 1,
       certification: 'Gold Standard',
       projectType: 'renewable',
-      location: 'Tamil Nadu, India'
+      location: 'Tamil Nadu, India',
     },
     {
       id: 'cookstove_program',
@@ -93,8 +93,8 @@ class CarbonCalculator {
       carbonReduction: 1,
       certification: 'CDM',
       projectType: 'energy-efficiency',
-      location: 'Rural Tamil Nadu'
-    }
+      location: 'Rural Tamil Nadu',
+    },
   ];
 
   // Calculate manufacturing emissions for a product
@@ -112,10 +112,10 @@ class CarbonCalculator {
       unit: 'kg',
       factors: {
         weight,
-        material
+        material,
       },
       verified: true,
-      offsetAvailable: true
+      offsetAvailable: true,
     };
   }
 
@@ -123,7 +123,12 @@ class CarbonCalculator {
   calculateShippingEmissions(
     distance: number, // km
     weight: number, // kg
-    method: 'truck_standard' | 'truck_electric' | 'air_freight' | 'sea_freight' | 'rail_freight' = 'truck_standard'
+    method:
+      | 'truck_standard'
+      | 'truck_electric'
+      | 'air_freight'
+      | 'sea_freight'
+      | 'rail_freight' = 'truck_standard'
   ): CarbonEmission {
     const factor = this.emissionFactors[method] || this.emissionFactors['truck_standard'];
     const emissions = distance * weight * factor;
@@ -135,10 +140,10 @@ class CarbonCalculator {
       factors: {
         distance,
         weight,
-        method
+        method,
       },
       verified: true,
-      offsetAvailable: true
+      offsetAvailable: true,
     };
   }
 
@@ -155,10 +160,10 @@ class CarbonCalculator {
       amount: emissions,
       unit: 'kg',
       factors: {
-        material: packagingType
+        material: packagingType,
       },
       verified: true,
-      offsetAvailable: true
+      offsetAvailable: true,
     };
   }
 
@@ -177,10 +182,10 @@ class CarbonCalculator {
       amount: emissions,
       unit: 'kg',
       factors: {
-        method: energySource
+        method: energySource,
       },
       verified: true,
-      offsetAvailable: true
+      offsetAvailable: true,
     };
   }
 
@@ -208,7 +213,7 @@ class CarbonCalculator {
     const breakdown: CarbonEmission[] = [];
 
     // Calculate manufacturing emissions for each item
-    order.items.forEach(item => {
+    order.items.forEach((item) => {
       const manufacturingEmission = this.calculateManufacturingEmissions(
         item.productType,
         item.weight * item.quantity,
@@ -251,7 +256,7 @@ class CarbonCalculator {
       breakdown,
       offsetCost,
       isCarbonNeutral: false,
-      calculatedAt: new Date()
+      calculatedAt: new Date(),
     };
   }
 
@@ -264,7 +269,7 @@ class CarbonCalculator {
       offsetProject: 'reforestation_tamilnadu',
       offsetDate: new Date().toISOString(),
       verifiedBy: 'SINGGLEBEE Carbon Verification',
-      certificateUrl: `https://singglebee.com/carbon-certificates/${footprint.orderId}`
+      certificateUrl: `https://singglebee.com/carbon-certificates/${footprint.orderId}`,
     };
 
     // In production, store certificate in database and generate PDF
@@ -294,32 +299,32 @@ class CarbonCalculator {
     // In production, calculate from actual order data
     // For now, return estimated values
     const baseEmissions = 1000; // kg CO2e per month base
-    
+
     return {
       totalEmissions: baseEmissions,
       breakdown: {
         manufacturing: baseEmissions * 0.6,
         shipping: baseEmissions * 0.25,
         operations: baseEmissions * 0.1,
-        packaging: baseEmissions * 0.05
+        packaging: baseEmissions * 0.05,
       },
       trends: [
         {
           period: '2024-01',
           emissions: 950,
-          change: -5
+          change: -5,
         },
         {
           period: '2024-02',
           emissions: 1000,
-          change: 5.3
+          change: 5.3,
         },
         {
           period: '2024-03',
           emissions: 980,
-          change: -2
-        }
-      ]
+          change: -2,
+        },
+      ],
     };
   }
 
@@ -347,18 +352,18 @@ class CarbonCalculator {
         totalEmissions: 12000, // kg CO2e yearly
         emissionsPerOrder: 2.4,
         offsetPercentage: 85,
-        renewableEnergyPercentage: 100
+        renewableEnergyPercentage: 100,
       },
       social: {
         fairTradeProducts: 45,
         localSourcingPercentage: 78,
-        communityInvestment: 250000 // INR
+        communityInvestment: 250000, // INR
       },
       governance: {
         sustainabilityReportPublished: true,
         auditCompleted: true,
-        esgRating: 'AA+'
-      }
+        esgRating: 'AA+',
+      },
     };
   }
 
@@ -373,19 +378,20 @@ class CarbonCalculator {
       // In production, integrate with Carbon Interface API or similar
       // For now, simulate validation
       const thirdPartyEmissions = footprint.totalEmissions * (0.9 + Math.random() * 0.2);
-      const variance = Math.abs((thirdPartyEmissions - footprint.totalEmissions) / footprint.totalEmissions) * 100;
-      
+      const variance =
+        Math.abs((thirdPartyEmissions - footprint.totalEmissions) / footprint.totalEmissions) * 100;
+
       return {
         isValid: variance < 10, // Within 10% variance
         thirdPartyEmissions,
         variance,
-        source: 'Carbon Interface API'
+        source: 'Carbon Interface API',
       };
     } catch (error) {
       console.error('Failed to validate with third-party API:', error);
       return {
         isValid: false,
-        source: 'Validation Failed'
+        source: 'Validation Failed',
       };
     }
   }
@@ -419,41 +425,41 @@ class CarbonCalculator {
           name: 'Plastic-Free Packaging',
           description: 'Eliminated all plastic from packaging',
           impact: 'Reduced packaging emissions by 95%',
-          status: 'Completed'
+          status: 'Completed',
         },
         {
           name: 'Renewable Energy',
           description: 'Switched to 100% renewable energy for operations',
           impact: 'Operational emissions reduced by 80%',
-          status: 'Completed'
+          status: 'Completed',
         },
         {
           name: 'Local Sourcing',
           description: 'Increased local sourcing to 78%',
           impact: 'Reduced shipping emissions by 40%',
-          status: 'In Progress'
-        }
+          status: 'In Progress',
+        },
       ],
       goals: [
         {
           goal: 'Carbon Neutral Operations',
           target: '100% offset of all emissions',
           current: 85,
-          deadline: '2024-12-31'
+          deadline: '2024-12-31',
         },
         {
           goal: 'Zero Waste Packaging',
           target: '100% biodegradable packaging',
           current: 95,
-          deadline: '2024-06-30'
+          deadline: '2024-06-30',
         },
         {
           goal: 'Local Sourcing',
           target: '90% local sourcing',
           current: 78,
-          deadline: '2024-12-31'
-        }
-      ]
+          deadline: '2024-12-31',
+        },
+      ],
     };
   }
 }

@@ -3,7 +3,12 @@ import React, { useState, useEffect } from 'react';
 
 interface CacheConfig {
   name: string;
-  strategy: 'cache-first' | 'network-first' | 'stale-while-revalidate' | 'cache-only' | 'network-only';
+  strategy:
+    | 'cache-first'
+    | 'network-first'
+    | 'stale-while-revalidate'
+    | 'cache-only'
+    | 'network-only';
   maxAge: number; // in seconds
   maxEntries: number;
   version: string;
@@ -49,39 +54,39 @@ class AdvancedCacheManager {
         strategy: 'cache-first',
         maxAge: 7 * 24 * 60 * 60, // 7 days
         maxEntries: 100,
-        version: 'v1'
+        version: 'v1',
       },
       {
         name: 'api-responses',
         strategy: 'stale-while-revalidate',
         maxAge: 5 * 60, // 5 minutes
         maxEntries: 50,
-        version: 'v1'
+        version: 'v1',
       },
       {
         name: 'product-data',
         strategy: 'cache-first',
         maxAge: 30 * 60, // 30 minutes
         maxEntries: 200,
-        version: 'v1'
+        version: 'v1',
       },
       {
         name: 'user-preferences',
         strategy: 'cache-first',
         maxAge: 24 * 60 * 60, // 24 hours
         maxEntries: 10,
-        version: 'v1'
+        version: 'v1',
       },
       {
         name: 'images',
         strategy: 'cache-first',
         maxAge: 30 * 24 * 60 * 60, // 30 days
         maxEntries: 500,
-        version: 'v1'
-      }
+        version: 'v1',
+      },
     ];
 
-    defaultConfigs.forEach(config => {
+    defaultConfigs.forEach((config) => {
       this.caches.set(config.name, config);
       this.cacheEntries.set(config.name, []);
       this.stats.set(config.name, {
@@ -91,7 +96,7 @@ class AdvancedCacheManager {
         hitRate: 0,
         missRate: 0,
         oldestEntry: new Date(),
-        newestEntry: new Date()
+        newestEntry: new Date(),
       });
     });
   }
@@ -110,9 +115,12 @@ class AdvancedCacheManager {
 
   // Start periodic cleanup
   private startPeriodicCleanup(): void {
-    setInterval(() => {
-      this.cleanupExpiredEntries();
-    }, 5 * 60 * 1000); // Every 5 minutes
+    setInterval(
+      () => {
+        this.cleanupExpiredEntries();
+      },
+      5 * 60 * 1000
+    ); // Every 5 minutes
   }
 
   // Get cached response
@@ -121,7 +129,7 @@ class AdvancedCacheManager {
     if (!config) return null;
 
     const entries = this.cacheEntries.get(cacheName) || [];
-    const entry = entries.find(e => e.url === url);
+    const entry = entries.find((e) => e.url === url);
 
     if (!entry) {
       this.updateStats(cacheName, 'miss');
@@ -141,7 +149,7 @@ class AdvancedCacheManager {
         this.revalidateInBackground(cacheName, url);
         return entry.response.clone();
       }
-      
+
       // Remove expired entry
       this.removeEntry(cacheName, url);
       this.updateStats(cacheName, 'miss');
@@ -160,10 +168,10 @@ class AdvancedCacheManager {
     if (!config) return;
 
     const entries = this.cacheEntries.get(cacheName) || [];
-    
+
     // Check if entry already exists
-    const existingIndex = entries.findIndex(e => e.url === url);
-    
+    const existingIndex = entries.findIndex((e) => e.url === url);
+
     const entry: CacheEntry = {
       url,
       response: response.clone(),
@@ -171,7 +179,7 @@ class AdvancedCacheManager {
       hits: existingIndex >= 0 ? entries[existingIndex].hits : 0,
       lastAccessed: Date.now(),
       etag: response.headers.get('etag') || undefined,
-      lastModified: response.headers.get('last-modified') || undefined
+      lastModified: response.headers.get('last-modified') || undefined,
     };
 
     if (existingIndex >= 0) {
@@ -191,7 +199,7 @@ class AdvancedCacheManager {
   // Remove entry from cache
   private removeEntry(cacheName: string, url: string): void {
     const entries = this.cacheEntries.get(cacheName) || [];
-    const filteredEntries = entries.filter(e => e.url !== url);
+    const filteredEntries = entries.filter((e) => e.url !== url);
     this.cacheEntries.set(cacheName, filteredEntries);
   }
 
@@ -212,8 +220,8 @@ class AdvancedCacheManager {
       const response = await fetch(url, {
         headers: {
           'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache'
-        }
+          Pragma: 'no-cache',
+        },
       });
 
       if (response.ok) {
@@ -248,7 +256,11 @@ class AdvancedCacheManager {
   }
 
   // Cache-first strategy
-  private async cacheFirst(cacheName: string, url: string, options?: RequestInit): Promise<Response> {
+  private async cacheFirst(
+    cacheName: string,
+    url: string,
+    options?: RequestInit
+  ): Promise<Response> {
     const cached = await this.get(cacheName, url);
     if (cached) {
       return cached;
@@ -266,7 +278,11 @@ class AdvancedCacheManager {
   }
 
   // Network-first strategy
-  private async networkFirst(cacheName: string, url: string, options?: RequestInit): Promise<Response> {
+  private async networkFirst(
+    cacheName: string,
+    url: string,
+    options?: RequestInit
+  ): Promise<Response> {
     try {
       const response = await fetch(url, options);
       if (response.ok) {
@@ -283,9 +299,13 @@ class AdvancedCacheManager {
   }
 
   // Stale-while-revalidate strategy
-  private async staleWhileRevalidate(cacheName: string, url: string, options?: RequestInit): Promise<Response> {
+  private async staleWhileRevalidate(
+    cacheName: string,
+    url: string,
+    options?: RequestInit
+  ): Promise<Response> {
     const cached = await this.get(cacheName, url);
-    
+
     // Always try to fetch fresh data
     try {
       const response = await fetch(url, options);
@@ -322,17 +342,18 @@ class AdvancedCacheManager {
   // Refresh stale caches
   private async refreshStaleCaches(): Promise<void> {
     const cacheNames = Array.from(this.caches.keys());
-    
+
     for (const cacheName of cacheNames) {
       const config = this.caches.get(cacheName);
       if (!config || config.strategy !== 'stale-while-revalidate') continue;
 
       const entries = this.cacheEntries.get(cacheName) || [];
       const now = Date.now();
-      
+
       for (const entry of entries) {
         const age = (now - entry.timestamp) / 1000;
-        if (age > config.maxAge / 2) { // Refresh if older than half max age
+        if (age > config.maxAge / 2) {
+          // Refresh if older than half max age
           this.revalidateInBackground(cacheName, entry.url);
         }
       }
@@ -342,14 +363,14 @@ class AdvancedCacheManager {
   // Cleanup expired entries
   private cleanupExpiredEntries(): void {
     const now = Date.now();
-    
+
     for (const [cacheName, config] of this.caches) {
       const entries = this.cacheEntries.get(cacheName) || [];
-      const validEntries = entries.filter(entry => {
+      const validEntries = entries.filter((entry) => {
         const age = (now - entry.timestamp) / 1000;
         return age <= config.maxAge;
       });
-      
+
       this.cacheEntries.set(cacheName, validEntries);
     }
   }
@@ -361,7 +382,7 @@ class AdvancedCacheManager {
 
     const entries = this.cacheEntries.get(cacheName) || [];
     stats.entries = entries.length;
-    
+
     // Calculate total size (approximate)
     stats.totalSize = entries.reduce((total, entry) => {
       // Approximate response size
@@ -373,15 +394,15 @@ class AdvancedCacheManager {
     if (action === 'hit' || action === 'miss') {
       const total = stats.hitRate + stats.missRate;
       if (action === 'hit') {
-        stats.hitRate = total > 0 ? (stats.hitRate + 1) : 1;
+        stats.hitRate = total > 0 ? stats.hitRate + 1 : 1;
       } else {
-        stats.missRate = total > 0 ? (stats.missRate + 1) : 1;
+        stats.missRate = total > 0 ? stats.missRate + 1 : 1;
       }
     }
 
     // Update oldest/newest entries
     if (entries.length > 0) {
-      const timestamps = entries.map(e => e.timestamp);
+      const timestamps = entries.map((e) => e.timestamp);
       stats.oldestEntry = new Date(Math.min(...timestamps));
       stats.newestEntry = new Date(Math.max(...timestamps));
     }
@@ -435,9 +456,13 @@ class AdvancedCacheManager {
   }
 
   // Create cache warming strategy
-  createCacheWarmingStrategy(cacheName: string, urls: string[], priority: 'high' | 'medium' | 'low' = 'medium'): void {
+  createCacheWarmingStrategy(
+    cacheName: string,
+    urls: string[],
+    priority: 'high' | 'medium' | 'low' = 'medium'
+  ): void {
     const delay = priority === 'high' ? 0 : priority === 'medium' ? 1000 : 5000;
-    
+
     setTimeout(() => {
       this.preloadResources(cacheName, urls);
     }, delay);
@@ -461,14 +486,14 @@ class AdvancedCacheManager {
     for (const [cacheName, config] of this.caches) {
       const stats = this.stats.get(cacheName);
       const entries = this.cacheEntries.get(cacheName) || [];
-      
+
       const issues: string[] = [];
       let status: 'healthy' | 'warning' | 'critical' = 'healthy';
 
       // Check hit rate
       const totalRequests = stats.hitRate + stats.missRate;
       const hitRate = totalRequests > 0 ? (stats.hitRate / totalRequests) * 100 : 0;
-      
+
       if (hitRate < 50) {
         issues.push('Low hit rate');
         status = 'critical';
@@ -485,7 +510,7 @@ class AdvancedCacheManager {
 
       // Check for expired entries
       const now = Date.now();
-      const expiredCount = entries.filter(entry => {
+      const expiredCount = entries.filter((entry) => {
         const age = (now - entry.timestamp) / 1000;
         return age > config.maxAge;
       }).length;
@@ -498,15 +523,15 @@ class AdvancedCacheManager {
       details.push({
         name: cacheName,
         status,
-        issues
+        issues,
       });
     }
 
-    const overall = details.some(d => d.status === 'critical') 
-      ? 'critical' 
-      : details.some(d => d.status === 'warning') 
-      ? 'warning' 
-      : 'healthy';
+    const overall = details.some((d) => d.status === 'critical')
+      ? 'critical'
+      : details.some((d) => d.status === 'warning')
+        ? 'warning'
+        : 'healthy';
 
     return { overall, details };
   }
@@ -518,15 +543,15 @@ class AdvancedCacheManager {
     caches: Record<string, any>;
   } {
     const data: Record<string, any> = {};
-    
+
     for (const [cacheName, entries] of this.cacheEntries) {
-      data[cacheName] = entries.map(entry => ({
+      data[cacheName] = entries.map((entry) => ({
         url: entry.url,
         timestamp: entry.timestamp,
         hits: entry.hits,
         lastAccessed: entry.lastAccessed,
         etag: entry.etag,
-        lastModified: entry.lastModified
+        lastModified: entry.lastModified,
         // Note: Response is not serialized for size reasons
       }));
     }
@@ -534,7 +559,7 @@ class AdvancedCacheManager {
     return {
       version: '1.0',
       timestamp: new Date().toISOString(),
-      caches: data
+      caches: data,
     };
   }
 
@@ -588,7 +613,7 @@ export const useAdvancedCache = () => {
     clearCache,
     clearAll,
     getStats: cacheManager.getStats.bind(cacheManager),
-    getHealth: cacheManager.getCacheHealth.bind(cacheManager)
+    getHealth: cacheManager.getCacheHealth.bind(cacheManager),
   };
 };
 

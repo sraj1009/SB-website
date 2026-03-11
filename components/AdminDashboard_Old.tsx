@@ -151,10 +151,11 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
-              className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-bold transition-all duration-200 ${activeTab === item.id
+              className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-bold transition-all duration-200 ${
+                activeTab === item.id
                   ? 'bg-amber-500/15 text-amber-400'
                   : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'
-                }`}
+              }`}
             >
               <span className="text-lg shrink-0">{item.icon}</span>
               {!sidebarCollapsed && <span className="truncate">{item.label}</span>}
@@ -449,10 +450,11 @@ const OrdersTab = ({
           <button
             key={s}
             onClick={() => onStatusFilterChange(s)}
-            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${statusFilter === s
+            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${
+              statusFilter === s
                 ? 'bg-gray-900 text-white'
                 : 'bg-white border border-gray-200 text-gray-500 hover:border-gray-400'
-              }`}
+            }`}
           >
             {s}
           </button>
@@ -465,10 +467,11 @@ const OrdersTab = ({
           <button
             key={p}
             onClick={() => onPaymentFilterChange(p)}
-            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${paymentFilter === p
+            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${
+              paymentFilter === p
                 ? 'bg-gray-900 text-white'
                 : 'bg-white border border-gray-200 text-gray-500 hover:border-gray-400'
-              }`}
+            }`}
           >
             {p}
           </button>
@@ -536,12 +539,13 @@ const OrdersTab = ({
                     <td className="px-6 py-4">
                       <div className="flex flex-col gap-1">
                         <span
-                          className={`inline-block w-fit px-2 py-0.5 rounded text-[9px] font-bold uppercase ${order.payment?.status === 'success'
+                          className={`inline-block w-fit px-2 py-0.5 rounded text-[9px] font-bold uppercase ${
+                            order.payment?.status === 'success'
                               ? 'bg-emerald-100 text-emerald-700'
                               : order.payment?.method === 'upi_manual'
                                 ? 'bg-amber-100 text-amber-700'
                                 : 'bg-gray-100 text-gray-500'
-                            }`}
+                          }`}
                         >
                           {order.payment?.status || 'pending'}
                         </span>
@@ -755,12 +759,13 @@ const CustomersTab = ({
                     </td>
                     <td className="px-6 py-4">
                       <span
-                        className={`px-2 py-0.5 rounded text-[9px] font-black uppercase ${customer.status === 'active'
+                        className={`px-2 py-0.5 rounded text-[9px] font-black uppercase ${
+                          customer.status === 'active'
                             ? 'bg-emerald-100 text-emerald-600'
                             : customer.status === 'suspended'
                               ? 'bg-amber-100 text-amber-600'
                               : 'bg-rose-100 text-rose-600'
-                          }`}
+                        }`}
                       >
                         {customer.status}
                       </span>

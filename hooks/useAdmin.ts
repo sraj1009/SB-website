@@ -3,12 +3,12 @@
 import React from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { adminService } from '../services/admin.service';
-import { 
-  CreateProductRequest, 
-  UpdateProductRequest, 
+import {
+  CreateProductRequest,
+  UpdateProductRequest,
   OrderStatus,
   AuditFilters,
-  ProductFilters
+  ProductFilters,
 } from '../types/api';
 import { toast } from 'react-toastify';
 
@@ -57,7 +57,7 @@ export function useCreateProduct() {
     mutationFn: (productData: CreateProductRequest) => adminService.createProduct(productData),
     onSuccess: (data) => {
       toast.success(`Product "${data.title}" created successfully! 📚`);
-      
+
       // Invalidate products queries
       queryClient.invalidateQueries({ queryKey: adminKeys.products() });
       queryClient.invalidateQueries({ queryKey: ['products'] });
@@ -74,11 +74,11 @@ export function useUpdateProduct() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, productData }: { id: string; productData: UpdateProductRequest }) => 
+    mutationFn: ({ id, productData }: { id: string; productData: UpdateProductRequest }) =>
       adminService.updateProduct(id, productData),
     onSuccess: (data, variables) => {
       toast.success(`Product "${data.title}" updated successfully!`);
-      
+
       // Invalidate products queries
       queryClient.invalidateQueries({ queryKey: adminKeys.products() });
       queryClient.invalidateQueries({ queryKey: adminKeys.product(variables.id) });
@@ -99,7 +99,7 @@ export function useDeleteProduct() {
     mutationFn: (id: string) => adminService.deleteProduct(id),
     onSuccess: () => {
       toast.success('Product deleted successfully');
-      
+
       // Invalidate products queries
       queryClient.invalidateQueries({ queryKey: adminKeys.products() });
       queryClient.invalidateQueries({ queryKey: ['products'] });
@@ -116,11 +116,11 @@ export function useUpdateInventory() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ productId, stockData }: { productId: string; stockData: any }) => 
+    mutationFn: ({ productId, stockData }: { productId: string; stockData: any }) =>
       adminService.updateInventory(productId, stockData),
     onSuccess: (data, variables) => {
       toast.success(`Inventory updated for "${data.title}"`);
-      
+
       // Invalidate products queries
       queryClient.invalidateQueries({ queryKey: adminKeys.products() });
       queryClient.invalidateQueries({ queryKey: adminKeys.product(variables.productId) });
@@ -138,11 +138,12 @@ export function useBulkUpdateInventory() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (updates: Array<{ productId: string; stock: number; lowStockThreshold?: number }>) => 
-      adminService.bulkUpdateInventory(updates),
+    mutationFn: (
+      updates: Array<{ productId: string; stock: number; lowStockThreshold?: number }>
+    ) => adminService.bulkUpdateInventory(updates),
     onSuccess: (data) => {
       toast.success(`Bulk inventory update completed for ${data.length} products! 📦`);
-      
+
       // Invalidate products queries
       queryClient.invalidateQueries({ queryKey: adminKeys.products() });
       queryClient.invalidateQueries({ queryKey: ['products'] });
@@ -155,15 +156,17 @@ export function useBulkUpdateInventory() {
 }
 
 // Get all orders (admin view)
-export function useAdminOrders(filters: {
-  status?: OrderStatus;
-  startDate?: string;
-  endDate?: string;
-  page?: number;
-  limit?: number;
-  sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
-} = {}) {
+export function useAdminOrders(
+  filters: {
+    status?: OrderStatus;
+    startDate?: string;
+    endDate?: string;
+    page?: number;
+    limit?: number;
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
+  } = {}
+) {
   return useQuery({
     queryKey: adminKeys.orders(),
     queryFn: () => adminService.getAllOrders(filters),
@@ -180,7 +183,7 @@ export function useVerifyOrder() {
     mutationFn: (orderId: string) => adminService.verifyOrder(orderId),
     onSuccess: (data, variables) => {
       toast.success(`Order ${adminService.formatOrderId(variables.orderId)} verified ✅`);
-      
+
       // Invalidate orders queries
       queryClient.invalidateQueries({ queryKey: adminKeys.orders() });
       queryClient.invalidateQueries({ queryKey: adminKeys.order(variables.orderId) });
@@ -198,18 +201,18 @@ export function useUpdateOrderStatus() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ 
-      orderId, 
-      status, 
-      data 
-    }: { 
-      orderId: string; 
-      status: OrderStatus; 
-      data?: { trackingNumber?: string; notes?: string; estimatedDelivery?: string; }
+    mutationFn: ({
+      orderId,
+      status,
+      data,
+    }: {
+      orderId: string;
+      status: OrderStatus;
+      data?: { trackingNumber?: string; notes?: string; estimatedDelivery?: string };
     }) => adminService.updateOrderStatus(orderId, status, data),
     onSuccess: (data, variables) => {
       toast.success(`Order status updated to ${variables.status}`);
-      
+
       // Invalidate orders queries
       queryClient.invalidateQueries({ queryKey: adminKeys.orders() });
       queryClient.invalidateQueries({ queryKey: adminKeys.order(variables.orderId) });
@@ -223,15 +226,17 @@ export function useUpdateOrderStatus() {
 }
 
 // Get all users
-export function useAdminUsers(filters: {
-  page?: number;
-  limit?: number;
-  search?: string;
-  role?: 'user' | 'admin';
-  status?: 'active' | 'banned' | 'suspended';
-  sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
-} = {}) {
+export function useAdminUsers(
+  filters: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    role?: 'user' | 'admin';
+    status?: 'active' | 'banned' | 'suspended';
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
+  } = {}
+) {
   return useQuery({
     queryKey: adminKeys.users(),
     queryFn: () => adminService.getAllUsers(filters),
@@ -245,11 +250,18 @@ export function useUpdateUserStatus() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ userId, status, reason }: { userId: string; status: 'active' | 'banned' | 'suspended'; reason?: string }) => 
-      adminService.updateUserStatus(userId, status, reason),
+    mutationFn: ({
+      userId,
+      status,
+      reason,
+    }: {
+      userId: string;
+      status: 'active' | 'banned' | 'suspended';
+      reason?: string;
+    }) => adminService.updateUserStatus(userId, status, reason),
     onSuccess: (data, variables) => {
       toast.success(`User status updated to ${variables.status}`);
-      
+
       // Invalidate users queries
       queryClient.invalidateQueries({ queryKey: adminKeys.users() });
       queryClient.invalidateQueries({ queryKey: adminKeys.user(variables.userId) });
@@ -283,11 +295,13 @@ export function useSystemHealth() {
 }
 
 // Get analytics data
-export function useAdminAnalytics(filters: {
-  startDate?: string;
-  endDate?: string;
-  type?: 'revenue' | 'orders' | 'users' | 'products';
-} = {}) {
+export function useAdminAnalytics(
+  filters: {
+    startDate?: string;
+    endDate?: string;
+    type?: 'revenue' | 'orders' | 'users' | 'products';
+  } = {}
+) {
   return useQuery({
     queryKey: adminKeys.analytics(),
     queryFn: () => adminService.getAnalytics(filters),
@@ -314,7 +328,7 @@ export function useUpdateSettings() {
     mutationFn: (settings: any) => adminService.updateSettings(settings),
     onSuccess: () => {
       toast.success('Settings updated successfully! ⚙️');
-      
+
       // Invalidate settings query
       queryClient.invalidateQueries({ queryKey: adminKeys.settings() });
     },
@@ -328,11 +342,16 @@ export function useUpdateSettings() {
 // Export data mutation
 export function useExportData() {
   return useMutation({
-    mutationFn: ({ type, filters }: { type: 'orders' | 'products' | 'users' | 'reviews'; filters?: any }) => 
-      adminService.exportData(type, filters),
+    mutationFn: ({
+      type,
+      filters,
+    }: {
+      type: 'orders' | 'products' | 'users' | 'reviews';
+      filters?: any;
+    }) => adminService.exportData(type, filters),
     onSuccess: (data) => {
       toast.success('Data exported successfully! Download will start shortly.');
-      
+
       // Trigger download
       const link = document.createElement('a');
       link.href = data.downloadUrl;
@@ -353,7 +372,7 @@ export function useAdminDashboard() {
   const dashboard = useDashboardStats();
   const health = useSystemHealth();
   const orders = useAdminOrders({ limit: 10 });
-  
+
   return {
     dashboard: dashboard.data,
     health: health.data,
@@ -371,47 +390,49 @@ export function useAdminDashboard() {
 // Custom hook for product management
 export function useProductManagement() {
   const queryClient = useQueryClient();
-  
+
   const products = useAdminProducts();
   const createProduct = useCreateProduct();
   const updateProduct = useUpdateProduct();
   const deleteProduct = useDeleteProduct();
   const updateInventory = useUpdateInventory();
   const bulkUpdateInventory = useBulkUpdateInventory();
-  
+
   return {
     products: products.data?.data || [],
-    pagination: products.data ? {
-      page: products.data.page,
-      limit: products.data.limit,
-      total: products.data.total,
-      totalPages: products.data.totalPages,
-    } : null,
-    
+    pagination: products.data
+      ? {
+          page: products.data.page,
+          limit: products.data.limit,
+          total: products.data.total,
+          totalPages: products.data.totalPages,
+        }
+      : null,
+
     isLoading: products.isLoading,
     error: products.error,
-    
+
     // Mutations
     createProduct: createProduct.mutateAsync,
     updateProduct: updateProduct.mutateAsync,
     deleteProduct: deleteProduct.mutateAsync,
     updateInventory: updateInventory.mutateAsync,
     bulkUpdateInventory: bulkUpdateInventory.mutateAsync,
-    
+
     // Loading states
     isCreating: createProduct.isPending,
     isUpdating: updateProduct.isPending,
     isDeleting: deleteProduct.isPending,
     isUpdatingInventory: updateInventory.isPending,
     isBulkUpdating: bulkUpdateInventory.isPending,
-    
+
     // Error states
     createError: createProduct.error,
     updateError: updateProduct.error,
     deleteError: deleteProduct.error,
     inventoryError: updateInventory.error,
     bulkInventoryError: bulkUpdateInventory.error,
-    
+
     // Refetch
     refetch: products.refetch,
   };
@@ -420,35 +441,37 @@ export function useProductManagement() {
 // Custom hook for order management
 export function useOrderManagement() {
   const queryClient = useQueryClient();
-  
+
   const orders = useAdminOrders();
   const verifyOrder = useVerifyOrder();
   const updateStatus = useUpdateOrderStatus();
-  
+
   return {
     orders: orders.data?.data || [],
-    pagination: orders.data ? {
-      page: orders.data.page,
-      limit: orders.data.limit,
-      total: orders.data.total,
-      totalPages: orders.data.totalPages,
-    } : null,
-    
+    pagination: orders.data
+      ? {
+          page: orders.data.page,
+          limit: orders.data.limit,
+          total: orders.data.total,
+          totalPages: orders.data.totalPages,
+        }
+      : null,
+
     isLoading: orders.isLoading,
     error: orders.error,
-    
+
     // Mutations
     verifyOrder: verifyOrder.mutateAsync,
     updateStatus: updateStatus.mutateAsync,
-    
+
     // Loading states
     isVerifying: verifyOrder.isPending,
     isUpdating: updateStatus.isPending,
-    
+
     // Error states
     verifyError: verifyOrder.error,
     updateError: updateStatus.error,
-    
+
     // Refetch
     refetch: orders.refetch,
   };
@@ -457,31 +480,33 @@ export function useOrderManagement() {
 // Custom hook for user management
 export function useUserManagement() {
   const queryClient = useQueryClient();
-  
+
   const users = useAdminUsers();
   const updateStatus = useUpdateUserStatus();
-  
+
   return {
     users: users.data?.data || [],
-    pagination: users.data ? {
-      page: users.data.page,
-      limit: users.data.limit,
-      total: users.data.total,
-      totalPages: users.data.totalPages,
-    } : null,
-    
+    pagination: users.data
+      ? {
+          page: users.data.page,
+          limit: users.data.limit,
+          total: users.data.total,
+          totalPages: users.data.totalPages,
+        }
+      : null,
+
     isLoading: users.isLoading,
     error: users.error,
-    
+
     // Mutations
     updateStatus: updateStatus.mutateAsync,
-    
+
     // Loading states
     isUpdating: updateStatus.isPending,
-    
+
     // Error states
     updateError: updateStatus.error,
-    
+
     // Refetch
     refetch: users.refetch,
   };
@@ -491,7 +516,7 @@ export function useUserManagement() {
 export function useAnalyticsDashboard() {
   const analytics = useAdminAnalytics();
   const stats = useOrderStats();
-  
+
   return {
     analytics: analytics.data,
     stats: stats.data,
@@ -507,12 +532,12 @@ export function useAnalyticsDashboard() {
 // Custom hook for system monitoring
 export function useSystemMonitoring() {
   const health = useSystemHealth();
-  
+
   const systemStatus = React.useMemo(() => {
     if (!health.data) return null;
-    
+
     const { status, services, metrics } = health.data;
-    
+
     return {
       overall: status,
       database: services.database.status,
@@ -524,7 +549,7 @@ export function useSystemMonitoring() {
       activeConnections: metrics.activeConnections,
     };
   }, [health.data]);
-  
+
   return {
     systemStatus,
     health: health.data,
@@ -538,7 +563,7 @@ export function useSystemMonitoring() {
 export function useAdminSettingsManager() {
   const settings = useAdminSettings();
   const updateSettings = useUpdateSettings();
-  
+
   return {
     settings: settings.data,
     isLoading: settings.isLoading,
@@ -553,7 +578,7 @@ export function useAdminSettingsManager() {
 // Custom hook for data export
 export function useDataExport() {
   const exportData = useExportData();
-  
+
   return {
     exportData: exportData.mutateAsync,
     isExporting: exportData.isPending,
@@ -564,15 +589,17 @@ export function useDataExport() {
 // Custom hook for audit trail
 export function useAuditTrail(filters: AuditFilters = {}) {
   const auditLogs = useAuditLogs(filters);
-  
+
   return {
     logs: auditLogs.data?.data || [],
-    pagination: auditLogs.data ? {
-      page: auditLogs.data.page,
-      limit: auditLogs.data.limit,
-      total: auditLogs.data.total,
-      totalPages: auditLogs.data.totalPages,
-    } : null,
+    pagination: auditLogs.data
+      ? {
+          page: auditLogs.data.page,
+          limit: auditLogs.data.limit,
+          total: auditLogs.data.total,
+          totalPages: auditLogs.data.totalPages,
+        }
+      : null,
     isLoading: auditLogs.isLoading,
     error: auditLogs.error,
     refetch: auditLogs.refetch,
@@ -582,10 +609,10 @@ export function useAuditTrail(filters: AuditFilters = {}) {
 // Custom hook for quick stats
 export function useQuickStats() {
   const dashboard = useDashboardStats();
-  
+
   const quickStats = React.useMemo(() => {
     if (!dashboard.data) return null;
-    
+
     return {
       totalOrders: dashboard.data.totalOrders,
       totalRevenue: dashboard.data.totalRevenue,
@@ -595,7 +622,7 @@ export function useQuickStats() {
       pendingVerifications: dashboard.data.pendingVerifications,
     };
   }, [dashboard.data]);
-  
+
   return {
     stats: quickStats,
     isLoading: dashboard.isLoading,

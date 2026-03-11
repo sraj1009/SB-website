@@ -1,20 +1,15 @@
 // Cart Service for SINGGLEBEE Frontend
 
 import apiClient from './api-client';
-import { 
-  ApiResponse, 
-  CartResponse, 
-  CartItem, 
+import {
+  ApiResponse,
+  CartResponse,
+  CartItem,
   AddToCartRequest,
   UpdateCartRequest,
-  Coupon
+  Coupon,
 } from '../types/api';
-import { 
-  NotFoundError, 
-  ValidationError, 
-  ErrorHandler,
-  createError
-} from '../utils/error-handler';
+import { NotFoundError, ValidationError, ErrorHandler, createError } from '../utils/error-handler';
 
 class CartService {
   private static instance: CartService;
@@ -32,7 +27,7 @@ class CartService {
   async getCart(): Promise<CartResponse> {
     try {
       const response = await apiClient.get<CartResponse>('/cart');
-      
+
       if (!response.success || !response.data) {
         throw createError(
           response.error?.message || 'Failed to fetch cart',
@@ -68,11 +63,11 @@ class CartService {
 
       const request: AddToCartRequest = {
         productId,
-        quantity
+        quantity,
       };
 
       const response = await apiClient.post<CartResponse>('/cart/add', request);
-      
+
       if (!response.success || !response.data) {
         throw createError(
           response.error?.message || 'Failed to add item to cart',
@@ -102,11 +97,11 @@ class CartService {
       }
 
       const request: UpdateCartRequest = {
-        quantity
+        quantity,
       };
 
       const response = await apiClient.patch<CartResponse>(`/cart/items/${itemId}`, request);
-      
+
       if (!response.success || !response.data) {
         throw createError(
           response.error?.message || 'Failed to update cart item',
@@ -132,7 +127,7 @@ class CartService {
       }
 
       const response = await apiClient.delete<CartResponse>(`/cart/items/${itemId}`);
-      
+
       if (!response.success || !response.data) {
         throw createError(
           response.error?.message || 'Failed to remove item from cart',
@@ -154,7 +149,7 @@ class CartService {
   async clearCart(): Promise<void> {
     try {
       const response = await apiClient.delete('/cart');
-      
+
       if (!response.success) {
         throw createError(
           response.error?.message || 'Failed to clear cart',
@@ -178,9 +173,9 @@ class CartService {
       }
 
       const response = await apiClient.post<CartResponse>('/cart/coupon', {
-        couponCode: couponCode.trim().toUpperCase()
+        couponCode: couponCode.trim().toUpperCase(),
       });
-      
+
       if (!response.success || !response.data) {
         throw createError(
           response.error?.message || 'Failed to apply coupon',
@@ -202,7 +197,7 @@ class CartService {
   async removeCoupon(): Promise<CartResponse> {
     try {
       const response = await apiClient.delete<CartResponse>('/cart/coupon');
-      
+
       if (!response.success || !response.data) {
         throw createError(
           response.error?.message || 'Failed to remove coupon',
@@ -224,7 +219,7 @@ class CartService {
   async syncCartWithBackend(): Promise<CartResponse> {
     try {
       const localCart = this.getCartFromStorage();
-      
+
       if (!localCart || localCart.items.length === 0) {
         // No local cart to sync, just get from API
         return this.getCart();
@@ -232,12 +227,12 @@ class CartService {
 
       // Send local cart to backend for merging
       const response = await apiClient.post<CartResponse>('/cart/sync', {
-        items: localCart.items.map(item => ({
+        items: localCart.items.map((item) => ({
           productId: item.product.id,
-          quantity: item.quantity
-        }))
+          quantity: item.quantity,
+        })),
       });
-      
+
       if (!response.success || !response.data) {
         throw createError(
           response.error?.message || 'Failed to sync cart',
@@ -271,16 +266,16 @@ class CartService {
   isProductInCart(productId: string): boolean {
     const cart = this.getCartFromStorage();
     if (!cart) return false;
-    
-    return cart.items.some(item => item.product.id === productId);
+
+    return cart.items.some((item) => item.product.id === productId);
   }
 
   // Get item quantity for product
   getItemQuantity(productId: string): number {
     const cart = this.getCartFromStorage();
     if (!cart) return 0;
-    
-    const item = cart.items.find(item => item.product.id === productId);
+
+    const item = cart.items.find((item) => item.product.id === productId);
     return item ? item.quantity : 0;
   }
 
@@ -289,8 +284,8 @@ class CartService {
     const cart = this.getCartFromStorage();
     if (!cart) return;
 
-    const itemIndex = cart.items.findIndex(item => item.product.id === productId);
-    
+    const itemIndex = cart.items.findIndex((item) => item.product.id === productId);
+
     if (itemIndex === -1) return;
 
     if (quantity === 0) {
@@ -304,7 +299,7 @@ class CartService {
 
     // Recalculate totals
     this.recalculateCartTotals(cart);
-    
+
     // Save to storage
     this.saveCartToStorage(cart);
   }
@@ -314,11 +309,11 @@ class CartService {
     const cart = this.getCartFromStorage();
     if (!cart) return;
 
-    cart.items = cart.items.filter(item => item.product.id !== productId);
-    
+    cart.items = cart.items.filter((item) => item.product.id !== productId);
+
     // Recalculate totals
     this.recalculateCartTotals(cart);
-    
+
     // Save to storage
     this.saveCartToStorage(cart);
   }
@@ -332,15 +327,16 @@ class CartService {
       subtotal: 0,
       tax: 0,
       shipping: 0,
-      discount: 0
+      discount: 0,
     };
 
-    const existingItemIndex = cart.items.findIndex(item => item.product.id === product.id);
-    
+    const existingItemIndex = cart.items.findIndex((item) => item.product.id === product.id);
+
     if (existingItemIndex !== -1) {
       // Update existing item
       cart.items[existingItemIndex].quantity += quantity;
-      cart.items[existingItemIndex].subtotal = cart.items[existingItemIndex].product.price * cart.items[existingItemIndex].quantity;
+      cart.items[existingItemIndex].subtotal =
+        cart.items[existingItemIndex].product.price * cart.items[existingItemIndex].quantity;
     } else {
       // Add new item
       cart.items.push({
@@ -352,17 +348,17 @@ class CartService {
           price: product.price,
           image: product.image,
           stock: product.stock,
-          format: product.format
+          format: product.format,
         },
         quantity,
         subtotal: product.price * quantity,
-        addedAt: new Date().toISOString()
+        addedAt: new Date().toISOString(),
       });
     }
 
     // Recalculate totals
     this.recalculateCartTotals(cart);
-    
+
     // Save to storage
     this.saveCartToStorage(cart);
   }
@@ -379,11 +375,11 @@ class CartService {
       if (!item.product || !item.product.id) {
         errors.push(`Item ${index + 1}: Product ID is required`);
       }
-      
+
       if (!item.quantity || item.quantity < 1) {
         errors.push(`Item ${index + 1}: Quantity must be at least 1`);
       }
-      
+
       if (!item.product.price || item.product.price < 0) {
         errors.push(`Item ${index + 1}: Product price is invalid`);
       }
@@ -413,7 +409,7 @@ class CartService {
     return deliveryDate.toLocaleDateString('en-US', {
       weekday: 'long',
       month: 'long',
-      day: 'numeric'
+      day: 'numeric',
     });
   }
 
@@ -421,7 +417,7 @@ class CartService {
   isEligibleForFreeShipping(): boolean {
     const cart = this.getCartFromStorage();
     if (!cart) return false;
-    
+
     const FREE_SHIPPING_THRESHOLD = 500; // ₹500
     return cart.subtotal >= FREE_SHIPPING_THRESHOLD;
   }
@@ -431,7 +427,7 @@ class CartService {
     if (this.isEligibleForFreeShipping()) {
       return 0;
     }
-    
+
     const cart = this.getCartFromStorage();
     if (!cart || cart.items.length === 0) {
       return 0;
@@ -465,7 +461,7 @@ class CartService {
     }
 
     let discount = 0;
-    
+
     switch (coupon.discountType) {
       case 'percentage':
         discount = subtotal * (coupon.discountValue / 100);
@@ -522,11 +518,11 @@ class CartService {
     try {
       const lastSync = localStorage.getItem(this.CART_SYNC_KEY);
       if (!lastSync) return true;
-      
+
       const syncTime = new Date(lastSync);
       const now = new Date();
       const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
-      
+
       return syncTime < fiveMinutesAgo;
     } catch {
       return true;
@@ -557,7 +553,7 @@ class CartService {
       totalAmount: cart.totalAmount,
       coupon: cart.coupon,
       estimatedDelivery: this.getEstimatedDelivery(),
-      freeShippingEligible: this.isEligibleForFreeShipping()
+      freeShippingEligible: this.isEligibleForFreeShipping(),
     };
   }
 

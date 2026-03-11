@@ -40,7 +40,7 @@ export interface SecurityEvent {
  */
 export class SecurityLogger {
   private static instance: SecurityLogger;
-  
+
   // PII fields to mask in logs
   private readonly PII_FIELDS = [
     'password',
@@ -75,7 +75,7 @@ export class SecurityLogger {
   logSecurityEvent(event: SecurityEvent): void {
     try {
       const maskedEvent = this.maskPII(event);
-      
+
       // Use structured logging for SIEM integration
       logger.warn('SECURITY_EVENT', {
         ...maskedEvent,
@@ -96,13 +96,7 @@ export class SecurityLogger {
   /**
    * Log authentication events
    */
-  logAuthEvent(
-    action: string,
-    userId?: string,
-    ip: string,
-    success: boolean,
-    details?: any
-  ): void {
+  logAuthEvent(action: string, userId?: string, ip: string, success: boolean, details?: any): void {
     const event: SecurityEvent = {
       type: SecurityEventType.AUTHENTICATION,
       severity: success ? SecuritySeverity.LOW : SecuritySeverity.MEDIUM,
@@ -191,11 +185,7 @@ export class SecurityLogger {
   /**
    * Log system security events
    */
-  logSystemEvent(
-    event: string,
-    severity: SecuritySeverity,
-    details?: any
-  ): void {
+  logSystemEvent(event: string, severity: SecuritySeverity, details?: any): void {
     const securityEvent: SecurityEvent = {
       type: SecurityEventType.SYSTEM,
       severity,
@@ -217,15 +207,15 @@ export class SecurityLogger {
     }
 
     if (Array.isArray(obj)) {
-      return obj.map(item => this.maskPII(item));
+      return obj.map((item) => this.maskPII(item));
     }
 
     const masked: any = {};
-    
+
     for (const [key, value] of Object.entries(obj)) {
       const lowerKey = key.toLowerCase();
-      
-      if (this.PII_FIELDS.some(field => lowerKey.includes(field.toLowerCase()))) {
+
+      if (this.PII_FIELDS.some((field) => lowerKey.includes(field.toLowerCase()))) {
         // Mask sensitive data
         if (typeof value === 'string') {
           if (value.length <= 4) {

@@ -28,7 +28,7 @@ const RatingSystem: React.FC<RatingSystemProps> = ({
   productName,
   averageRating = 0,
   totalReviews = 0,
-  onReviewSubmit
+  onReviewSubmit,
 }) => {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [userRating, setUserRating] = useState<number>(0);
@@ -67,7 +67,7 @@ const RatingSystem: React.FC<RatingSystemProps> = ({
       rating: userRating,
       title: reviewTitle,
       content: reviewContent,
-      verified: true
+      verified: true,
     };
 
     try {
@@ -75,9 +75,9 @@ const RatingSystem: React.FC<RatingSystemProps> = ({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
-        body: JSON.stringify(newReview)
+        body: JSON.stringify(newReview),
       });
 
       if (response.ok) {
@@ -100,21 +100,23 @@ const RatingSystem: React.FC<RatingSystemProps> = ({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
-        body: JSON.stringify({ helpful })
+        body: JSON.stringify({ helpful }),
       });
 
       if (response.ok) {
-        setReviews(reviews.map(review => 
-          review.id === reviewId 
-            ? {
-                ...review,
-                helpful: helpful ? review.helpful + 1 : review.helpful,
-                notHelpful: !helpful ? review.notHelpful + 1 : review.notHelpful
-              }
-            : review
-        ));
+        setReviews(
+          reviews.map((review) =>
+            review.id === reviewId
+              ? {
+                  ...review,
+                  helpful: helpful ? review.helpful + 1 : review.helpful,
+                  notHelpful: !helpful ? review.notHelpful + 1 : review.notHelpful,
+                }
+              : review
+          )
+        );
       }
     } catch (error) {
       console.error('Failed to mark review helpful:', error);
@@ -122,7 +124,7 @@ const RatingSystem: React.FC<RatingSystemProps> = ({
   };
 
   const filteredAndSortedReviews = reviews
-    .filter(review => filter === 'all' || review.rating === parseInt(filter))
+    .filter((review) => filter === 'all' || review.rating === parseInt(filter))
     .sort((a, b) => {
       switch (sortBy) {
         case 'newest':
@@ -142,7 +144,7 @@ const RatingSystem: React.FC<RatingSystemProps> = ({
     const sizeClasses = {
       sm: 'w-4 h-4',
       md: 'w-5 h-5',
-      lg: 'w-6 h-6'
+      lg: 'w-6 h-6',
     };
 
     return (
@@ -162,10 +164,13 @@ const RatingSystem: React.FC<RatingSystemProps> = ({
     );
   };
 
-  const ratingDistribution = [5, 4, 3, 2, 1].map(rating => ({
+  const ratingDistribution = [5, 4, 3, 2, 1].map((rating) => ({
     rating,
-    count: reviews.filter(r => r.rating === rating).length,
-    percentage: reviews.length > 0 ? (reviews.filter(r => r.rating === rating).length / reviews.length) * 100 : 0
+    count: reviews.filter((r) => r.rating === rating).length,
+    percentage:
+      reviews.length > 0
+        ? (reviews.filter((r) => r.rating === rating).length / reviews.length) * 100
+        : 0,
   }));
 
   return (
@@ -173,7 +178,7 @@ const RatingSystem: React.FC<RatingSystemProps> = ({
       {/* Rating Summary */}
       <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
         <h2 className="text-2xl font-bold mb-4">Customer Reviews</h2>
-        
+
         <div className="flex flex-col md:flex-row gap-8">
           {/* Overall Rating */}
           <div className="flex flex-col items-center">
@@ -195,14 +200,12 @@ const RatingSystem: React.FC<RatingSystemProps> = ({
                   <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                 </div>
                 <div className="flex-1 bg-gray-200 rounded-full h-2">
-                  <div 
+                  <div
                     className="bg-yellow-400 h-2 rounded-full transition-all duration-300"
                     style={{ width: `${percentage}%` }}
                   />
                 </div>
-                <div className="text-sm text-gray-600 w-12 text-right">
-                  {count}
-                </div>
+                <div className="text-sm text-gray-600 w-12 text-right">{count}</div>
               </div>
             ))}
           </div>
@@ -222,22 +225,16 @@ const RatingSystem: React.FC<RatingSystemProps> = ({
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg max-w-2xl w-full p-6">
             <h3 className="text-xl font-bold mb-4">Review {productName}</h3>
-            
+
             {/* Rating Selection */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Your Rating *
-              </label>
-              <div className="flex gap-2">
-                {renderStars(hoverRating || userRating, true, 'lg')}
-              </div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Your Rating *</label>
+              <div className="flex gap-2">{renderStars(hoverRating || userRating, true, 'lg')}</div>
             </div>
 
             {/* Review Title */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Review Title *
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Review Title *</label>
               <input
                 type="text"
                 value={reviewTitle}
@@ -250,9 +247,7 @@ const RatingSystem: React.FC<RatingSystemProps> = ({
 
             {/* Review Content */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Your Review *
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Your Review *</label>
               <textarea
                 value={reviewContent}
                 onChange={(e) => setReviewContent(e.target.value)}
@@ -287,9 +282,7 @@ const RatingSystem: React.FC<RatingSystemProps> = ({
       <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Filter by Rating
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Filter by Rating</label>
             <select
               value={filter}
               onChange={(e) => setFilter(e.target.value as any)}
@@ -305,9 +298,7 @@ const RatingSystem: React.FC<RatingSystemProps> = ({
           </div>
 
           <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Sort by
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Sort by</label>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
@@ -328,7 +319,9 @@ const RatingSystem: React.FC<RatingSystemProps> = ({
           <div className="bg-white rounded-lg shadow-sm p-8 text-center">
             <MessageSquare className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-600">
-              {filter === 'all' ? 'No reviews yet. Be the first to review!' : `No ${filter}-star reviews yet.`}
+              {filter === 'all'
+                ? 'No reviews yet. Be the first to review!'
+                : `No ${filter}-star reviews yet.`}
             </p>
           </div>
         ) : (

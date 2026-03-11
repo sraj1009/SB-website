@@ -4,18 +4,14 @@ import { processEmailJob } from '../queues/email.queue.js';
 import logger from '../utils/logger.js';
 
 // Create email worker
-const emailWorker = new Worker(
-  'email-queue',
-  processEmailJob,
-  {
-    connection: redisClient,
-    concurrency: 5, // Process 5 emails concurrently
-    limiter: {
-      max: 20, // Max 20 emails per minute
-      duration: 60000, // 1 minute
-    },
-  }
-);
+const emailWorker = new Worker('email-queue', processEmailJob, {
+  connection: redisClient,
+  concurrency: 5, // Process 5 emails concurrently
+  limiter: {
+    max: 20, // Max 20 emails per minute
+    duration: 60000, // 1 minute
+  },
+});
 
 // Worker event handlers
 emailWorker.on('completed', (job) => {

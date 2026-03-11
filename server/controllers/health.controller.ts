@@ -49,21 +49,21 @@ interface HealthResponse {
  */
 export const getHealthCheck = async (req: Request, res: Response) => {
   const startTime = Date.now();
-  
+
   try {
     // Check Redis health
     const redisHealth = await checkRedisHealth();
-    
+
     // Check queue health
     const emailQueueHealth = await checkEmailQueueHealth();
     const webhookQueueHealth = await checkWebhookQueueHealth();
-    
+
     // Check database health
     const dbHealth = await checkDatabaseHealth();
-    
+
     // Get system metrics
     const metrics = getSystemMetrics();
-    
+
     // Determine overall status
     const overallStatus = determineOverallStatus([
       redisHealth.status,
@@ -87,7 +87,7 @@ export const getHealthCheck = async (req: Request, res: Response) => {
     };
 
     const duration = Date.now() - startTime;
-    
+
     // Log health check
     logger.info(`Health check completed in ${duration}ms`, {
       status: overallStatus,
@@ -98,13 +98,12 @@ export const getHealthCheck = async (req: Request, res: Response) => {
     });
 
     // Set appropriate status code
-    const statusCode = overallStatus === 'healthy' ? 200 : 
-                       overallStatus === 'degraded' ? 200 : 503;
+    const statusCode = overallStatus === 'healthy' ? 200 : overallStatus === 'degraded' ? 200 : 503;
 
     res.status(statusCode).json(response);
   } catch (error) {
     logger.error('Health check failed:', error);
-    
+
     res.status(503).json({
       status: 'unhealthy',
       timestamp: new Date().toISOString(),
@@ -119,7 +118,7 @@ export const getHealthCheck = async (req: Request, res: Response) => {
 export const getRedisHealth = async (req: Request, res: Response) => {
   try {
     const redisHealth = await checkRedisHealth();
-    
+
     res.status(redisHealth.status === 'up' ? 200 : 503).json(redisHealth);
   } catch (error) {
     logger.error('Redis health check failed:', error);
@@ -137,7 +136,7 @@ export const getQueueHealth = async (req: Request, res: Response) => {
   try {
     const emailQueueHealth = await checkEmailQueueHealth();
     const webhookQueueHealth = await checkWebhookQueueHealth();
-    
+
     res.json({
       emailQueue: emailQueueHealth,
       webhookQueue: webhookQueueHealth,
@@ -157,7 +156,7 @@ export const getCacheStats = async (req: Request, res: Response) => {
   try {
     const redisInfo = await redisClient.info();
     const keyspace = await redisClient.info('keyspace');
-    
+
     const stats = {
       info: parseRedisInfo(redisInfo),
       keyspace: parseRedisInfo(keyspace),
@@ -179,8 +178,8 @@ export const getRateLimitStats = async (req: Request, res: Response) => {
   try {
     const pattern = 'singglebee:ratelimit:*';
     const keys = await redisClient.keys(pattern);
-    
-    let totalKeys = keys.length;
+
+    const totalKeys = keys.length;
     let totalRequests = 0;
     const endpointCounts: Record<string, number> = {};
 
@@ -198,7 +197,7 @@ export const getRateLimitStats = async (req: Request, res: Response) => {
     }
 
     const topEndpoints = Object.entries(endpointCounts)
-      .sort(([,a], [,b]) => b - a)
+      .sort(([, a], [, b]) => b - a)
       .slice(0, 10)
       .map(([endpoint, requests]) => ({ endpoint, requests }));
 
@@ -222,10 +221,10 @@ async function checkRedisHealth(): Promise<any> {
     const startTime = Date.now();
     await redisClient.ping();
     const latency = Date.now() - startTime;
-    
+
     const info = await redisClient.info('memory');
     const clients = await redisClient.info('clients');
-    
+
     return {
       status: 'up',
       latency,
@@ -244,7 +243,7 @@ async function checkRedisHealth(): Promise<any> {
 async function checkEmailQueueHealth(): Promise<any> {
   try {
     const stats = await EmailQueueService.getQueueStats();
-    
+
     return {
       status: stats ? 'up' : 'down',
       waiting: stats?.waiting || 0,
@@ -262,7 +261,7 @@ async function checkEmailQueueHealth(): Promise<any> {
 async function checkWebhookQueueHealth(): Promise<any> {
   try {
     const stats = await WebhookQueueService.getQueueStats();
-    
+
     return {
       status: stats ? 'up' : 'down',
       waiting: stats?.waiting || 0,
@@ -281,11 +280,11 @@ async function checkDatabaseHealth(): Promise<any> {
   try {
     // Import mongoose dynamically to avoid circular dependencies
     const mongoose = await import('mongoose');
-    
+
     const startTime = Date.now();
     await mongoose.connection.db.admin().ping();
     const latency = Date.now() - startTime;
-    
+
     return {
       status: 'up',
       latency,
@@ -309,8 +308,8 @@ function getSystemMetrics(): any {
 }
 
 function determineOverallStatus(statuses: string[]): 'healthy' | 'degraded' | 'unhealthy' {
-  const downCount = statuses.filter(s => s === 'down').length;
-  
+  const downCount = statuses.filter((s) => s === 'down').length;
+
   if (downCount === 0) return 'healthy';
   if (downCount <= statuses.length / 2) return 'degraded';
   return 'unhealthy';
@@ -322,7 +321,7 @@ function parseRedisInfo(info: string): any {
 
   for (const line of lines) {
     if (line.startsWith('#') || line === '') continue;
-    
+
     const [key, value] = line.split(':');
     if (key && value) {
       // Convert numeric values

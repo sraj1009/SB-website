@@ -1,5 +1,7 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
+import { fieldEncryption } from 'mongoose-field-encryption';
+import { encryptionService } from '../services/encryption.service.js';
 
 const loginHistorySchema = new mongoose.Schema(
   {
@@ -12,12 +14,12 @@ const loginHistorySchema = new mongoose.Schema(
 
 const addressSchema = new mongoose.Schema(
   {
-    street: { type: String, trim: true },
-    landmark: { type: String, trim: true },
-    city: { type: String, trim: true },
-    state: { type: String, trim: true },
-    zipCode: { type: String, trim: true },
-    country: { type: String, default: 'India', trim: true },
+    street: { type: String, trim: true, encrypt: true },
+    landmark: { type: String, trim: true, encrypt: true },
+    city: { type: String, trim: true, encrypt: true },
+    state: { type: String, trim: true, encrypt: true },
+    zipCode: { type: String, trim: true, encrypt: true },
+    country: { type: String, default: 'India', trim: true, encrypt: true },
   },
   { _id: false }
 );
@@ -38,6 +40,7 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
       match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'Please enter a valid email'],
+      encrypt: true, // Field-level encryption
     },
     password: {
       type: String,
@@ -54,6 +57,7 @@ const userSchema = new mongoose.Schema(
       trim: true,
       minlength: [10, 'Phone must be at least 10 digits'],
       match: [/^[0-9]+$/, 'Phone must contain only numbers'],
+      encrypt: true, // Field-level encryption
     },
     role: {
       type: String,
@@ -107,6 +111,19 @@ const userSchema = new mongoose.Schema(
     },
   }
 );
+
+// Apply field-level encryption plugin
+userSchema.plugin(fieldEncryption, {
+  fields: ['email', 'phone', 'address.street', 'address.landmark', 'address.city', 'address.state', 'address.zipCode', 'address.country'],
+  secret: process.env.ENCRYPTION_SECRET || 'default-secret-key',
+  saltLength: 16,
+  encryptMethod: (data, secret) => {
+    return encryptionService.encryptForMongoose(data);
+  },
+  decryptMethod: (data, secret) => {
+    return encryptionService.decryptFromMongoose(data);
+  },
+});
 
 // Alias: fullName -> name (for API compatibility)
 userSchema.virtual('fullName').get(function () {

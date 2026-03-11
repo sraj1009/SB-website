@@ -102,7 +102,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
         onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
         currentTime={currentTime}
       />
-      
+
       {/* Main Content */}
       <div className="flex-1 flex flex-col bg-brand-light overflow-hidden">
         {/* Header */}
@@ -111,9 +111,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
             <h1 className="text-2xl font-black text-brand-black capitalize">
               {activeTab} Dashboard
             </h1>
-            <p className="text-gray-500">
-              Manage your {activeTab} from here
-            </p>
+            <p className="text-gray-500">Manage your {activeTab} from here</p>
           </div>
           <button
             onClick={onClose}
@@ -122,11 +120,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
             ✕
           </button>
         </div>
-        
+
         {/* Content */}
-        <div className="flex-1 overflow-auto p-6">
-          {renderActiveTab()}
-        </div>
+        <div className="flex-1 overflow-auto p-6">{renderActiveTab()}</div>
       </div>
     </div>
   );

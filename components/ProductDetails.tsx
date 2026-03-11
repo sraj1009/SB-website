@@ -216,9 +216,10 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({
                 <button
                   onClick={onToggleWishlist}
                   className={`group/wish p-4 rounded-2xl shadow-sm transition-all duration-300 active:scale-95 flex-shrink-0 border 
-                    ${isWishlisted
-                      ? 'bg-rose-500 text-white border-rose-400'
-                      : 'bg-white text-gray-400 border-gray-100 hover:text-rose-500 hover:border-rose-100'
+                    ${
+                      isWishlisted
+                        ? 'bg-rose-500 text-white border-rose-400'
+                        : 'bg-white text-gray-400 border-gray-100 hover:text-rose-500 hover:border-rose-100'
                     }`}
                 >
                   <svg
@@ -278,12 +279,13 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({
                   onClick={handleAddToCart}
                   disabled={addStatus !== 'idle' || product.isOutOfStock || product.isComingSoon}
                   className={`group/hive relative w-full font-black py-4 sm:py-5 rounded-2xl shadow-lg transition-all duration-500 flex items-center justify-center gap-4 text-xs sm:text-sm uppercase tracking-[0.15em] overflow-hidden
-                     ${product.isOutOfStock || product.isComingSoon
-                      ? 'bg-zinc-200 text-zinc-400 cursor-not-allowed shadow-none'
-                      : addStatus === 'idle'
-                        ? 'bg-gradient-to-r from-zinc-900 via-gray-800 to-zinc-900 text-amber-400 hover:scale-[1.02] hover:shadow-xl active:scale-[0.98]'
-                        : ''
-                    }
+                     ${
+                       product.isOutOfStock || product.isComingSoon
+                         ? 'bg-zinc-200 text-zinc-400 cursor-not-allowed shadow-none'
+                         : addStatus === 'idle'
+                           ? 'bg-gradient-to-r from-zinc-900 via-gray-800 to-zinc-900 text-amber-400 hover:scale-[1.02] hover:shadow-xl active:scale-[0.98]'
+                           : ''
+                     }
                      ${addStatus === 'loading' ? 'bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500 text-white cursor-wait' : ''}
                      ${addStatus === 'success' ? 'bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-500 text-white scale-[1.02]' : ''}
                    `}
@@ -435,10 +437,11 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({
                         type="button"
                         onClick={() => setReviewForm({ ...reviewForm, rating: star })}
                         className={`group/star relative w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-300 font-black text-2xl overflow-hidden
-                        ${reviewForm.rating >= star
+                        ${
+                          reviewForm.rating >= star
                             ? 'bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-[0_8px_24px_rgba(251,191,36,0.4)] scale-105 -rotate-3'
                             : 'bg-white text-gray-300 hover:text-amber-400 hover:bg-amber-50 hover:scale-110 border border-gray-100 shadow-sm'
-                          }`}
+                        }`}
                       >
                         <span
                           className={`relative z-10 transition-transform duration-300 ${reviewForm.rating >= star ? 'drop-shadow-[0_2px_4px_rgba(0,0,0,0.2)]' : 'group-hover/star:scale-125'}`}
@@ -516,9 +519,9 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({
                         key={i}
                         className={
                           i <
-                            Math.round(
-                              reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length || 0
-                            )
+                          Math.round(
+                            reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length || 0
+                          )
                             ? 'text-brand-primary'
                             : 'text-gray-300'
                         }
@@ -617,7 +620,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({
               product={p}
               onAddToCart={onAddToCart}
               onClick={onProductClick}
-              onQuickView={() => { }}
+              onQuickView={() => {}}
               isWishlisted={wishlistIds.includes(p.id)}
               onToggleWishlist={() => onToggleWishlistId(p.id)}
             />

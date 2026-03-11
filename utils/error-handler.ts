@@ -117,36 +117,36 @@ export const ERROR_MESSAGES = {
   [ERROR_CODES.NETWORK_ERROR]: 'Network connection failed. Please check your internet connection.',
   [ERROR_CODES.TIMEOUT_ERROR]: 'Request timed out. Please try again.',
   [ERROR_CODES.CONNECTION_ERROR]: 'Unable to connect to the server. Please try again later.',
-  
+
   [ERROR_CODES.UNAUTHORIZED]: 'You need to be logged in to access this resource.',
   [ERROR_CODES.TOKEN_EXPIRED]: 'Your session has expired. Please log in again.',
   [ERROR_CODES.INVALID_TOKEN]: 'Invalid authentication token. Please log in again.',
   [ERROR_CODES.NO_TOKEN]: 'Authentication token is required.',
   [ERROR_CODES.TOKEN_REFRESH_FAILED]: 'Failed to refresh your session. Please log in again.',
-  
+
   [ERROR_CODES.VALIDATION_ERROR]: 'Please check your input and try again.',
   [ERROR_CODES.INVALID_INPUT]: 'Invalid input provided.',
   [ERROR_CODES.REQUIRED_FIELD]: 'This field is required.',
-  
+
   [ERROR_CODES.NOT_FOUND]: 'The requested resource was not found.',
   [ERROR_CODES.ALREADY_EXISTS]: 'This resource already exists.',
   [ERROR_CODES.RESOURCE_DELETED]: 'This resource has been deleted.',
-  
-  [ERROR_CODES.PERMISSION_DENIED]: 'You don\'t have permission to perform this action.',
+
+  [ERROR_CODES.PERMISSION_DENIED]: "You don't have permission to perform this action.",
   [ERROR_CODES.INSUFFICIENT_PERMISSIONS]: 'Insufficient permissions to access this resource.',
-  
+
   [ERROR_CODES.RATE_LIMIT_EXCEEDED]: 'Too many requests. Please try again later.',
-  
+
   [ERROR_CODES.INTERNAL_SERVER_ERROR]: 'An unexpected error occurred. Please try again.',
   [ERROR_CODES.SERVICE_UNAVAILABLE]: 'Service is temporarily unavailable. Please try again later.',
   [ERROR_CODES.DATABASE_ERROR]: 'Database error occurred. Please try again.',
-  
+
   [ERROR_CODES.INSUFFICIENT_STOCK]: 'This product is out of stock.',
   [ERROR_CODES.PAYMENT_FAILED]: 'Payment failed. Please try again.',
   [ERROR_CODES.ORDER_NOT_CANCELLABLE]: 'This order cannot be cancelled.',
   [ERROR_CODES.COUPON_EXPIRED]: 'This coupon has expired.',
   [ERROR_CODES.COUPON_LIMIT_REACHED]: 'Coupon usage limit has been reached.',
-  
+
   [ERROR_CODES.FILE_TOO_LARGE]: 'File size exceeds the maximum limit.',
   [ERROR_CODES.INVALID_FILE_TYPE]: 'Invalid file type.',
   [ERROR_CODES.UPLOAD_FAILED]: 'File upload failed. Please try again.',
@@ -192,29 +192,30 @@ export class ErrorHandler {
     switch (status) {
       case 400:
         return new ValidationError(errorMessage, errorDetails?.field, errorDetails);
-      
+
       case 401:
         if (errorCode === 'TOKEN_EXPIRED') {
           return new AuthError('Your session has expired. Please log in again.', errorCode);
         }
         return new AuthError(errorMessage, errorCode, errorDetails);
-      
+
       case 403:
         return new PermissionError(errorMessage);
-      
+
       case 404:
         return new NotFoundError('Resource', errorDetails?.resourceId);
-      
-      case 429:
+
+      case 429: {
         const retryAfter = error.response.headers['retry-after'];
         return new RateLimitError(errorMessage, retryAfter ? parseInt(retryAfter) : undefined);
-      
+      }
+
       case 500:
       case 502:
       case 503:
       case 504:
         return new ApiError(errorMessage, errorCode, status, errorDetails);
-      
+
       default:
         return new ApiError(errorMessage, errorCode, status, errorDetails);
     }
@@ -237,9 +238,11 @@ export class ErrorHandler {
         lastError = error;
 
         // Don't retry on certain errors
-        if (error instanceof ValidationError || 
-            error instanceof PermissionError || 
-            error instanceof NotFoundError) {
+        if (
+          error instanceof ValidationError ||
+          error instanceof PermissionError ||
+          error instanceof NotFoundError
+        ) {
           throw error;
         }
 
@@ -250,13 +253,15 @@ export class ErrorHandler {
 
         // Calculate exponential backoff delay
         const delay = baseDelay * Math.pow(2, attempt);
-        
+
         if (import.meta.env.DEV) {
-          console.warn(`Retrying ${context} (attempt ${attempt + 1}/${maxRetries}) after ${delay}ms delay`);
+          console.warn(
+            `Retrying ${context} (attempt ${attempt + 1}/${maxRetries}) after ${delay}ms delay`
+          );
         }
 
         // Wait before retry
-        await new Promise(resolve => setTimeout(resolve, delay));
+        await new Promise((resolve) => setTimeout(resolve, delay));
       }
     }
 
@@ -272,8 +277,10 @@ export class ErrorHandler {
     }
 
     // Return mapped message based on error code
-    return ERROR_MESSAGES[error.code as keyof typeof ERROR_MESSAGES] || 
-           'An unexpected error occurred. Please try again.';
+    return (
+      ERROR_MESSAGES[error.code as keyof typeof ERROR_MESSAGES] ||
+      'An unexpected error occurred. Please try again.'
+    );
   }
 
   // Check if Error is Retryable
@@ -319,37 +326,37 @@ export class ErrorHandler {
         return {
           type: 'warning',
           title: 'Slow Down!',
-          message: error.details?.retryAfter 
+          message: error.details?.retryAfter
             ? `Too many requests. Try again in ${error.details.retryAfter} seconds.`
-            : 'Too many requests. Please try again later.'
+            : 'Too many requests. Please try again later.',
         };
-      
+
       case ERROR_CODES.TOKEN_EXPIRED:
         return {
           type: 'warning',
           title: 'Session Expired',
-          message: 'Your session has expired. Please log in again.'
+          message: 'Your session has expired. Please log in again.',
         };
-      
+
       case ERROR_CODES.INSUFFICIENT_STOCK:
         return {
           type: 'error',
           title: 'Out of Stock',
-          message: 'This product is currently out of stock.'
+          message: 'This product is currently out of stock.',
         };
-      
+
       case ERROR_CODES.PAYMENT_FAILED:
         return {
           type: 'error',
           title: 'Payment Failed',
-          message: 'Your payment could not be processed. Please try again.'
+          message: 'Your payment could not be processed. Please try again.',
         };
-      
+
       default:
         return {
           type: 'error',
           title: 'Error',
-          message
+          message,
         };
     }
   }
@@ -363,32 +370,38 @@ export class ErrorHandler {
 
 // Utility Functions
 export const createError = (
-  message: string, 
-  code: string, 
-  statusCode?: number, 
+  message: string,
+  code: string,
+  statusCode?: number,
   details?: any
 ): ApiError => {
   return new ApiError(message, code, statusCode, details);
 };
 
 export const isNetworkError = (error: any): boolean => {
-  return error instanceof NetworkError || 
-         error.code === 'NETWORK_ERROR' || 
-         error.code === 'ECONNABORTED' ||
-         error.message === 'Network Error';
+  return (
+    error instanceof NetworkError ||
+    error.code === 'NETWORK_ERROR' ||
+    error.code === 'ECONNABORTED' ||
+    error.message === 'Network Error'
+  );
 };
 
 export const isAuthError = (error: any): boolean => {
-  return error instanceof AuthError || 
-         error.code === 'UNAUTHORIZED' || 
-         error.code === 'TOKEN_EXPIRED' ||
-         error.code === 'INVALID_TOKEN';
+  return (
+    error instanceof AuthError ||
+    error.code === 'UNAUTHORIZED' ||
+    error.code === 'TOKEN_EXPIRED' ||
+    error.code === 'INVALID_TOKEN'
+  );
 };
 
 export const isValidationError = (error: any): boolean => {
-  return error instanceof ValidationError || 
-         error.code === 'VALIDATION_ERROR' ||
-         error.code === 'INVALID_INPUT';
+  return (
+    error instanceof ValidationError ||
+    error.code === 'VALIDATION_ERROR' ||
+    error.code === 'INVALID_INPUT'
+  );
 };
 
 export const getErrorCode = (error: any): string => {
