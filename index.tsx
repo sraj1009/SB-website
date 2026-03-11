@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import App from './App.tsx';
+import App from './src/App.tsx';
 // @ts-ignore
 import { registerSW } from 'virtual:pwa-register';
 
